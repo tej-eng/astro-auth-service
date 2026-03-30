@@ -62,7 +62,9 @@ export const requestOtpService = async (contactNo) => {
 
   console.log("OTP:", otp);
 
-  return "OTP sent successfully";
+ return {
+  message: "OTP sent successfully",
+};
 };
 
 // ================= VERIFY OTP =================

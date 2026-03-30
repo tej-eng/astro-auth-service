@@ -19,10 +19,10 @@ async function startServer() {
   const app = express();
 
   // ================= MIDDLEWARE =================
-  app.use(cors({
-    origin: true,
-    credentials: true,
-  }));
+app.use(cors({
+  origin: "http://localhost:7001",
+  credentials: true,
+}));
 
   app.use(express.json());
   app.use(cookieParser());
@@ -37,16 +37,15 @@ async function startServer() {
 
   await server.start();
 
-  app.use(
-    "/graphql",
-    expressMiddleware(server, {
-      context: async ({ req, res }) => {
-        // attach user from auth middleware
-        const user = auth(req);
-        return { req, res, user };
-      },
-    })
-  );
+app.use(
+  "/graphql",
+  expressMiddleware(server, {
+    context: async ({ req, res }) => {
+      const user = await auth(req); // ✅ FIXED
+      return { req, res, user };
+    },
+  })
+);
 
   // ================= HEALTH CHECK =================
   app.get("/", (req, res) => {

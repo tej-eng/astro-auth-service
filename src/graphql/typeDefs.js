@@ -43,6 +43,7 @@ export default gql`
     experiences: [ExperiencePlatform!]!
     createdAt: String
     updatedAt: String
+  
   }
 
   type Address {
