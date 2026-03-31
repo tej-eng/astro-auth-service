@@ -134,6 +134,7 @@ model Astrologer {
   interviews  Interview[]
   wallet      AstrologerWallet?
   sessions    Session[]
+   refreshToken  String?  
 }
 
 model AstrologerDocument {
