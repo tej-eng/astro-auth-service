@@ -20,7 +20,8 @@ export default gql`
   # ================= COMMON =================
 
   type MessageResponse {
-    message: String!
+    message: String
+  success: Boolean
   }
 
   # ================= TYPES =================
@@ -43,6 +44,7 @@ export default gql`
     experiences: [ExperiencePlatform!]!
     createdAt: String
     updatedAt: String
+  
   }
 
   type Address {

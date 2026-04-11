@@ -19,10 +19,10 @@ async function startServer() {
   const app = express();
 
   // ================= MIDDLEWARE =================
-  app.use(cors({
-    origin: true,
-    credentials: true,
-  }));
+app.use(cors({
+    origin: ["http://localhost:7001", "http://192.168.1.10:7001"],
+  credentials: true,
+}));
 
   app.use(express.json());
   app.use(cookieParser());
@@ -37,27 +37,25 @@ async function startServer() {
 
   await server.start();
 
-  app.use(
-    "/graphql",
-    expressMiddleware(server, {
-      context: async ({ req, res }) => {
-        // attach user from auth middleware
-        const user = auth(req);
-        return { req, res, user };
-      },
-    })
-  );
+app.use(
+  "/graphql",
+  expressMiddleware(server, {
+    context: async ({ req, res }) => {
+      const user = await auth(req); 
+      return { req, res, user };
+    },
+  })
+);
 
   // ================= HEALTH CHECK =================
   app.get("/", (req, res) => {
     res.send("Astro Auth Service Running 🚀");
   });
+const PORT = process.env.PORT || 4000;
 
-  const PORT = process.env.PORT || 4000;
-
-  app.listen(PORT, () => {
-    console.log(`🚀 Server running at http://localhost:${PORT}/graphql`);
-  });
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running at http://192.168.1.10:${PORT}/graphql`);
+});
 }
 
 startServer();

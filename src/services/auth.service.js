@@ -62,7 +62,9 @@ export const requestOtpService = async (contactNo) => {
 
   console.log("OTP:", otp);
 
-  return "OTP sent successfully";
+  return {
+    message: "OTP sent successfully",
+  };
 };
 
 // ================= VERIFY OTP =================
@@ -74,8 +76,7 @@ export const verifyOtpService = async (contactNo, otp, res) => {
     const fails = await redis.incr(failKey);
 
     if (fails === 1) await redis.expire(failKey, LOGIN_FAIL_WINDOW);
-    if (fails > LOGIN_FAIL_LIMIT)
-      throw new Error("Too many failed attempts.");
+    if (fails > LOGIN_FAIL_LIMIT) throw new Error("Too many failed attempts.");
 
     throw new Error("Invalid OTP");
   }
@@ -103,15 +104,22 @@ export const verifyOtpService = async (contactNo, otp, res) => {
     `refresh:${astrologer.id}`,
     refreshToken,
     "EX",
-    REFRESH_EXPIRE_DAYS * 24 * 60 * 60
+    REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
   );
 
   // ✅ Safe cookie set (important for tests)
   if (res) {
+    res.cookie("accessToken", accessToken, {
+     httpOnly: true,
+  secure: false, // ✅ for local
+  sameSite: "lax", // ✅ safer for local
+  path: "/",
+    });
+
     res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       path: "/",
       maxAge: REFRESH_EXPIRE_DAYS * 24 * 60 * 60 * 1000,
     });
@@ -122,8 +130,7 @@ export const verifyOtpService = async (contactNo, otp, res) => {
 
 // ================= REFRESH =================
 export const refreshTokenService = async (req, res) => {
-  if (!req || !req.cookies)
-    throw new Error("Request context missing");
+  if (!req || !req.cookies) throw new Error("Request context missing");
 
   const token = req.cookies[REFRESH_COOKIE_NAME];
 
@@ -157,7 +164,7 @@ export const refreshTokenService = async (req, res) => {
     `refresh:${astrologer.id}`,
     newRefreshToken,
     "EX",
-    REFRESH_EXPIRE_DAYS * 24 * 60 * 60
+    REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
   );
 
   if (res) {
@@ -175,8 +182,7 @@ export const refreshTokenService = async (req, res) => {
 
 // ================= LOGOUT =================
 export const logoutService = async (req, res) => {
-  if (!req || !req.cookies)
-    throw new Error("Request context missing");
+  if (!req || !req.cookies) throw new Error("Request context missing");
 
   const token = req.cookies[REFRESH_COOKIE_NAME];
 
