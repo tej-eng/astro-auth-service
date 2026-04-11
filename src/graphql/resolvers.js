@@ -6,9 +6,7 @@ import {
 } from "../services/auth.service.js";
 
 export default {
-  Query: {
- 
-  },
+  Query: {},
 
   Mutation: {
     requestAstrologerOtp: async (_, { contactNo }) => {
@@ -19,9 +17,17 @@ export default {
       return verifyOtpService(contactNo, otp, res);
     },
 
-    logoutAstrologer: async (_, __, { req, res, user }) => {
-      if (!user) throw new Error("Unauthorized");
-      return logoutService(req, res);
+    // logoutAstrologer: async (_, __, { req, res, user }) => {
+    //   if (!user) throw new Error("Unauthorized");
+    //   return logoutService(req, res);
+    // },
+    logoutAstrologer: async (_, __, { req, res }) => {
+      const message = await logoutService(req, res);
+
+      return {
+        message: "Logged out successfully",
+        success: true, 
+      };
     },
 
     refreshAstrologerToken: async (_, __, { req, res }) => {

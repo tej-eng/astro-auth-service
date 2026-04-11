@@ -20,7 +20,8 @@ export default gql`
   # ================= COMMON =================
 
   type MessageResponse {
-    message: String!
+    message: String
+  success: Boolean
   }
 
   # ================= TYPES =================
