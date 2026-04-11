@@ -107,22 +107,25 @@ export const verifyOtpService = async (contactNo, otp, res) => {
     REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
   );
 
-  // ✅ Safe cookie set (important for tests)
+  //  Safe cookie set (important for tests)
   if (res) {
-    res.cookie("accessToken", accessToken, {
-     httpOnly: true,
-  secure: false, // ✅ for local
-  sameSite: "lax", // ✅ safer for local
-  path: "/",
-    });
+   res.cookie("accessToken", accessToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        domain: ".dhwaniastro.com",
+        maxAge:  1 * 24 * 60 * 60 * 1000, //for testing 1 day, can be changed to 15 * 60 * 1000 for 15 mins in production
+        path: "/",
+      });
 
-    res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/",
-      maxAge: REFRESH_EXPIRE_DAYS * 24 * 60 * 60 * 1000,
-    });
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "none",
+        domain: ".dhwaniastro.com",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: "/",
+      });
   }
 
   return { accessToken, astrologer };

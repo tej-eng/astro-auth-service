@@ -25,6 +25,7 @@ model User {
   paymentOrders PaymentOrder[]
   sessions      Session[]
   wallet        UserWallet?
+  refreshToken String? @db.Text
 }
 
 model Role {
@@ -51,7 +52,7 @@ model Permission {
   name        String   @unique
   description String?
 
-  // ✅ NEW FIELD
+  
   type        PermissionType @default(SYSTEM)
 
   createdAt   DateTime @default(now())
@@ -135,6 +136,8 @@ model Astrologer {
   wallet      AstrologerWallet?
   sessions    Session[]
    refreshToken  String?  
+   @@index([approvalStatus])
+   @@index([experience])
 }
 
 model AstrologerDocument {
@@ -223,37 +226,90 @@ model AstrologerWallet {
 }
 
 model WalletTransaction {
-  id                 String            @id @default(uuid())
+  id                 String @id @default(uuid())
+
   userWalletId       String?
   astrologerWalletId String?
   rechargePackId     String?
+  sessionId          String?   // NEW
+  paymentId          String?   // NEW
+
   coins              Int
+  amount             Float?    // NEW
+
   type               TransactionType
-  createdAt          DateTime          @default(now())
-  astrologerWallet   AstrologerWallet? @relation(fields: [astrologerWalletId], references: [id])
-  rechargePack       RechargePack?     @relation(fields: [rechargePackId], references: [id])
-  userWallet         UserWallet?       @relation(fields: [userWalletId], references: [id])
+  description        String?   // NEW
+
+  createdAt          DateTime @default(now())
+
+  astrologerWallet AstrologerWallet? @relation(fields: [astrologerWalletId], references: [id])
+  rechargePack     RechargePack?     @relation(fields: [rechargePackId], references: [id])
+  userWallet       UserWallet?       @relation(fields: [userWalletId], references: [id])
+  session          Session?          @relation(fields: [sessionId], references: [id])
+  payment          Payment?          @relation(fields: [paymentId], references: [id])
+
+  @@index([userWalletId])
+  @@index([astrologerWalletId])
+  @@index([sessionId])
+  @@index([paymentId])
+
+  @@unique([paymentId, type]) // 🔥 prevents duplicate credit
 }
 
 model Session {
   id           String        @id @default(uuid())
   userId       String
   astrologerId String
+
   type         SessionType
   status       SessionStatus
-  createdAt    DateTime      @default(now())
-  astrologer   Astrologer    @relation(fields: [astrologerId], references: [id])
-  user         User          @relation(fields: [userId], references: [id])
+
+  ratePerMin    Int?      // NEW
+  durationSec   Int       @default(0)  // NEW
+  coinsDeducted Int       @default(0)  // NEW
+  coinsEarned   Int       @default(0)  // NEW
+  commission    Int       @default(0)  // NEW
+
+  startedAt     DateTime? // NEW
+  endedAt       DateTime? // NEW
+
+  createdAt     DateTime  @default(now())
+
+  astrologer Astrologer @relation(fields: [astrologerId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+
+  transactions WalletTransaction[] // NEW
+  review       Review?
+
+  @@index([userId])
+  @@index([astrologerId])
 }
 
 model Payment {
-  id             String        @id @default(uuid())
+  id             String @id @default(uuid())
+
   userId         String
-  amount         Float
-  status         PaymentStatus
   rechargePackId String
-  rechargePack   RechargePack  @relation(fields: [rechargePackId], references: [id])
-  user           User          @relation(fields: [userId], references: [id])
+
+  amount         Float
+  coins          Int?        // NEW
+
+  provider       PaymentProvider? // NEW
+
+  razorpayOrderId   String?   // NEW
+  razorpayPaymentId String?   @unique // NEW
+
+  status         PaymentStatus
+
+  createdAt      DateTime @default(now())
+
+  user           User         @relation(fields: [userId], references: [id])
+  rechargePack   RechargePack @relation(fields: [rechargePackId], references: [id])
+
+  transactions WalletTransaction[] // NEW
+
+  @@index([userId])
+  @@index([status])
 }
 
 model PaymentOrder {
@@ -556,4 +612,64 @@ model Faq {
   answer    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id            String   @id @default(uuid())
+
+  userId        String
+  astrologerId  String
+
+  sessionId     String?  @unique
+
+  rating        Int
+  comment       String?
+
+  createdAt     DateTime @default(now())
+
+  user         User       @relation(fields: [userId], references: [id])
+  astrologer   Astrologer @relation(fields: [astrologerId], references: [id])
+  session      Session?   @relation(fields: [sessionId], references: [id])
+
+  @@index([userId])
+  @@index([astrologerId])
+}
+
+model Message {
+  id        String   @id @default(uuid())
+
+  msgId     String
+  roomId    String
+
+  senderId  String
+  receiverId String?
+
+  message   String
+  image     String?
+
+  sessionId String?
+  createdAt DateTime @default(now())
+
+  session Session? @relation(fields: [sessionId], references: [id])
+
+  @@index([roomId])
+  @@index([sessionId])
+}
+
+model Withdrawal {
+  id                String @id @default(uuid())
+
+  astrologerWalletId String
+  amount            Float
+  coins             Int
+
+  status            WithdrawalStatus
+
+  requestedAt       DateTime @default(now())
+  processedAt       DateTime?
+
+  astrologerWallet AstrologerWallet @relation(fields: [astrologerWalletId], references: [id])
+
+  @@index([astrologerWalletId])
+  @@index([status])
 }
