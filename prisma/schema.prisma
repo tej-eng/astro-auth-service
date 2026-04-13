@@ -171,43 +171,43 @@ model User {
 //////////////////// ASTROLOGER ////////////////////
 
 model Astrologer {
-  id             String   @id @default(uuid())
+  id             String         @id @default(uuid())
+  profilePic     String
   name           String
-  displayName    String?
-  profilePic     String?
-  email          String   @unique
-  contactNo      String
-  password       String?
-
+  dateOfBirth    DateTime
   gender         Gender
-  experience     Int
-  about          String?
-
+  displayName    String?
+  refreshToken   String? @db.Text
+  intakes        Intake[]
   languages      String[]
   skills         String[]
-
+  experience     Int
+  email          String         @unique
+  contactNo      String
+  about          String
   approvalStatus ApprovalStatus @default(PENDING)
   adminRemarks   String?
+  price          Int?           @default(0)
+  rating         Float?         @default(0)
+  status         Boolean        @default(false)
+  addresses        Address[]
+  experiences      ExperiencePlatform[]
+  interviews       Interview[]
+  documents        AstrologerDocument[]
+  rejectionHistory AstrologerRejectionHistory[]
 
-  price          Int?   @default(0)
-  rating         Float? @default(0)
-  status         Boolean @default(false)
-
-  refreshToken   String? @db.Text
-
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
+  approvedById String?
+  approvedBy   Admin?  @relation(fields: [approvedById], references: [id])
   wallet         AstrologerWallet?
   sessions       Session[]
-  reviews        Review[]
+  reviews Review[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  addresses      Address[]
-  experiences    ExperiencePlatform[]
-  interviews     Interview[]
-  documents      AstrologerDocument[]
-  rejections     AstrologerRejectionHistory[]
-  intakes   Intake[]
+  @@index([approvalStatus])
+  @@index([price])
+  @@index([rating])
+  @@index([experience])
 }
 
 //////////////////// ADMIN ////////////////////
