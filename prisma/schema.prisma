@@ -111,6 +111,7 @@ enum ServiceType {
   DIRECT_SERVICE
 }
 
+
 model Intake {
   id           String   @id @default(uuid())
 
