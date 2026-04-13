@@ -179,7 +179,6 @@ model Astrologer {
   displayName    String?
   intakes        Intake[]
   refreshToken   String? @db.Text
-  intakes        Intake[]
   languages      String[]
   skills         String[]
   experience     Int
@@ -210,7 +209,6 @@ model Astrologer {
   @@index([rating])
   @@index([experience])
 }
-
 //////////////////// ADMIN ////////////////////
 
 model Admin {
