@@ -20,7 +20,7 @@ async function startServer() {
 
   // ================= MIDDLEWARE =================
 app.use(cors({
-    origin: ["http://localhost:7001", "http://192.168.1.10:7001"],
+    origin: ["http://localhost:7001", "https://astro-panel-satge-git-main-tej-engs-projects.vercel.app/"],
   credentials: true,
 }));
 
