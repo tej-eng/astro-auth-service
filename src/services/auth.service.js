@@ -46,8 +46,8 @@ export const requestOtpService = async (contactNo) => {
   });
 
   if (!astrologer) throw new Error("Astrologer not found");
-  if (astrologer.approvalStatus !== "APPROVED")
-    throw new Error("Astrologer not approved");
+  //if (astrologer.approvalStatus !== "APPROVED")
+    //throw new Error("Astrologer not approved");
 
   const rateKey = `otp_rate:${contactNo}`;
   const count = await redis.incr(rateKey);
