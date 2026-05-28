@@ -290,6 +290,51 @@ type WalletTransactionResponse {
 }
 #-----END code for astrologer wallet transactions----------------------
 
+
+#--------------------start code for get astrologer reviews--------------
+# ================= REVIEW TYPES =================
+
+type ReviewItem {
+  id: String!
+
+  sessionId: String
+
+  userName: String
+
+  astroName: String
+
+  rating: Int!
+
+  comment: String
+
+  reply: String
+
+  isFlagged: Boolean
+
+  createdAt: String
+}
+
+type ReviewResponse {
+  success: Boolean!
+
+  totalCount: Int!
+
+  currentPage: Int!
+
+  totalPages: Int!
+
+  data: [ReviewItem!]!
+}
+
+input ReviewFilterInput {
+  page: Int
+
+  limit: Int
+
+  rating: Int
+}
+#-------------END code for get astrologer reviews----------------------
+
   type Query {
     meAstrologer: Astrologer
     getAstrologerEarnings: AstrologerEarningResponse!
@@ -310,11 +355,15 @@ getAstrologerWalletTransactions(
   limit: Int
 ): WalletTransactionResponse!
 
+getAstrologerReviews(
+  filter: ReviewFilterInput
+): ReviewResponse!
+
 
   }
 
 
-  # ================= MUTATION =================
+ 
 
   type Mutation {
     registerAstrologer(data: RegisterAstrologerInput!): Astrologer!
@@ -329,5 +378,10 @@ getAstrologerWalletTransactions(
     refreshAstrologerToken: AstrologerRefreshAuthPayload!
 
     logoutAstrologer: MessageResponse!
+
+    replyToReview(
+  reviewId: String!
+  reply: String!
+): MessageResponse!
   }
 `;
