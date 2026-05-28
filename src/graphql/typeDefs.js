@@ -268,13 +268,18 @@ input AstrologerCallHistoryFilterInput {
     getAstrologerChatHistory(
     filter: AstrologerChatHistoryFilterInput
   ): AstrologerChatHistoryResponse!
+  
   getSessionMessages(
   sessionId: String!
 ): GetSessionMessagesResponse!
-  }
+
 getAstrologerCallHistory(
   filter: AstrologerCallHistoryFilterInput
 ): AstrologerCallHistoryResponse!
+
+
+  }
+
 
   # ================= MUTATION =================
 
