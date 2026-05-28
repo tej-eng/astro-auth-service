@@ -335,6 +335,114 @@ export default {
         );
       }
     },
+  getSessionMessages: async (
+  _,
+  { sessionId },
+  { user }
+) => {
+  try {
+    /* =====================================
+       AUTH CHECK
+    ===================================== */
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    /* =====================================
+       VALIDATE SESSION
+    ===================================== */
+    const session =
+      await prisma.session.findUnique({
+        where: {
+          id: sessionId,
+        },
+
+        select: {
+          id: true,
+          astrologerId: true,
+        },
+      });
+
+    if (!session) {
+      throw new Error(
+        "Session not found"
+      );
+    }
+
+    /* =====================================
+       SECURITY CHECK
+    ===================================== */
+    if (
+      session.astrologerId !== user.id
+    ) {
+      throw new Error(
+        "Access denied"
+      );
+    }
+
+    /* =====================================
+       FETCH MESSAGES
+    ===================================== */
+    const messages =
+      await prisma.message.findMany({
+        where: {
+          sessionId,
+        },
+
+        orderBy: {
+          createdAt: "asc",
+        },
+      });
+
+    /* =====================================
+       RESPONSE
+    ===================================== */
+    return {
+      success: true,
+
+      totalCount: messages.length,
+
+      data: messages.map((msg) => ({
+        id: msg.id,
+
+        msgId: msg.msgId,
+
+        roomId: msg.roomId,
+
+        senderId: msg.senderId,
+
+        receiverId:
+          msg.receiverId || null,
+
+        message:
+          msg.message || null,
+
+        image: msg.image || null,
+
+        sender: msg.sender,
+
+        replyTo: msg.replyTo
+          ? JSON.stringify(
+              msg.replyTo
+            )
+          : null,
+
+        createdAt:
+          msg.createdAt.toISOString(),
+      })),
+    };
+  } catch (error) {
+    console.error(
+      "getSessionMessages error:",
+      error
+    );
+
+    throw new Error(
+      error.message ||
+        "Failed to fetch messages"
+    );
+  }
+},
   },
 
   Mutation: {

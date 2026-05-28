@@ -183,7 +183,34 @@ input AstrologerChatHistoryFilterInput {
 }
 
 
+
   #------end code for astrologer chat history-----------------------
+  # ================= MESSAGE TYPES =================
+
+type ChatMessage {
+  id: ID!
+
+  msgId: String
+  roomId: String
+
+  senderId: String
+  receiverId: String
+
+  message: String
+  image: String
+  sender: String
+
+  replyTo: String
+
+  createdAt: String
+}
+
+type GetSessionMessagesResponse {
+  success: Boolean!
+  totalCount: Int!
+
+  data: [ChatMessage!]!
+}
 
   type Query {
     meAstrologer: Astrologer
@@ -191,6 +218,9 @@ input AstrologerChatHistoryFilterInput {
     getAstrologerChatHistory(
     filter: AstrologerChatHistoryFilterInput
   ): AstrologerChatHistoryResponse!
+  getSessionMessages(
+  sessionId: String!
+): GetSessionMessagesResponse!
   }
 
   # ================= MUTATION =================
