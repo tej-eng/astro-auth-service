@@ -103,8 +103,86 @@ export default gql`
 
   # ================= QUERY =================
 
+  #---------------------start code for astrologer earnings--------
+  type AstrologerEarningSummary {
+  totalEarnings: Float!
+  totalWithdrawn: Float!
+  currentBalance: Float!
+  totalSessions: Int!
+  totalChatMinutes: Int!
+}
+
+type AstrologerEarningTransaction {
+  id: ID!
+  type: String!
+  amount: Float
+  coins: Int
+  description: String
+  createdAt: String
+}
+
+type AstrologerEarningResponse {
+  summary: AstrologerEarningSummary!
+  transactions: [AstrologerEarningTransaction!]!
+}
+
+
+  #--------end code for astrologer earnings---------------------
+
+  #-----------------------start code for astrologer chat history-----
+  type AstrologerChatHistoryItem {
+  sessionId: String
+  roomId: String
+
+  userName: String
+  userMobile: String
+  userCountryCode: String
+
+  startedAt: String
+  endedAt: String
+  createdAt: String
+
+  status: String
+
+  durationSec: Int
+  durationMinutes: Int
+
+  ratePerMin: Int
+
+  coinsEarned: Int
+  commission: Int
+
+  lastMessage: String
+}
+
+type AstrologerChatHistoryResponse {
+  success: Boolean!
+  totalCount: Int!
+  currentPage: Int!
+  totalPages: Int!
+  data: [AstrologerChatHistoryItem!]!
+}
+
+input AstrologerChatHistoryFilterInput {
+  page: Int
+  limit: Int
+
+  userName: String
+  status: SessionStatus
+
+  startDate: String
+  endDate: String
+}
+
+
+  #------end code for astrologer chat history-----------------------
+
   type Query {
     meAstrologer: Astrologer
+    getAstrologerEarnings: AstrologerEarningResponse!
+    getAstrologerChatHistory(
+    filter: AstrologerChatHistoryFilterInput
+  ): AstrologerChatHistoryResponse!
   }
 
   # ================= MUTATION =================
