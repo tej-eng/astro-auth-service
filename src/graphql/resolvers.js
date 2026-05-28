@@ -1,3 +1,5 @@
+import prisma from "../config/prisma.js";
+
 import {
   logoutService,
   refreshTokenService,
@@ -7,13 +9,15 @@ import {
 
 export default {
   Query: {
+    /* =====================================
+       ASTROLOGER EARNINGS
+    ===================================== */
     getAstrologerEarnings: async (
       _,
       __,
-      { prisma, user }
+      { user }
     ) => {
       try {
-        // AUTH CHECK
         if (!user) {
           throw new Error("Unauthorized");
         }
@@ -45,6 +49,9 @@ export default {
             },
           });
 
+        /* =====================================
+           EMPTY WALLET RESPONSE
+        ===================================== */
         if (!wallet) {
           return {
             summary: {
@@ -86,7 +93,7 @@ export default {
         });
 
         /* =====================================
-           RESPONSE
+           FINAL RESPONSE
         ===================================== */
         return {
           summary: {
@@ -110,12 +117,12 @@ export default {
 
               type: t.type,
 
-              amount: t.amount,
+              amount: t.amount || 0,
 
-              coins: t.coins,
+              coins: t.coins || 0,
 
               description:
-                t.description,
+                t.description || "",
 
               createdAt:
                 t.createdAt.toISOString(),
@@ -133,235 +140,247 @@ export default {
         );
       }
     },
+
+    /* =====================================
+       ASTROLOGER CHAT HISTORY
+    ===================================== */
     getAstrologerChatHistory: async (
-  _,
-  { filter = {} },
-  { prisma, user }
-) => {
-  try {
-    /* =====================================
-       AUTH CHECK
-    ===================================== */
-    if (!user) {
-      throw new Error("Unauthorized");
-    }
+      _,
+      { filter = {} },
+      { user }
+    ) => {
+      try {
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
 
-    const astrologerId = user.id;
+        const astrologerId = user.id;
 
-    const {
-      page = 1,
-      limit = 10,
-      userName,
-      status,
-      startDate,
-      endDate,
-    } = filter;
+        const {
+          page = 1,
+          limit = 10,
+          userName,
+          status,
+          startDate,
+          endDate,
+        } = filter;
 
-    const skip = (page - 1) * limit;
+        const skip = (page - 1) * limit;
 
-    console.log(
-      "ASTROLOGER ID:",
-      astrologerId
-    );
+        const where = {
+          astrologerId,
 
-    /* =====================================
-       FILTER
-    ===================================== */
-    const where = {
-      astrologerId,
+          ...(status && {
+            status,
+          }),
 
-      ...(status && {
-        status,
-      }),
+          ...(startDate || endDate
+            ? {
+                createdAt: {
+                  ...(startDate && {
+                    gte: new Date(startDate),
+                  }),
 
-      ...(startDate || endDate
-        ? {
-            createdAt: {
-              ...(startDate && {
-                gte: new Date(startDate),
-              }),
+                  ...(endDate && {
+                    lte: new Date(endDate),
+                  }),
+                },
+              }
+            : {}),
 
-              ...(endDate && {
-                lte: new Date(endDate),
-              }),
+          ...(userName && {
+            user: {
+              name: {
+                contains: userName,
+                mode: "insensitive",
+              },
             },
-          }
-        : {}),
+          }),
+        };
 
-      ...(userName && {
-        user: {
-          name: {
-            contains: userName,
-            mode: "insensitive",
-          },
-        },
-      }),
-    };
+        /* =====================================
+           TOTAL COUNT
+        ===================================== */
+        const totalCount =
+          await prisma.session.count({
+            where,
+          });
 
-    /* =====================================
-       TOTAL COUNT
-    ===================================== */
-    const totalCount =
-      await prisma.session.count({
-        where,
-      });
+        /* =====================================
+           FETCH SESSIONS
+        ===================================== */
+        const sessions =
+          await prisma.session.findMany({
+            where,
 
-    /* =====================================
-       FETCH SESSIONS
-    ===================================== */
-    const sessions =
-      await prisma.session.findMany({
-        where,
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  mobile: true,
+                  countryCode: true,
+                },
+              },
 
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              mobile: true,
-              countryCode: true,
+              messages: {
+                orderBy: {
+                  createdAt: "desc",
+                },
+
+                take: 1,
+
+                select: {
+                  roomId: true,
+                  message: true,
+                },
+              },
             },
-          },
 
-          messages: {
             orderBy: {
               createdAt: "desc",
             },
 
-            take: 1,
+            skip,
+            take: limit,
+          });
 
-            select: {
-              roomId: true,
-              message: true,
-            },
-          },
-        },
+        /* =====================================
+           RESPONSE DATA
+        ===================================== */
+        const data = sessions.map(
+          (session) => {
+            const lastMessage =
+              session.messages?.[0] || null;
 
-        orderBy: {
-          createdAt: "desc",
-        },
+            const durationMinutes =
+              session.durationSec
+                ? Math.ceil(
+                    session.durationSec / 60
+                  )
+                : 0;
 
-        skip,
-        take: limit,
-      });
+            return {
+              sessionId: session.id,
 
-    /* =====================================
-       RESPONSE
-    ===================================== */
-    const data = sessions.map(
-      (session, index) => {
-        const lastMessage =
-          session.messages?.[0] || null;
+              roomId:
+                lastMessage?.roomId || null,
 
-        let durationMinutes = 0;
+              userName:
+                session.user?.name || "",
 
-        if (session.durationSec) {
-          durationMinutes = Math.ceil(
-            session.durationSec / 60
-          );
-        }
+              userMobile:
+                session.user?.mobile || "",
+
+              userCountryCode:
+                session.user?.countryCode ||
+                "",
+
+              startedAt: session.startedAt
+                ? session.startedAt.toISOString()
+                : null,
+
+              endedAt: session.endedAt
+                ? session.endedAt.toISOString()
+                : null,
+
+              createdAt: session.createdAt
+                ? session.createdAt.toISOString()
+                : null,
+
+              status: session.status,
+
+              durationSec:
+                session.durationSec || 0,
+
+              durationMinutes,
+
+              ratePerMin:
+                session.ratePerMin || 0,
+
+              coinsEarned:
+                session.coinsEarned || 0,
+
+              commission:
+                session.commission || 0,
+
+              lastMessage:
+                lastMessage?.message || "",
+            };
+          }
+        );
 
         return {
-          sessionId: session.id,
+          success: true,
 
-          roomId:
-            lastMessage?.roomId || null,
+          totalCount,
 
-          userName:
-            session.user?.name || null,
+          currentPage: page,
 
-          userMobile:
-            session.user?.mobile || null,
+          totalPages: Math.ceil(
+            totalCount / limit
+          ),
 
-          userCountryCode:
-            session.user?.countryCode ||
-            null,
-
-          startedAt: session.startedAt
-            ? session.startedAt.toISOString()
-            : null,
-
-          endedAt: session.endedAt
-            ? session.endedAt.toISOString()
-            : null,
-
-          createdAt: session.createdAt
-            ? session.createdAt.toISOString()
-            : null,
-
-          status: session.status,
-
-          durationSec:
-            session.durationSec || 0,
-
-          durationMinutes,
-
-          ratePerMin:
-            session.ratePerMin || 0,
-
-          coinsEarned:
-            session.coinsEarned || 0,
-
-          commission:
-            session.commission || 0,
-
-          lastMessage:
-            lastMessage?.message || null,
+          data,
         };
+      } catch (error) {
+        console.error(
+          "getAstrologerChatHistory error:",
+          error
+        );
+
+        throw new Error(
+          error.message ||
+            "Failed to fetch chat history"
+        );
       }
-    );
-
-    return {
-      success: true,
-
-      totalCount,
-
-      currentPage: page,
-
-      totalPages: Math.ceil(
-        totalCount / limit
-      ),
-
-      data,
-    };
-  } catch (error) {
-    console.error(
-      "getAstrologerChatHistory error:",
-      error
-    );
-
-    throw new Error(
-      error.message ||
-        "Failed to fetch chat history"
-    );
-  }
-},
+    },
   },
 
   Mutation: {
-    requestAstrologerOtp: async (_, { contactNo }) => {
+    requestAstrologerOtp: async (
+      _,
+      { contactNo }
+    ) => {
       return requestOtpService(contactNo);
     },
 
-    verifyAstrologerOtp: async (_, { contactNo, otp }, { res }) => {
-      return verifyOtpService(contactNo, otp, res);
+    verifyAstrologerOtp: async (
+      _,
+      { contactNo, otp },
+      { res }
+    ) => {
+      return verifyOtpService(
+        contactNo,
+        otp,
+        res
+      );
     },
 
-    // logoutAstrologer: async (_, __, { req, res, user }) => {
-    //   if (!user) throw new Error("Unauthorized");
-    //   return logoutService(req, res);
-    // },
-    logoutAstrologer: async (_, __, { req, res }) => {
-      const message = await logoutService(req, res);
+    logoutAstrologer: async (
+      _,
+      __,
+      { req, res }
+    ) => {
+      await logoutService(req, res);
 
       return {
-        message: "Logged out successfully",
-        success: true, 
+        message:
+          "Logged out successfully",
+
+        success: true,
       };
     },
 
-    refreshAstrologerToken: async (_, __, { req, res }) => {
-      return refreshTokenService(req, res);
+    refreshAstrologerToken: async (
+      _,
+      __,
+      { req, res }
+    ) => {
+      return refreshTokenService(
+        req,
+        res
+      );
     },
   },
 };
