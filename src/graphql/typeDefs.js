@@ -262,13 +262,41 @@ input AstrologerCallHistoryFilterInput {
 }
 #---------END code for call history----------------------
 
+#---------start code for astrologer wallet transactions----------------------
+type WalletTransactionItem {
+  id: String!
+
+  type: String!
+
+  amount: Float
+
+  coins: Int
+
+  description: String
+
+  createdAt: String!
+}
+
+type WalletTransactionResponse {
+  success: Boolean!
+
+  totalCount: Int!
+
+  currentPage: Int!
+
+  totalPages: Int!
+
+  data: [WalletTransactionItem!]!
+}
+#-----END code for astrologer wallet transactions----------------------
+
   type Query {
     meAstrologer: Astrologer
     getAstrologerEarnings: AstrologerEarningResponse!
     getAstrologerChatHistory(
     filter: AstrologerChatHistoryFilterInput
   ): AstrologerChatHistoryResponse!
-  
+
   getSessionMessages(
   sessionId: String!
 ): GetSessionMessagesResponse!
@@ -276,6 +304,11 @@ input AstrologerCallHistoryFilterInput {
 getAstrologerCallHistory(
   filter: AstrologerCallHistoryFilterInput
 ): AstrologerCallHistoryResponse!
+
+getAstrologerWalletTransactions(
+  page: Int
+  limit: Int
+): WalletTransactionResponse!
 
 
   }

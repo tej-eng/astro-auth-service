@@ -648,6 +648,113 @@ getAstrologerCallHistory: async (
     );
   }
 },
+
+getAstrologerWalletTransactions: async (
+  _,
+  { page = 1, limit = 20 },
+  { user }
+) => {
+  try {
+    /* =====================================
+       AUTH CHECK
+    ===================================== */
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    const astrologerId = user.id;
+
+    const skip = (page - 1) * limit;
+
+    /* =====================================
+       GET WALLET
+    ===================================== */
+    const wallet =
+      await prisma.astrologerWallet.findUnique({
+        where: {
+          astrologerId,
+        },
+      });
+
+    if (!wallet) {
+      return {
+        success: true,
+        totalCount: 0,
+        currentPage: page,
+        totalPages: 0,
+        data: [],
+      };
+    }
+
+    /* =====================================
+       TOTAL COUNT
+    ===================================== */
+    const totalCount =
+      await prisma.walletTransaction.count({
+        where: {
+          walletId: wallet.id,
+        },
+      });
+
+    /* =====================================
+       FETCH TRANSACTIONS
+    ===================================== */
+    const transactions =
+      await prisma.walletTransaction.findMany({
+        where: {
+          walletId: wallet.id,
+        },
+
+        orderBy: {
+          createdAt: "desc",
+        },
+
+        skip,
+        take: limit,
+      });
+
+    /* =====================================
+       RESPONSE
+    ===================================== */
+    return {
+      success: true,
+
+      totalCount,
+
+      currentPage: page,
+
+      totalPages: Math.ceil(
+        totalCount / limit
+      ),
+
+      data: transactions.map((txn) => ({
+        id: txn.id,
+
+        type: txn.type,
+
+        amount: txn.amount || 0,
+
+        coins: txn.coins || 0,
+
+        description:
+          txn.description || "",
+
+        createdAt:
+          txn.createdAt.toISOString(),
+      })),
+    };
+  } catch (error) {
+    console.error(
+      "getAstrologerWalletTransactions error:",
+      error
+    );
+
+    throw new Error(
+      error.message ||
+        "Failed to fetch wallet transactions"
+    );
+  }
+},
   },
 
   Mutation: {
