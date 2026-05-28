@@ -1100,6 +1100,7 @@ enum PlatformType {
   ANDROID
   IOS
 }
+
 model AppVersion {
   id String @id @default(uuid())
 
