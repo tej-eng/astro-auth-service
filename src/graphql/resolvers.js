@@ -649,6 +649,7 @@ getAstrologerCallHistory: async (
   }
 },
 
+
 getAstrologerWalletTransactions: async (
   _,
   { page = 1, limit = 20 },
@@ -666,8 +667,13 @@ getAstrologerWalletTransactions: async (
 
     const skip = (page - 1) * limit;
 
+    console.log(
+      "ASTROLOGER WALLET TRANSACTIONS:",
+      astrologerId
+    );
+
     /* =====================================
-       GET WALLET
+       GET ASTROLOGER WALLET
     ===================================== */
     const wallet =
       await prisma.astrologerWallet.findUnique({
@@ -676,12 +682,19 @@ getAstrologerWalletTransactions: async (
         },
       });
 
+    /* =====================================
+       EMPTY WALLET RESPONSE
+    ===================================== */
     if (!wallet) {
       return {
         success: true,
+
         totalCount: 0,
+
         currentPage: page,
+
         totalPages: 0,
+
         data: [],
       };
     }
@@ -692,7 +705,8 @@ getAstrologerWalletTransactions: async (
     const totalCount =
       await prisma.walletTransaction.count({
         where: {
-          walletId: wallet.id,
+          astrologerWalletId:
+            wallet.id,
         },
       });
 
@@ -702,7 +716,8 @@ getAstrologerWalletTransactions: async (
     const transactions =
       await prisma.walletTransaction.findMany({
         where: {
-          walletId: wallet.id,
+          astrologerWalletId:
+            wallet.id,
         },
 
         orderBy: {
@@ -710,6 +725,7 @@ getAstrologerWalletTransactions: async (
         },
 
         skip,
+
         take: limit,
       });
 
@@ -755,6 +771,7 @@ getAstrologerWalletTransactions: async (
     );
   }
 },
+
   },
 
   Mutation: {
