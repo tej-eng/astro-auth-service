@@ -334,6 +334,91 @@ input ReviewFilterInput {
   rating: Int
 }
 #-------------END code for get astrologer reviews----------------------
+#-----------Start code for getAstrologerProfile----------------------
+enum DocumentStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum PricingType {
+  CHAT
+  CALL
+  VIDEO
+  AUDIO
+}
+
+type AstrologerPricing {
+  id: ID
+  type: PricingType
+  price: Float
+  offerPrice: Float
+  commissionPercent: Float
+  isActive: Boolean
+}
+
+type AstrologerAddress {
+  street: String
+  city: String
+  state: String
+  country: String
+  pincode: String
+}
+
+type AstrologerExperience {
+  platformName: String
+  yearsWorked: Int
+}
+
+type AstrologerReview {
+  id: ID
+  rating: Int
+  comment: String
+  reply: String
+  userName: String
+  createdAt: String
+}
+
+type AstrologerProfile {
+  id: ID
+  profilePic: String
+  name: String
+  displayName: String
+  email: String
+  contactNo: String
+
+  gender: Gender
+  about: String
+
+  languages: [String]
+  skills: [String]
+  problems: [String]
+
+  experience: Int
+  rating: Float
+
+  tags: String
+  vtags: String
+
+  status: Boolean
+
+  createdAt: String
+
+  pricing: [AstrologerPricing]
+
+  addresses: [AstrologerAddress]
+
+  experiences: [AstrologerExperience]
+
+  reviews: [AstrologerReview]
+
+  totalReviews: Int
+
+  totalSessions: Int
+
+  completedSessions: Int
+}
+#--------END--code for getAstrologerProfile----------------------
 
   type Query {
     meAstrologer: Astrologer
@@ -358,6 +443,8 @@ getAstrologerWalletTransactions(
 getAstrologerReviews(
   filter: ReviewFilterInput
 ): ReviewResponse!
+
+getAstrologerProfile: AstrologerProfile!
 
 
   }

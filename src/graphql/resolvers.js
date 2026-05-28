@@ -723,6 +723,201 @@ export default {
         throw new Error(error.message || "Failed to fetch reviews");
       }
     },
+    getAstrologerProfile: async (_, __, { user }) => {
+  try {
+    /* =====================================
+       AUTH CHECK
+    ===================================== */
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    const astrologerId = user.id;
+
+    /* =====================================
+       FETCH ASTROLOGER PROFILE
+    ===================================== */
+    const astrologer =
+      await prisma.astrologer.findUnique({
+        where: {
+          id: astrologerId,
+        },
+
+        include: {
+          pricing: true,
+
+          wallet: true,
+
+          reviews: {
+            orderBy: {
+              createdAt: "desc",
+            },
+
+            take: 5,
+
+            select: {
+              id: true,
+              rating: true,
+              comment: true,
+              userName: true,
+              createdAt: true,
+            },
+          },
+
+          addresses: true,
+
+          experiences: true,
+
+          kycDetail: true,
+        },
+      });
+
+    if (!astrologer) {
+      throw new Error(
+        "Astrologer profile not found"
+      );
+    }
+
+    /* =====================================
+       TOTAL REVIEW COUNT
+    ===================================== */
+    const totalReviews =
+      await prisma.review.count({
+        where: {
+          astrologerId,
+        },
+      });
+
+    /* =====================================
+       TOTAL SESSIONS
+    ===================================== */
+    const totalSessions =
+      await prisma.session.count({
+        where: {
+          astrologerId,
+          status: "COMPLETED",
+        },
+      });
+
+    /* =====================================
+       RESPONSE
+    ===================================== */
+    return {
+      success: true,
+
+      message:
+        "Astrologer profile fetched successfully",
+
+      data: {
+        id: astrologer.id,
+
+        profilePic:
+          astrologer.profilePic || "",
+
+        name: astrologer.name,
+
+        displayName:
+          astrologer.displayName,
+
+        email: astrologer.email,
+
+        contactNo:
+          astrologer.contactNo,
+
+        about: astrologer.about,
+
+        gender: astrologer.gender,
+
+        languages:
+          astrologer.languages || [],
+
+        skills:
+          astrologer.skills || [],
+
+        problems:
+          astrologer.problems || [],
+
+        experience:
+          astrologer.experience || 0,
+
+        rating:
+          astrologer.rating || 0,
+
+        totalReviews,
+
+        totalSessions,
+
+        tags: astrologer.tags || "",
+
+        vtags:
+          astrologer.vtags || "",
+
+        status:
+          astrologer.status || false,
+
+        createdAt:
+          astrologer.createdAt.toISOString(),
+
+        pricing:
+          astrologer.pricing || [],
+
+        wallet: astrologer.wallet
+          ? {
+              balanceCoins:
+                astrologer.wallet
+                  .balanceCoins || 0,
+
+              totalEarned:
+                astrologer.wallet
+                  .totalEarned || 0,
+
+              totalWithdrawn:
+                astrologer.wallet
+                  .totalWithdrawn || 0,
+            }
+          : null,
+
+        recentReviews:
+          astrologer.reviews.map(
+            (review) => ({
+              id: review.id,
+
+              rating:
+                review.rating,
+
+              comment:
+                review.comment || "",
+
+              userName:
+                review.userName || "",
+
+              createdAt:
+                review.createdAt.toISOString(),
+            }),
+          ),
+
+        addresses:
+          astrologer.addresses || [],
+
+        experiences:
+          astrologer.experiences || [],
+
+        kycDetail:
+          astrologer.kycDetail || null,
+      },
+    };
+  } catch (error) {
+    console.error(
+      "getAstrologerProfile error:",
+      error
+    );
+
+    throw new Error(
+      error.message ||
+        "Failed to fetch astrologer profile"
+    );
+  }
+},
   },
 
   Mutation: {
