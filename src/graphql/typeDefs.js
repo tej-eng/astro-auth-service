@@ -211,6 +211,56 @@ type GetSessionMessagesResponse {
 
   data: [ChatMessage!]!
 }
+#------------------------END code for message----------------------
+
+#----------------start code for call history----------------------
+# ================= CALL HISTORY =================
+
+type AstrologerCallHistoryItem {
+  sessionId: String
+  roomId: String
+
+  userName: String
+  userMobile: String
+  userCountryCode: String
+
+  startedAt: String
+  endedAt: String
+  createdAt: String
+
+  status: String
+
+  durationSec: Int
+  durationMinutes: Int
+
+  ratePerMin: Int
+
+  coinsEarned: Int
+  commission: Int
+
+  lastMessage: String
+}
+
+type AstrologerCallHistoryResponse {
+  success: Boolean!
+  totalCount: Int!
+  currentPage: Int!
+  totalPages: Int!
+
+  data: [AstrologerCallHistoryItem!]!
+}
+
+input AstrologerCallHistoryFilterInput {
+  page: Int
+  limit: Int
+
+  userName: String
+  status: SessionStatus
+
+  startDate: String
+  endDate: String
+}
+#---------END code for call history----------------------
 
   type Query {
     meAstrologer: Astrologer
@@ -222,6 +272,9 @@ type GetSessionMessagesResponse {
   sessionId: String!
 ): GetSessionMessagesResponse!
   }
+getAstrologerCallHistory(
+  filter: AstrologerCallHistoryFilterInput
+): AstrologerCallHistoryResponse!
 
   # ================= MUTATION =================
 
