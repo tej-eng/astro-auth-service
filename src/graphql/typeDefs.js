@@ -130,6 +130,14 @@ type AstrologerEarningResponse {
   #--------end code for astrologer earnings---------------------
 
   #-----------------------start code for astrologer chat history-----
+  enum SessionStatus {
+  REQUESTED
+  ACCEPTED
+  ONGOING
+  COMPLETED
+  CANCELLED
+  FAILED
+}
   type AstrologerChatHistoryItem {
   sessionId: String
   roomId: String
