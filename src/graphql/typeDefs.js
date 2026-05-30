@@ -394,9 +394,11 @@ type AstrologerReview {
 
 type AstrologerProfile {
   id: ID
+
   profilePic: String
   name: String
   displayName: String
+
   email: String
   contactNo: String
 
@@ -419,17 +421,45 @@ type AstrologerProfile {
 
   pricing: [AstrologerPricing]
 
+  wallet: AstrologerWalletInfo
+
+  recentReviews: [AstrologerReview]
+
   addresses: [AstrologerAddress]
 
   experiences: [AstrologerExperience]
 
-  reviews: [AstrologerReview]
-
   totalReviews: Int
-
   totalSessions: Int
 
-  completedSessions: Int
+  kycDetail: KycDetailResponse
+}
+type AstrologerWalletInfo {
+  balanceCoins: Float
+  totalEarned: Int
+  totalWithdrawn: Int
+}
+
+type AstrologerProfileResponse {
+  success: Boolean!
+  message: String!
+  data: AstrologerProfile
+}
+
+type KycDetailResponse {
+  accountHolderName: String
+  accountNumber: String
+  bankName: String
+  ifsc: String
+  branchName: String
+  panNumber: String
+
+  profileImage: String
+  aadhaarImage: String
+  panImage: String
+  passbookImage: String
+
+  status: DocumentStatus
 }
 #--------END--code for getAstrologerProfile----------------------
 
@@ -548,7 +578,7 @@ getAstrologerReviews(
   filter: ReviewFilterInput
 ): ReviewResponse!
 
-getAstrologerProfile: AstrologerProfile!
+getAstrologerProfile: AstrologerProfileResponse!
 
 getUserDetails(userId: String!): UserDetails!
 
