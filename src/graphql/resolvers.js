@@ -708,6 +708,10 @@ export default {
         rating: review.rating,
         comment: review.comment || "",
 
+        // ADD THESE
+        reply: review.reply || null,
+        isFlagged: review.isFlagged || false,
+
         createdAt: review.createdAt.toISOString(),
       })),
     };
