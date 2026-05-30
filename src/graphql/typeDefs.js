@@ -423,6 +423,37 @@ type AstrologerProfile {
 }
 #--------END--code for getAstrologerProfile----------------------
 
+#-----------------start code for getUser Details--------
+type UserWalletInfo {
+  balanceCoins: Float
+  lockedCoins: Float
+}
+
+type UserDetails {
+  id: ID!
+  name: String
+  mobile: String
+  countryCode: String
+  gender: Gender
+
+  birthDate: String
+  birthTime: String
+
+  occupation: String
+
+  isActive: Boolean
+
+  wallet: UserWalletInfo
+
+  totalSessions: Int
+  completedSessions: Int
+
+  totalReviews: Int
+
+  createdAt: String
+  updatedAt: String
+}
+#----------------END code for getUser Details-------
   type Query {
     meAstrologer: Astrologer
     getAstrologerEarnings: AstrologerEarningResponse!
@@ -448,6 +479,8 @@ getAstrologerReviews(
 ): ReviewResponse!
 
 getAstrologerProfile: AstrologerProfile!
+
+getUserDetails(userId: String!): UserDetails!
 
 
   }

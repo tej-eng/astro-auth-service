@@ -637,321 +637,354 @@ export default {
         throw new Error(error.message || "Failed to fetch wallet transactions");
       }
     },
- getAstrologerReviews: async (_, { filter = {} }, { user }) => {
-  try {
-    /* =====================================
+    getAstrologerReviews: async (_, { filter = {} }, { user }) => {
+      try {
+        /* =====================================
        AUTH CHECK
     ===================================== */
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
+
+        const astrologerId = user.id;
+
+        /* =====================================
+       PAGINATION
+    ===================================== */
+        const page = Number(filter.page) || 1;
+        const limit = Number(filter.limit) || 10;
+
+        const skip = (page - 1) * limit;
+
+        /* =====================================
+       FILTER
+    ===================================== */
+        const where = {
+          astrologerId,
+
+          ...(filter.rating && {
+            rating: Number(filter.rating),
+          }),
+        };
+
+        /* =====================================
+       TOTAL COUNT
+    ===================================== */
+        const totalCount = await prisma.review.count({
+          where,
+        });
+
+        /* =====================================
+       FETCH REVIEWS
+    ===================================== */
+        const reviews = await prisma.review.findMany({
+          where,
+
+          include: {
+            session: {
+              select: {
+                id: true,
+                type: true,
+                status: true,
+                startedAt: true,
+                endedAt: true,
+                durationSec: true,
+                createdAt: true,
+              },
+            },
+          },
+
+          orderBy: {
+            createdAt: "desc",
+          },
+
+          skip,
+          take: limit,
+        });
+
+        /* =====================================
+       RESPONSE
+    ===================================== */
+        return {
+          success: true,
+
+          totalCount,
+
+          currentPage: page,
+
+          totalPages: Math.ceil(totalCount / limit),
+
+          limit,
+
+          data: reviews.map((review) => ({
+            id: review.id,
+
+            /* Session Details */
+            sessionId: review.session?.id || review.sessionId || null,
+            sessionType: review.session?.type || null,
+            sessionStatus: review.session?.status || null,
+
+            durationSec: review.session?.durationSec || 0,
+
+            startedAt: review.session?.startedAt
+              ? review.session.startedAt.toISOString()
+              : null,
+
+            endedAt: review.session?.endedAt
+              ? review.session.endedAt.toISOString()
+              : null,
+
+            /* Review Details */
+            userName: review.userName || "",
+            astroName: review.astroName || "",
+
+            rating: review.rating,
+
+            comment: review.comment || "",
+
+            reply: review.reply || null,
+
+            isFlagged: review.isFlagged || false,
+
+            createdAt: review.createdAt.toISOString(),
+          })),
+        };
+      } catch (error) {
+        console.error("getAstrologerReviews error:", error);
+
+        throw new Error(error.message || "Failed to fetch reviews");
+      }
+    },
+  getUserDetails: async (_, { userId }, { user }) => {
+  try {
     if (!user) {
       throw new Error("Unauthorized");
     }
 
-    const astrologerId = user.id;
-
-    /* =====================================
-       PAGINATION
-    ===================================== */
-    const page = Number(filter.page) || 1;
-    const limit = Number(filter.limit) || 10;
-
-    const skip = (page - 1) * limit;
-
-    /* =====================================
-       FILTER
-    ===================================== */
-    const where = {
-      astrologerId,
-
-      ...(filter.rating && {
-        rating: Number(filter.rating),
-      }),
-    };
-
-    /* =====================================
-       TOTAL COUNT
-    ===================================== */
-    const totalCount = await prisma.review.count({
-      where,
-    });
-
-    /* =====================================
-       FETCH REVIEWS
-    ===================================== */
-    const reviews = await prisma.review.findMany({
-      where,
-
+    const userData = await prisma.user.findUnique({
+      where: {
+        id: userId,
+      },
       include: {
-        session: {
+        wallet: true,
+        sessions: {
+          select: {
+            status: true,
+          },
+        },
+        reviews: {
           select: {
             id: true,
-            type: true,
-            status: true,
-            startedAt: true,
-            endedAt: true,
-            durationSec: true,
-            createdAt: true,
           },
         },
       },
-
-      orderBy: {
-        createdAt: "desc",
-      },
-
-      skip,
-      take: limit,
     });
 
-    /* =====================================
-       RESPONSE
-    ===================================== */
+    if (!userData) {
+      throw new Error("User not found");
+    }
+
+    const totalSessions = userData.sessions.length;
+
+    const completedSessions = userData.sessions.filter(
+      (session) => session.status === "COMPLETED"
+    ).length;
+
     return {
-      success: true,
+      id: userData.id,
 
-      totalCount,
+      name: userData.name,
+      mobile: userData.mobile,
+      countryCode: userData.countryCode,
 
-      currentPage: page,
+      gender: userData.gender,
 
-      totalPages: Math.ceil(totalCount / limit),
+      birthDate: userData.birthDate
+        ? userData.birthDate.toISOString()
+        : null,
 
-      limit,
+      birthTime: userData.birthTime,
 
-      data: reviews.map((review) => ({
-        id: review.id,
+      occupation: userData.occupation,
 
-        /* Session Details */
-        sessionId: review.session?.id || review.sessionId || null,
-        sessionType: review.session?.type || null,
-        sessionStatus: review.session?.status || null,
+      isActive: userData.isActive,
 
-        durationSec: review.session?.durationSec || 0,
+      wallet: userData.wallet
+        ? {
+            balanceCoins: userData.wallet.balanceCoins,
+            lockedCoins: userData.wallet.lockedCoins,
+          }
+        : null,
 
-        startedAt: review.session?.startedAt
-          ? review.session.startedAt.toISOString()
-          : null,
+      totalSessions,
 
-        endedAt: review.session?.endedAt
-          ? review.session.endedAt.toISOString()
-          : null,
+      completedSessions,
 
-        /* Review Details */
-        userName: review.userName || "",
-        astroName: review.astroName || "",
+      totalReviews: userData.reviews.length,
 
-        rating: review.rating,
-
-        comment: review.comment || "",
-
-        reply: review.reply || null,
-
-        isFlagged: review.isFlagged || false,
-
-        createdAt: review.createdAt.toISOString(),
-      })),
+      createdAt: userData.createdAt.toISOString(),
+      updatedAt: userData.updatedAt.toISOString(),
     };
   } catch (error) {
-    console.error("getAstrologerReviews error:", error);
-
-    throw new Error(
-      error.message || "Failed to fetch reviews"
-    );
+    console.error("getUserDetails error:", error);
+    throw new Error(error.message || "Failed to fetch user details");
   }
 },
     getAstrologerProfile: async (_, __, { user }) => {
-  try {
-    /* =====================================
+      try {
+        /* =====================================
        AUTH CHECK
     ===================================== */
-    if (!user) {
-      throw new Error("Unauthorized");
-    }
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
 
-    const astrologerId = user.id;
+        const astrologerId = user.id;
 
-    /* =====================================
+        /* =====================================
        FETCH ASTROLOGER PROFILE
     ===================================== */
-    const astrologer =
-      await prisma.astrologer.findUnique({
-        where: {
-          id: astrologerId,
-        },
-
-        include: {
-          pricing: true,
-
-          wallet: true,
-
-          reviews: {
-            orderBy: {
-              createdAt: "desc",
-            },
-
-            take: 5,
-
-            select: {
-              id: true,
-              rating: true,
-              comment: true,
-              userName: true,
-              createdAt: true,
-            },
+        const astrologer = await prisma.astrologer.findUnique({
+          where: {
+            id: astrologerId,
           },
 
-          addresses: true,
+          include: {
+            pricing: true,
 
-          experiences: true,
+            wallet: true,
 
-          kycDetail: true,
-        },
-      });
+            reviews: {
+              orderBy: {
+                createdAt: "desc",
+              },
 
-    if (!astrologer) {
-      throw new Error(
-        "Astrologer profile not found"
-      );
-    }
+              take: 5,
 
-    /* =====================================
+              select: {
+                id: true,
+                rating: true,
+                comment: true,
+                userName: true,
+                createdAt: true,
+              },
+            },
+
+            addresses: true,
+
+            experiences: true,
+
+            kycDetail: true,
+          },
+        });
+
+        if (!astrologer) {
+          throw new Error("Astrologer profile not found");
+        }
+
+        /* =====================================
        TOTAL REVIEW COUNT
     ===================================== */
-    const totalReviews =
-      await prisma.review.count({
-        where: {
-          astrologerId,
-        },
-      });
+        const totalReviews = await prisma.review.count({
+          where: {
+            astrologerId,
+          },
+        });
 
-    /* =====================================
+        /* =====================================
        TOTAL SESSIONS
     ===================================== */
-    const totalSessions =
-      await prisma.session.count({
-        where: {
-          astrologerId,
-          status: "COMPLETED",
-        },
-      });
+        const totalSessions = await prisma.session.count({
+          where: {
+            astrologerId,
+            status: "COMPLETED",
+          },
+        });
 
-    /* =====================================
+        /* =====================================
        RESPONSE
     ===================================== */
-    return {
-      success: true,
+        return {
+          success: true,
 
-      message:
-        "Astrologer profile fetched successfully",
+          message: "Astrologer profile fetched successfully",
 
-      data: {
-        id: astrologer.id,
+          data: {
+            id: astrologer.id,
 
-        profilePic:
-          astrologer.profilePic || "",
+            profilePic: astrologer.profilePic || "",
 
-        name: astrologer.name,
+            name: astrologer.name,
 
-        displayName:
-          astrologer.displayName,
+            displayName: astrologer.displayName,
 
-        email: astrologer.email,
+            email: astrologer.email,
 
-        contactNo:
-          astrologer.contactNo,
+            contactNo: astrologer.contactNo,
 
-        about: astrologer.about,
+            about: astrologer.about,
 
-        gender: astrologer.gender,
+            gender: astrologer.gender,
 
-        languages:
-          astrologer.languages || [],
+            languages: astrologer.languages || [],
 
-        skills:
-          astrologer.skills || [],
+            skills: astrologer.skills || [],
 
-        problems:
-          astrologer.problems || [],
+            problems: astrologer.problems || [],
 
-        experience:
-          astrologer.experience || 0,
+            experience: astrologer.experience || 0,
 
-        rating:
-          astrologer.rating || 0,
+            rating: astrologer.rating || 0,
 
-        totalReviews,
+            totalReviews,
 
-        totalSessions,
+            totalSessions,
 
-        tags: astrologer.tags || "",
+            tags: astrologer.tags || "",
 
-        vtags:
-          astrologer.vtags || "",
+            vtags: astrologer.vtags || "",
 
-        status:
-          astrologer.status || false,
+            status: astrologer.status || false,
 
-        createdAt:
-          astrologer.createdAt.toISOString(),
+            createdAt: astrologer.createdAt.toISOString(),
 
-        pricing:
-          astrologer.pricing || [],
+            pricing: astrologer.pricing || [],
 
-        wallet: astrologer.wallet
-          ? {
-              balanceCoins:
-                astrologer.wallet
-                  .balanceCoins || 0,
+            wallet: astrologer.wallet
+              ? {
+                  balanceCoins: astrologer.wallet.balanceCoins || 0,
 
-              totalEarned:
-                astrologer.wallet
-                  .totalEarned || 0,
+                  totalEarned: astrologer.wallet.totalEarned || 0,
 
-              totalWithdrawn:
-                astrologer.wallet
-                  .totalWithdrawn || 0,
-            }
-          : null,
+                  totalWithdrawn: astrologer.wallet.totalWithdrawn || 0,
+                }
+              : null,
 
-        recentReviews:
-          astrologer.reviews.map(
-            (review) => ({
+            recentReviews: astrologer.reviews.map((review) => ({
               id: review.id,
 
-              rating:
-                review.rating,
+              rating: review.rating,
 
-              comment:
-                review.comment || "",
+              comment: review.comment || "",
 
-              userName:
-                review.userName || "",
+              userName: review.userName || "",
 
-              createdAt:
-                review.createdAt.toISOString(),
-            }),
-          ),
+              createdAt: review.createdAt.toISOString(),
+            })),
 
-        addresses:
-          astrologer.addresses || [],
+            addresses: astrologer.addresses || [],
 
-        experiences:
-          astrologer.experiences || [],
+            experiences: astrologer.experiences || [],
 
-        kycDetail:
-          astrologer.kycDetail || null,
-      },
-    };
-  } catch (error) {
-    console.error(
-      "getAstrologerProfile error:",
-      error
-    );
+            kycDetail: astrologer.kycDetail || null,
+          },
+        };
+      } catch (error) {
+        console.error("getAstrologerProfile error:", error);
 
-    throw new Error(
-      error.message ||
-        "Failed to fetch astrologer profile"
-    );
-  }
-},
+        throw new Error(error.message || "Failed to fetch astrologer profile");
+      }
+    },
   },
 
   Mutation: {
@@ -976,76 +1009,58 @@ export default {
     refreshAstrologerToken: async (_, __, { req, res }) => {
       return refreshTokenService(req, res);
     },
-    replyToReview: async (
-  _,
-  { reviewId, reply },
-  { user }
-) => {
-  try {
-    /* =====================================
+    replyToReview: async (_, { reviewId, reply }, { user }) => {
+      try {
+        /* =====================================
        AUTH CHECK
     ===================================== */
-    if (!user) {
-      throw new Error("Unauthorized");
-    }
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
 
-    /* =====================================
+        /* =====================================
        FIND REVIEW
     ===================================== */
-    const review =
-      await prisma.review.findUnique({
-        where: {
-          id: reviewId,
-        },
-      });
+        const review = await prisma.review.findUnique({
+          where: {
+            id: reviewId,
+          },
+        });
 
-    if (!review) {
-      throw new Error(
-        "Review not found"
-      );
-    }
+        if (!review) {
+          throw new Error("Review not found");
+        }
 
-    /* =====================================
+        /* =====================================
        SECURITY CHECK
     ===================================== */
-    if (
-      review.astrologerId !== user.id
-    ) {
-      throw new Error(
-        "Access denied"
-      );
-    }
+        if (review.astrologerId !== user.id) {
+          throw new Error("Access denied");
+        }
 
-    /* =====================================
+        /* =====================================
        UPDATE REVIEW
     ===================================== */
-    await prisma.review.update({
-      where: {
-        id: reviewId,
-      },
+        await prisma.review.update({
+          where: {
+            id: reviewId,
+          },
 
-      data: {
-        reply,
-      },
-    });
+          data: {
+            reply,
+          },
+        });
 
-    return {
-      success: true,
+        return {
+          success: true,
 
-      message:
-        "Reply added successfully",
-    };
-  } catch (error) {
-    console.error(
-      "replyToReview error:",
-      error
-    );
+          message: "Reply added successfully",
+        };
+      } catch (error) {
+        console.error("replyToReview error:", error);
 
-    throw new Error(
-      error.message ||
-        "Failed to reply to review"
-    );
-  }
-},
+        throw new Error(error.message || "Failed to reply to review");
+      }
+    },
   },
 };
