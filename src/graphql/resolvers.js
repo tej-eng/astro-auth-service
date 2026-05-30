@@ -637,11 +637,8 @@ export default {
         throw new Error(error.message || "Failed to fetch wallet transactions");
       }
     },
-   getAstrologerReviews: async (_, { filter = {} }, { user }) => {
+  getAstrologerReviews: async (_, { filter = {} }, { user }) => {
   try {
-    /* =====================================
-       AUTH CHECK
-    ===================================== */
     if (!user) {
       throw new Error("Unauthorized");
     }
@@ -652,30 +649,17 @@ export default {
 
     const skip = (page - 1) * limit;
 
-    /* =====================================
-       FILTER
-    ===================================== */
     const where = {
       astrologerId,
-
-      ...(rating && {
-        rating,
-      }),
+      ...(rating && { rating }),
     };
 
-    /* =====================================
-       TOTAL COUNT
-    ===================================== */
     const totalCount = await prisma.review.count({
       where,
     });
 
-    /* =====================================
-       FETCH REVIEWS + SESSION DETAILS
-    ===================================== */
     const reviews = await prisma.review.findMany({
       where,
-
       include: {
         session: {
           select: {
@@ -688,18 +672,13 @@ export default {
           },
         },
       },
-
       orderBy: {
         createdAt: "desc",
       },
-
       skip,
       take: limit,
     });
 
-    /* =====================================
-       RESPONSE
-    ===================================== */
     return {
       success: true,
       totalCount,
@@ -712,6 +691,7 @@ export default {
         sessionId: review.session?.id || null,
         sessionType: review.session?.type || null,
         sessionStatus: review.session?.status || null,
+
         durationSec: review.session?.durationSec || 0,
 
         startedAt: review.session?.startedAt
@@ -733,10 +713,7 @@ export default {
     };
   } catch (error) {
     console.error("getAstrologerReviews error:", error);
-
-    throw new Error(
-      error.message || "Failed to fetch reviews"
-    );
+    throw new Error(error.message || "Failed to fetch reviews");
   }
 },
     getAstrologerProfile: async (_, __, { user }) => {

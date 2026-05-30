@@ -295,7 +295,7 @@ type WalletTransactionResponse {
 # ================= REVIEW TYPES =================
 
 type ReviewItem {
- id: ID!
+  id: ID!
 
   sessionId: String
   sessionType: String
@@ -320,17 +320,14 @@ type ReviewResponse {
   totalCount: Int!
   currentPage: Int!
   totalPages: Int!
-  data: [Review!]!
+  data: [ReviewItem!]!
 }
 
 input ReviewFilterInput {
   page: Int
-
   limit: Int
-
   rating: Int
 }
-#-------------END code for get astrologer reviews----------------------
 #-----------Start code for getAstrologerProfile----------------------
 enum DocumentStatus {
   PENDING
