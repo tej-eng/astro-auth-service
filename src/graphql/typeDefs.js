@@ -138,7 +138,7 @@ type AstrologerEarningResponse {
   CANCELLED
   FAILED
 }
-  type AstrologerChatHistoryItem {
+ type AstrologerChatHistoryItem {
   sessionId: String
   roomId: String
 
@@ -166,6 +166,9 @@ type AstrologerEarningResponse {
 
   coinsEarned: Int
   commission: Int
+
+  rating: Int
+  reviewComment: String
 
   lastMessage: String
 }

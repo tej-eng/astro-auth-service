@@ -120,7 +120,7 @@ export default {
     /* =====================================
        ASTROLOGER CHAT HISTORY
     ===================================== */
-    getAstrologerChatHistory: async (_, { filter = {} }, { user }) => {
+ getAstrologerChatHistory: async (_, { filter = {} }, { user }) => {
   try {
     if (!user) {
       throw new Error("Unauthorized");
@@ -152,7 +152,6 @@ export default {
               ...(startDate && {
                 gte: new Date(startDate),
               }),
-
               ...(endDate && {
                 lte: new Date(endDate),
               }),
@@ -190,6 +189,13 @@ export default {
             name: true,
             mobile: true,
             countryCode: true,
+          },
+        },
+
+        review: {
+          select: {
+            rating: true,
+            comment: true,
           },
         },
 
@@ -308,6 +314,10 @@ export default {
         coinsEarned: session.coinsEarned || 0,
 
         commission: session.commission || 0,
+
+        rating: session.review?.rating ?? null,
+
+        reviewComment: session.review?.comment ?? null,
 
         lastMessage: lastMessage?.message || "",
       };
