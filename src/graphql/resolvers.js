@@ -222,36 +222,49 @@ export default {
     });
 
     /* =====================================
-       FETCH INTAKE DETAILS
+       FETCH INTAKE DETAILS USING
+       USERID + ASTROLOGERID
     ===================================== */
-    const roomIds = sessions
-      .map((session) => session.messages?.[0]?.roomId)
-      .filter(Boolean);
+
+    const intakeConditions = sessions.map((session) => ({
+      userId: session.userId,
+      astrologerId: session.astrologerId,
+    }));
 
     let intakeMap = new Map();
 
-    if (roomIds.length > 0) {
+    if (intakeConditions.length > 0) {
       const intakes = await prisma.intake.findMany({
         where: {
-          chatId: {
-            in: roomIds,
-          },
+          OR: intakeConditions,
+        },
+
+        orderBy: {
+          createdAt: "desc",
         },
 
         select: {
-          chatId: true,
+          userId: true,
+          astrologerId: true,
+
           birthPlace: true,
           birthDate: true,
           birthTime: true,
           occupation: true,
           gender: true,
           name: true,
+
+          createdAt: true,
         },
       });
 
-      intakeMap = new Map(
-        intakes.map((intake) => [intake.chatId, intake])
-      );
+      for (const intake of intakes) {
+        const key = `${intake.userId}_${intake.astrologerId}`;
+
+        if (!intakeMap.has(key)) {
+          intakeMap.set(key, intake);
+        }
+      }
     }
 
     /* =====================================
@@ -260,7 +273,9 @@ export default {
     const data = sessions.map((session) => {
       const lastMessage = session.messages?.[0] || null;
 
-      const intake = intakeMap.get(lastMessage?.roomId);
+      const intakeKey = `${session.userId}_${session.astrologerId}`;
+
+      const intake = intakeMap.get(intakeKey);
 
       const durationMinutes = session.durationSec
         ? Math.ceil(session.durationSec / 60)
