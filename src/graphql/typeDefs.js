@@ -295,35 +295,32 @@ type WalletTransactionResponse {
 # ================= REVIEW TYPES =================
 
 type ReviewItem {
-  id: String!
+ id: ID!
 
   sessionId: String
+  sessionType: String
+  sessionStatus: String
+
+  durationSec: Int
+
+  startedAt: String
+  endedAt: String
 
   userName: String
-
   astroName: String
 
   rating: Int!
-
   comment: String
 
-  reply: String
-
-  isFlagged: Boolean
-
-  createdAt: String
+  createdAt: String!
 }
 
 type ReviewResponse {
   success: Boolean!
-
   totalCount: Int!
-
   currentPage: Int!
-
   totalPages: Int!
-
-  data: [ReviewItem!]!
+  data: [Review!]!
 }
 
 input ReviewFilterInput {

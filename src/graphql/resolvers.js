@@ -637,92 +637,108 @@ export default {
         throw new Error(error.message || "Failed to fetch wallet transactions");
       }
     },
-    getAstrologerReviews: async (_, { filter = {} }, { user }) => {
-      try {
-        /* =====================================
+   getAstrologerReviews: async (_, { filter = {} }, { user }) => {
+  try {
+    /* =====================================
        AUTH CHECK
     ===================================== */
-        if (!user) {
-          throw new Error("Unauthorized");
-        }
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
 
-        const astrologerId = user.id;
+    const astrologerId = user.id;
 
-        const { page = 1, limit = 10, rating } = filter;
+    const { page = 1, limit = 10, rating } = filter;
 
-        const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-        /* =====================================
+    /* =====================================
        FILTER
     ===================================== */
-        const where = {
-          astrologerId,
+    const where = {
+      astrologerId,
 
-          ...(rating && {
-            rating,
-          }),
-        };
+      ...(rating && {
+        rating,
+      }),
+    };
 
-        /* =====================================
+    /* =====================================
        TOTAL COUNT
     ===================================== */
-        const totalCount = await prisma.review.count({
-          where,
-        });
+    const totalCount = await prisma.review.count({
+      where,
+    });
 
-        /* =====================================
-       FETCH REVIEWS
+    /* =====================================
+       FETCH REVIEWS + SESSION DETAILS
     ===================================== */
-        const reviews = await prisma.review.findMany({
-          where,
+    const reviews = await prisma.review.findMany({
+      where,
 
-          orderBy: {
-            createdAt: "desc",
+      include: {
+        session: {
+          select: {
+            id: true,
+            type: true,
+            status: true,
+            startedAt: true,
+            endedAt: true,
+            durationSec: true,
           },
+        },
+      },
 
-          skip,
+      orderBy: {
+        createdAt: "desc",
+      },
 
-          take: limit,
-        });
+      skip,
+      take: limit,
+    });
 
-        /* =====================================
+    /* =====================================
        RESPONSE
     ===================================== */
-        return {
-          success: true,
+    return {
+      success: true,
+      totalCount,
+      currentPage: page,
+      totalPages: Math.ceil(totalCount / limit),
 
-          totalCount,
+      data: reviews.map((review) => ({
+        id: review.id,
 
-          currentPage: page,
+        sessionId: review.session?.id || null,
+        sessionType: review.session?.type || null,
+        sessionStatus: review.session?.status || null,
+        durationSec: review.session?.durationSec || 0,
 
-          totalPages: Math.ceil(totalCount / limit),
+        startedAt: review.session?.startedAt
+          ? review.session.startedAt.toISOString()
+          : null,
 
-          data: reviews.map((review) => ({
-            id: review.id,
+        endedAt: review.session?.endedAt
+          ? review.session.endedAt.toISOString()
+          : null,
 
-            sessionId: review.sessionId || null,
+        userName: review.userName || "",
+        astroName: review.astroName || "",
 
-            userName: review.userName || "",
+        rating: review.rating,
+        comment: review.comment || "",
 
-            astroName: review.astroName || "",
+        createdAt: review.createdAt.toISOString(),
+      })),
+    };
+  } catch (error) {
+    console.error("getAstrologerReviews error:", error);
 
-            rating: review.rating,
-
-            comment: review.comment || "",
-
-            reply: review.reply || "",
-
-            isFlagged: review.isFlagged || false,
-
-            createdAt: review.createdAt.toISOString(),
-          })),
-        };
-      } catch (error) {
-        console.error("getAstrologerReviews error:", error);
-
-        throw new Error(error.message || "Failed to fetch reviews");
-      }
-    },
+    throw new Error(
+      error.message || "Failed to fetch reviews"
+    );
+  }
+},
     getAstrologerProfile: async (_, __, { user }) => {
   try {
     /* =====================================
