@@ -313,14 +313,22 @@ type ReviewItem {
   comment: String
   reply: String
 
+  isFlagged: Boolean
+
   createdAt: String!
 }
 
 type ReviewResponse {
   success: Boolean!
+
   totalCount: Int!
+
   currentPage: Int!
+
   totalPages: Int!
+
+  limit: Int!
+
   data: [ReviewItem!]!
 }
 

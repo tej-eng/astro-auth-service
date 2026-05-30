@@ -637,29 +637,49 @@ export default {
         throw new Error(error.message || "Failed to fetch wallet transactions");
       }
     },
-  getAstrologerReviews: async (_, { filter = {} }, { user }) => {
+ getAstrologerReviews: async (_, { filter = {} }, { user }) => {
   try {
+    /* =====================================
+       AUTH CHECK
+    ===================================== */
     if (!user) {
       throw new Error("Unauthorized");
     }
 
     const astrologerId = user.id;
 
-    const { page = 1, limit = 10, rating } = filter;
+    /* =====================================
+       PAGINATION
+    ===================================== */
+    const page = Number(filter.page) || 1;
+    const limit = Number(filter.limit) || 10;
 
     const skip = (page - 1) * limit;
 
+    /* =====================================
+       FILTER
+    ===================================== */
     const where = {
       astrologerId,
-      ...(rating && { rating }),
+
+      ...(filter.rating && {
+        rating: Number(filter.rating),
+      }),
     };
 
+    /* =====================================
+       TOTAL COUNT
+    ===================================== */
     const totalCount = await prisma.review.count({
       where,
     });
 
+    /* =====================================
+       FETCH REVIEWS
+    ===================================== */
     const reviews = await prisma.review.findMany({
       where,
+
       include: {
         session: {
           select: {
@@ -669,26 +689,38 @@ export default {
             startedAt: true,
             endedAt: true,
             durationSec: true,
+            createdAt: true,
           },
         },
       },
+
       orderBy: {
         createdAt: "desc",
       },
+
       skip,
       take: limit,
     });
 
+    /* =====================================
+       RESPONSE
+    ===================================== */
     return {
       success: true,
+
       totalCount,
+
       currentPage: page,
+
       totalPages: Math.ceil(totalCount / limit),
+
+      limit,
 
       data: reviews.map((review) => ({
         id: review.id,
 
-        sessionId: review.session?.id || null,
+        /* Session Details */
+        sessionId: review.session?.id || review.sessionId || null,
         sessionType: review.session?.type || null,
         sessionStatus: review.session?.status || null,
 
@@ -702,14 +734,16 @@ export default {
           ? review.session.endedAt.toISOString()
           : null,
 
+        /* Review Details */
         userName: review.userName || "",
         astroName: review.astroName || "",
 
         rating: review.rating,
+
         comment: review.comment || "",
 
-        // ADD THESE
         reply: review.reply || null,
+
         isFlagged: review.isFlagged || false,
 
         createdAt: review.createdAt.toISOString(),
@@ -717,7 +751,10 @@ export default {
     };
   } catch (error) {
     console.error("getAstrologerReviews error:", error);
-    throw new Error(error.message || "Failed to fetch reviews");
+
+    throw new Error(
+      error.message || "Failed to fetch reviews"
+    );
   }
 },
     getAstrologerProfile: async (_, __, { user }) => {
