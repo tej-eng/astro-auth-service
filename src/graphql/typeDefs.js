@@ -150,6 +150,8 @@ type AstrologerEarningResponse {
   birthDate: String
   birthTime: String
   occupation: String
+  gender: Gender
+  intakeName: String
 
   startedAt: String
   endedAt: String
