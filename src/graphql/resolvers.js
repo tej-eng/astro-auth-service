@@ -121,164 +121,218 @@ export default {
        ASTROLOGER CHAT HISTORY
     ===================================== */
     getAstrologerChatHistory: async (_, { filter = {} }, { user }) => {
-      try {
-        if (!user) {
-          throw new Error("Unauthorized");
-        }
+  try {
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
 
-        const astrologerId = user.id;
+    const astrologerId = user.id;
 
-        const {
-          page = 1,
-          limit = 10,
-          userName,
-          status,
-          startDate,
-          endDate,
-        } = filter;
+    const {
+      page = 1,
+      limit = 10,
+      userName,
+      status,
+      startDate,
+      endDate,
+    } = filter;
 
-        const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-        const where = {
-          astrologerId,
+    const where = {
+      astrologerId,
 
-          ...(status && {
-            status,
-          }),
+      ...(status && {
+        status,
+      }),
 
-          ...(startDate || endDate
-            ? {
-                createdAt: {
-                  ...(startDate && {
-                    gte: new Date(startDate),
-                  }),
+      ...(startDate || endDate
+        ? {
+            createdAt: {
+              ...(startDate && {
+                gte: new Date(startDate),
+              }),
 
-                  ...(endDate && {
-                    lte: new Date(endDate),
-                  }),
-                },
-              }
-            : {}),
-
-          ...(userName && {
-            user: {
-              name: {
-                contains: userName,
-                mode: "insensitive",
-              },
+              ...(endDate && {
+                lte: new Date(endDate),
+              }),
             },
-          }),
-        };
+          }
+        : {}),
 
-        /* =====================================
-           TOTAL COUNT
-        ===================================== */
-        const totalCount = await prisma.session.count({
-          where,
-        });
-
-        /* =====================================
-           FETCH SESSIONS
-        ===================================== */
-        const sessions = await prisma.session.findMany({
-          where,
-
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                mobile: true,
-                countryCode: true,
-              },
-            },
-
-            messages: {
-              orderBy: {
-                createdAt: "desc",
-              },
-
-              take: 1,
-
-              select: {
-                roomId: true,
-                message: true,
-              },
-            },
+      ...(userName && {
+        user: {
+          name: {
+            contains: userName,
+            mode: "insensitive",
           },
+        },
+      }),
+    };
 
+    /* =====================================
+       TOTAL COUNT
+    ===================================== */
+    const totalCount = await prisma.session.count({
+      where,
+    });
+
+    /* =====================================
+       FETCH SESSIONS
+    ===================================== */
+    const sessions = await prisma.session.findMany({
+      where,
+
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            mobile: true,
+            countryCode: true,
+          },
+        },
+
+        messages: {
           orderBy: {
             createdAt: "desc",
           },
 
-          skip,
-          take: limit,
-        });
+          take: 1,
 
-        /* =====================================
-           RESPONSE DATA
-        ===================================== */
-        const data = sessions.map((session) => {
-          const lastMessage = session.messages?.[0] || null;
+          select: {
+            roomId: true,
+            message: true,
+          },
+        },
+      },
 
-          const durationMinutes = session.durationSec
-            ? Math.ceil(session.durationSec / 60)
-            : 0;
+      orderBy: {
+        createdAt: "desc",
+      },
 
-          return {
-            sessionId: session.id,
+      skip,
+      take: limit,
+    });
 
-            roomId: lastMessage?.roomId || null,
+    /* =====================================
+       FETCH INTAKE DETAILS
+    ===================================== */
+    const roomIds = sessions
+      .map((session) => session.messages?.[0]?.roomId)
+      .filter(Boolean);
 
-            userName: session.user?.name || "",
+    let intakeMap = new Map();
 
-            userMobile: session.user?.mobile || "",
+    if (roomIds.length > 0) {
+      const intakes = await prisma.intake.findMany({
+        where: {
+          chatId: {
+            in: roomIds,
+          },
+        },
 
-            userCountryCode: session.user?.countryCode || "",
+        select: {
+          chatId: true,
+          birthPlace: true,
+          birthDate: true,
+          birthTime: true,
+          occupation: true,
+          gender: true,
+          name: true,
+        },
+      });
 
-            startedAt: session.startedAt
-              ? session.startedAt.toISOString()
-              : null,
+      intakeMap = new Map(
+        intakes.map((intake) => [intake.chatId, intake])
+      );
+    }
 
-            endedAt: session.endedAt ? session.endedAt.toISOString() : null,
+    /* =====================================
+       RESPONSE DATA
+    ===================================== */
+    const data = sessions.map((session) => {
+      const lastMessage = session.messages?.[0] || null;
 
-            createdAt: session.createdAt
-              ? session.createdAt.toISOString()
-              : null,
+      const intake = intakeMap.get(lastMessage?.roomId);
 
-            status: session.status,
+      const durationMinutes = session.durationSec
+        ? Math.ceil(session.durationSec / 60)
+        : 0;
 
-            durationSec: session.durationSec || 0,
+      return {
+        sessionId: session.id,
 
-            durationMinutes,
+        roomId: lastMessage?.roomId || null,
 
-            ratePerMin: session.ratePerMin || 0,
+        userName: session.user?.name || "",
 
-            coinsEarned: session.coinsEarned || 0,
+        userMobile: session.user?.mobile || "",
 
-            commission: session.commission || 0,
+        userCountryCode: session.user?.countryCode || "",
 
-            lastMessage: lastMessage?.message || "",
-          };
-        });
+        birthPlace: intake?.birthPlace || "",
 
-        return {
-          success: true,
+        birthDate: intake?.birthDate
+          ? intake.birthDate.toISOString()
+          : null,
 
-          totalCount,
+        birthTime: intake?.birthTime || "",
 
-          currentPage: page,
+        occupation: intake?.occupation || "",
 
-          totalPages: Math.ceil(totalCount / limit),
+        gender: intake?.gender || null,
 
-          data,
-        };
-      } catch (error) {
-        console.error("getAstrologerChatHistory error:", error);
+        intakeName: intake?.name || "",
 
-        throw new Error(error.message || "Failed to fetch chat history");
-      }
-    },
+        startedAt: session.startedAt
+          ? session.startedAt.toISOString()
+          : null,
+
+        endedAt: session.endedAt
+          ? session.endedAt.toISOString()
+          : null,
+
+        createdAt: session.createdAt
+          ? session.createdAt.toISOString()
+          : null,
+
+        status: session.status,
+
+        durationSec: session.durationSec || 0,
+
+        durationMinutes,
+
+        ratePerMin: session.ratePerMin || 0,
+
+        coinsEarned: session.coinsEarned || 0,
+
+        commission: session.commission || 0,
+
+        lastMessage: lastMessage?.message || "",
+      };
+    });
+
+    return {
+      success: true,
+
+      totalCount,
+
+      currentPage: page,
+
+      totalPages: Math.ceil(totalCount / limit),
+
+      data,
+    };
+  } catch (error) {
+    console.error("getAstrologerChatHistory error:", error);
+
+    throw new Error(
+      error.message || "Failed to fetch chat history"
+    );
+  }
+},
+    
     getSessionMessages: async (_, { sessionId }, { user }) => {
       try {
         /* =====================================

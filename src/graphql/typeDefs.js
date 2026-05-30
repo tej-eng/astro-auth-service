@@ -146,6 +146,11 @@ type AstrologerEarningResponse {
   userMobile: String
   userCountryCode: String
 
+  birthPlace: String
+  birthDate: String
+  birthTime: String
+  occupation: String
+
   startedAt: String
   endedAt: String
   createdAt: String
@@ -453,7 +458,7 @@ type UserDetails {
   createdAt: String
   updatedAt: String
 }
-#----------------END code for getUser Details-------
+#--END code for getUser Details-------
   type Query {
     meAstrologer: Astrologer
     getAstrologerEarnings: AstrologerEarningResponse!
