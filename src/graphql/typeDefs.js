@@ -311,6 +311,7 @@ type ReviewItem {
 
   rating: Int!
   comment: String
+  reply: String
 
   createdAt: String!
 }
