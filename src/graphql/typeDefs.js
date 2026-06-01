@@ -569,16 +569,25 @@ export default gql`
   }
   #--------END code for get Offer-------
   #-----   START CODE FOR REMEDY---
-  
-  type Remedy {
-  id: ID!
-  title: String!
-  description: String!
-  isActive: Boolean!
-  createdAt: String!
-  updatedAt: String!
-}
 
+  type Remedy {
+    id: ID!
+    title: String!
+    description: String!
+    isActive: Boolean!
+    createdAt: String!
+    updatedAt: String!
+  }
+
+  input SessionRemedyFilterInput {
+    page: Int
+    limit: Int
+
+    sessionId: String
+
+    startDate: String
+    endDate: String
+  }
   type RemedyResponse {
     success: Boolean!
     message: String!
@@ -586,22 +595,29 @@ export default gql`
   }
 
   type SessionRemedy {
-  id: ID!
-  sessionId: String!
-  remedyText: String!
-  createdAt: String!
-}
+    id: ID!
+    sessionId: String!
+    remedyText: String!
+    createdAt: String!
+  }
 
-type SessionRemedyResponse {
-  success: Boolean!
-  message: String!
-  sessionType: SessionType!
-  data: [SessionRemedy!]!
-}
-enum SessionType {
-  CHAT
-  CALL
-}
+  type SessionRemedyResponse {
+    success: Boolean!
+
+    message: String!
+
+    totalCount: Int!
+
+    currentPage: Int!
+
+    totalPages: Int!
+
+    data: [SessionRemedy!]!
+  }
+  enum SessionType {
+    CHAT
+    CALL
+  }
   #------END CODE FOR REMEDY----------
 
   type Query {
@@ -636,7 +652,7 @@ enum SessionType {
 
     getRemedies: RemedyResponse!
 
-     getSessionRemedies(sessionId: String!): SessionRemedyResponse!
+    getSessionRemedies(filter: SessionRemedyFilterInput): SessionRemedyResponse!
   }
 
   type Mutation {

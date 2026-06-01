@@ -1342,37 +1342,71 @@ getRemedies: async () => {
     );
   }
 },
-getSessionRemedies: async (_, { sessionId }) => {
+getSessionRemedies: async (_, { filter = {} }) => {
   try {
-    const session = await prisma.session.findUnique({
-      where: {
-        id: sessionId,
-      },
-      select: {
-        type: true,
-      },
-    });
+    const {
+      page = 1,
+      limit = 10,
+      sessionId,
+      startDate,
+      endDate,
+    } = filter;
 
-    if (!session) {
-      throw new Error("Session not found");
+    const skip = (page - 1) * limit;
+
+    const where = {};
+
+    if (sessionId) {
+      where.sessionId = sessionId;
     }
 
+    if (startDate || endDate) {
+      where.createdAt = {};
+
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate);
+      }
+    }
+
+    const totalCount = await prisma.sessionRemedy.count({
+      where,
+    });
+
     const remedies = await prisma.sessionRemedy.findMany({
-      where: {
-        sessionId,
-      },
+      where,
+      skip,
+      take: limit,
       orderBy: {
         createdAt: "desc",
+      },
+      include: {
+        session: {
+          select: {
+            id: true,
+            type: true,
+          },
+        },
       },
     });
 
     return {
       success: true,
       message: "Session remedies fetched successfully",
-      sessionType: session.type,
+
+      totalCount,
+
+      currentPage: page,
+
+      totalPages: Math.ceil(totalCount / limit),
+
       data: remedies.map((r) => ({
         id: r.id,
         sessionId: r.sessionId,
+        sessionType: r.session?.type || null,
         remedyText: r.remedyText,
         createdAt: r.createdAt.toISOString(),
       })),
