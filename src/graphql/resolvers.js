@@ -1515,6 +1515,6 @@ getSessionRemedies: async (_, { sessionId }) => {
   } catch (error) {
     throw new Error(error.message);
   }
-};
+},
   },
 };
