@@ -1344,6 +1344,19 @@ getRemedies: async () => {
 },
 getSessionRemedies: async (_, { sessionId }) => {
   try {
+    const session = await prisma.session.findUnique({
+      where: {
+        id: sessionId,
+      },
+      select: {
+        type: true,
+      },
+    });
+
+    if (!session) {
+      throw new Error("Session not found");
+    }
+
     const remedies = await prisma.sessionRemedy.findMany({
       where: {
         sessionId,
@@ -1356,6 +1369,7 @@ getSessionRemedies: async (_, { sessionId }) => {
     return {
       success: true,
       message: "Session remedies fetched successfully",
+      sessionType: session.type,
       data: remedies.map((r) => ({
         id: r.id,
         sessionId: r.sessionId,
@@ -1364,6 +1378,7 @@ getSessionRemedies: async (_, { sessionId }) => {
       })),
     };
   } catch (error) {
+    console.error("getSessionRemedies error:", error);
     throw new Error(error.message);
   }
 },

@@ -595,9 +595,13 @@ export default gql`
 type SessionRemedyResponse {
   success: Boolean!
   message: String!
+  sessionType: SessionType!
   data: [SessionRemedy!]!
 }
-
+enum SessionType {
+  CHAT
+  CALL
+}
   #------END CODE FOR REMEDY----------
 
   type Query {
