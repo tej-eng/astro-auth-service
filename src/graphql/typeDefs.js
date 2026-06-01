@@ -570,19 +570,19 @@ export default gql`
   #--------END code for get Offer-------
   #-----   START CODE FOR REMEDY---
   type Remedy {
-  id: ID!
-  title: String!
-  description: String!
-  isActive: Boolean!
-  createdAt: String!
-  updatedAt: String!
-}
+    id: ID!
+    title: String!
+    description: String!
+    isActive: Boolean!
+    createdAt: String!
+    updatedAt: String!
+  }
 
-type RemedyResponse {
-  success: Boolean!
-  message: String!
-  data: [Remedy!]!
-}
+  type RemedyResponse {
+    success: Boolean!
+    message: String!
+    data: [Remedy!]!
+  }
 
   #------END CODE FOR REMEDY----------
 
@@ -636,5 +636,7 @@ type RemedyResponse {
     replyToReview(reviewId: String!, reply: String!): MessageResponse!
 
     updateOfferStatus(offerId: String!, isActive: Boolean!): MessageResponse!
+
+    sendRemedy(sessionId: String!, remedyId: String!): MessageResponse!
   }
 `;

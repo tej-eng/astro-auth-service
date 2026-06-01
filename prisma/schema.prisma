@@ -689,34 +689,32 @@ model Withdrawal {
 }
 
 model Session {
-  id String @id @default(uuid())
+  id            String   @id @default(uuid())
 
-  userId String
-  user   User   @relation(fields: [userId], references: [id])
+  userId        String
+  astrologerId  String
 
-  astrologerId String
- astrologer Astrologer @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
+  type          SessionType
+  status        SessionStatus
 
-  type   SessionType
-  status SessionStatus
+  ratePerMin    Int
+  durationSec   Int
 
-  ratePerMin  Int
-  durationSec Int @default(0)
+  coinsDeducted Int
+  coinsEarned   Int
+  commission    Int
 
-  coinsDeducted Int                 @default(0)
-  coinsEarned   Int                 @default(0)
-  commission    Int                 @default(0)
-  review        Review?
   startedAt     DateTime?
   endedAt       DateTime?
-  messages      Message[]
-  createdAt     DateTime            @default(now())
-  transactions  WalletTransaction[]
-  fraudLogs FraudLog[] 
-  @@index([userId])
-  @@index([astrologerId])
-  @@index([status])
-  @@index([createdAt])
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  remedyId      String?
+
+  remedy        Remedy?  @relation(fields: [remedyId], references: [id])
+
+  @@index([remedyId])
 }
 
 model Payment {
@@ -1095,15 +1093,17 @@ model DisclaimerPage {
   @@index([createdAt])
 }
 model Remedy {
-  id String @id @default(uuid())
+  id          String   @id @default(uuid())
 
-  title String
-  description String @db.Text
+  title       String
+  description String   @db.Text
 
-  isActive Boolean @default(true)
+  isActive    Boolean  @default(true)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sessions    Session[]
 
   @@index([createdAt])
   @@index([isActive])

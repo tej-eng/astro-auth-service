@@ -1454,5 +1454,60 @@ getRemedies: async () => {
         throw new Error(error.message || "Failed to update offer status");
       }
     },
+    sendRemedy: async (
+  _,
+  { sessionId, remedyId },
+  { user }
+) => {
+  try {
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    const session = await prisma.session.findUnique({
+      where: {
+        id: sessionId,
+      },
+    });
+
+    if (!session) {
+      throw new Error("Session not found");
+    }
+
+    if (session.astrologerId !== user.id) {
+      throw new Error("Access denied");
+    }
+
+    const remedy = await prisma.remedy.findUnique({
+      where: {
+        id: remedyId,
+      },
+    });
+
+    if (!remedy) {
+      throw new Error("Remedy not found");
+    }
+
+    await prisma.session.update({
+      where: {
+        id: sessionId,
+      },
+      data: {
+        remedyId,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Remedy sent successfully",
+    };
+  } catch (error) {
+    console.error("sendRemedy error:", error);
+
+    throw new Error(
+      error.message || "Failed to send remedy"
+    );
+  }
+},
   },
 };
