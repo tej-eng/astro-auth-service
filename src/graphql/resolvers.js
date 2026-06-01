@@ -1277,40 +1277,37 @@ export default {
         throw new Error(error.message || "Failed to fetch astrologer sessions");
       }
     },
+getOffers: async () => {
+  try {
+    const offers = await prisma.offer.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-    getOffers: async () => {
-      try {
-        const offers = await prisma.offer.findMany({
-          where: {
-            isActive: true,
-          },
+    return {
+      success: true,
+      message: "Offers fetched successfully",
 
-          orderBy: {
-            createdAt: "desc",
-          },
-        });
+      data: offers.map((offer) => ({
+        id: offer.id,
+        offerName: offer.offerName,
+        price: offer.price,
+        description: offer.description || "",
+        isActive: offer.isActive,
 
-        return {
-          success: true,
-          message: "Offers fetched successfully",
+        createdAt: offer.createdAt.toISOString(),
+        updatedAt: offer.updatedAt.toISOString(),
+      })),
+    };
+  } catch (error) {
+    console.error("getOffers error:", error);
 
-          data: offers.map((offer) => ({
-            id: offer.id,
-            offerName: offer.offerName,
-            price: offer.price,
-            description: offer.description || "",
-            isActive: offer.isActive,
-
-            createdAt: offer.createdAt.toISOString(),
-            updatedAt: offer.updatedAt.toISOString(),
-          })),
-        };
-      } catch (error) {
-        console.error("getOffers error:", error);
-
-        throw new Error(error.message || "Failed to fetch offers");
-      }
-    },
+    throw new Error(
+      error.message || "Failed to fetch offers"
+    );
+  }
+},
   },
 
   Mutation: {
