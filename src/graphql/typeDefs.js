@@ -21,7 +21,7 @@ export default gql`
 
   type MessageResponse {
     message: String
-  success: Boolean
+    success: Boolean
   }
 
   # ================= TYPES =================
@@ -44,7 +44,6 @@ export default gql`
     experiences: [ExperiencePlatform!]!
     createdAt: String
     updatedAt: String
-  
   }
 
   type Address {
@@ -105,517 +104,500 @@ export default gql`
 
   #---------------------start code for astrologer earnings--------
   type AstrologerEarningSummary {
-  totalEarnings: Float!
-  totalWithdrawn: Float!
-  currentBalance: Float!
-  totalSessions: Int!
-  totalChatMinutes: Int!
-}
+    totalEarnings: Float!
+    totalWithdrawn: Float!
+    currentBalance: Float!
+    totalSessions: Int!
+    totalChatMinutes: Int!
+  }
 
-type AstrologerEarningTransaction {
-  id: ID!
-  type: String!
-  amount: Float
-  coins: Int
-  description: String
-  createdAt: String
-}
+  type AstrologerEarningTransaction {
+    id: ID!
+    type: String!
+    amount: Float
+    coins: Int
+    description: String
+    createdAt: String
+  }
 
-type AstrologerEarningResponse {
-  summary: AstrologerEarningSummary!
-  transactions: [AstrologerEarningTransaction!]!
-}
-
+  type AstrologerEarningResponse {
+    summary: AstrologerEarningSummary!
+    transactions: [AstrologerEarningTransaction!]!
+  }
 
   #--------end code for astrologer earnings---------------------
 
   #-----------------------start code for astrologer chat history-----
   enum SessionStatus {
-  REQUESTED
-  ACCEPTED
-  ONGOING
-  COMPLETED
-  CANCELLED
-  FAILED
-}
- type AstrologerChatHistoryItem {
-  sessionId: String
-  roomId: String
+    REQUESTED
+    ACCEPTED
+    ONGOING
+    COMPLETED
+    CANCELLED
+    FAILED
+  }
+  type AstrologerChatHistoryItem {
+    sessionId: String
+    roomId: String
 
-  userName: String
-  userMobile: String
-  userCountryCode: String
+    userName: String
+    userMobile: String
+    userCountryCode: String
 
-  birthPlace: String
-  birthDate: String
-  birthTime: String
-  occupation: String
-  gender: Gender
-  intakeName: String
+    birthPlace: String
+    birthDate: String
+    birthTime: String
+    occupation: String
+    gender: Gender
+    intakeName: String
 
-  startedAt: String
-  endedAt: String
-  createdAt: String
+    startedAt: String
+    endedAt: String
+    createdAt: String
 
-  status: String
+    status: String
 
-  durationSec: Int
-  durationMinutes: Int
+    durationSec: Int
+    durationMinutes: Int
 
-  ratePerMin: Int
+    ratePerMin: Int
 
-  coinsEarned: Int
-  commission: Int
+    coinsEarned: Int
+    commission: Int
 
-  rating: Int
-  reviewComment: String
+    rating: Int
+    reviewComment: String
 
-  lastMessage: String
-}
+    lastMessage: String
+  }
 
-type AstrologerChatHistoryResponse {
-  success: Boolean!
-  totalCount: Int!
-  currentPage: Int!
-  totalPages: Int!
-  data: [AstrologerChatHistoryItem!]!
-}
+  type AstrologerChatHistoryResponse {
+    success: Boolean!
+    totalCount: Int!
+    currentPage: Int!
+    totalPages: Int!
+    data: [AstrologerChatHistoryItem!]!
+  }
 
-input AstrologerChatHistoryFilterInput {
-  page: Int
-  limit: Int
+  input AstrologerChatHistoryFilterInput {
+    page: Int
+    limit: Int
 
-  userName: String
-  status: SessionStatus
+    userName: String
+    status: SessionStatus
 
-  startDate: String
-  endDate: String
-}
-
-
+    startDate: String
+    endDate: String
+  }
 
   #------end code for astrologer chat history-----------------------
   # ================= MESSAGE TYPES =================
 
-type ChatMessage {
-  id: ID!
+  type ChatMessage {
+    id: ID!
 
-  msgId: String
-  roomId: String
+    msgId: String
+    roomId: String
 
-  senderId: String
-  receiverId: String
+    senderId: String
+    receiverId: String
 
-  message: String
-  image: String
-  sender: String
+    message: String
+    image: String
+    sender: String
 
-  replyTo: String
+    replyTo: String
 
-  createdAt: String
-}
+    createdAt: String
+  }
 
-type GetSessionMessagesResponse {
-  success: Boolean!
-  totalCount: Int!
+  type GetSessionMessagesResponse {
+    success: Boolean!
+    totalCount: Int!
 
-  data: [ChatMessage!]!
-}
-#------------------------END code for message----------------------
+    data: [ChatMessage!]!
+  }
+  #------------------------END code for message----------------------
 
-#----------------start code for call history----------------------
-# ================= CALL HISTORY =================
+  #----------------start code for call history----------------------
+  # ================= CALL HISTORY =================
 
-type AstrologerCallHistoryItem {
-  sessionId: String
-  roomId: String
+  type AstrologerCallHistoryItem {
+    sessionId: String
+    roomId: String
 
-  userName: String
-  userMobile: String
-  userCountryCode: String
+    userName: String
+    userMobile: String
+    userCountryCode: String
 
-  startedAt: String
-  endedAt: String
-  createdAt: String
+    startedAt: String
+    endedAt: String
+    createdAt: String
 
-  status: String
+    status: String
 
-  durationSec: Int
-  durationMinutes: Int
+    durationSec: Int
+    durationMinutes: Int
 
-  ratePerMin: Int
+    ratePerMin: Int
 
-  coinsEarned: Int
-  commission: Int
+    coinsEarned: Int
+    commission: Int
 
-  lastMessage: String
-}
+    lastMessage: String
+  }
 
-type AstrologerCallHistoryResponse {
-  success: Boolean!
-  totalCount: Int!
-  currentPage: Int!
-  totalPages: Int!
+  type AstrologerCallHistoryResponse {
+    success: Boolean!
+    totalCount: Int!
+    currentPage: Int!
+    totalPages: Int!
 
-  data: [AstrologerCallHistoryItem!]!
-}
+    data: [AstrologerCallHistoryItem!]!
+  }
 
-input AstrologerCallHistoryFilterInput {
-  page: Int
-  limit: Int
+  input AstrologerCallHistoryFilterInput {
+    page: Int
+    limit: Int
 
-  userName: String
-  status: SessionStatus
+    userName: String
+    status: SessionStatus
 
-  startDate: String
-  endDate: String
-}
-#---------END code for call history----------------------
+    startDate: String
+    endDate: String
+  }
+  #---------END code for call history----------------------
 
-#---------start code for astrologer wallet transactions----------------------
-type WalletTransactionItem {
-  id: String!
+  #---------start code for astrologer wallet transactions----------------------
+  type WalletTransactionItem {
+    id: String!
 
-  type: String!
+    type: String!
 
-  amount: Float
+    amount: Float
 
-  coins: Int
+    coins: Int
 
-  description: String
+    description: String
 
-  createdAt: String!
-}
+    createdAt: String!
+  }
 
-type WalletTransactionResponse {
-  success: Boolean!
+  type WalletTransactionResponse {
+    success: Boolean!
 
-  totalCount: Int!
+    totalCount: Int!
 
-  currentPage: Int!
+    currentPage: Int!
 
-  totalPages: Int!
+    totalPages: Int!
 
-  data: [WalletTransactionItem!]!
-}
-#-----END code for astrologer wallet transactions----------------------
-
-
-#--------------------start code for get astrologer reviews--------------
-# ================= REVIEW TYPES =================
-
-type ReviewItem {
-  id: ID!
-
-  sessionId: String
-  sessionType: String
-  sessionStatus: String
-
-  durationSec: Int
+    data: [WalletTransactionItem!]!
+  }
+  #-----END code for astrologer wallet transactions----------------------
+
+  #--------------------start code for get astrologer reviews--------------
+  # ================= REVIEW TYPES =================
+
+  type ReviewItem {
+    id: ID!
+
+    sessionId: String
+    sessionType: String
+    sessionStatus: String
+
+    durationSec: Int
+
+    startedAt: String
+    endedAt: String
+
+    userName: String
+    astroName: String
 
-  startedAt: String
-  endedAt: String
+    rating: Int!
+    comment: String
+    reply: String
 
-  userName: String
-  astroName: String
+    isFlagged: Boolean
 
-  rating: Int!
-  comment: String
-  reply: String
+    createdAt: String!
+  }
 
-  isFlagged: Boolean
+  type ReviewResponse {
+    success: Boolean!
 
-  createdAt: String!
-}
+    totalCount: Int!
 
-type ReviewResponse {
-  success: Boolean!
+    currentPage: Int!
 
-  totalCount: Int!
+    totalPages: Int!
 
-  currentPage: Int!
+    limit: Int!
 
-  totalPages: Int!
+    data: [ReviewItem!]!
+  }
 
-  limit: Int!
+  input ReviewFilterInput {
+    page: Int
+    limit: Int
+    rating: Int
+  }
+  #-----------Start code for getAstrologerProfile----------------------
+  enum DocumentStatus {
+    PENDING
+    VERIFIED
+    REJECTED
+  }
 
-  data: [ReviewItem!]!
-}
+  enum PricingType {
+    CHAT
+    CALL
+    VIDEO
+    AUDIO
+  }
 
-input ReviewFilterInput {
-  page: Int
-  limit: Int
-  rating: Int
-}
-#-----------Start code for getAstrologerProfile----------------------
-enum DocumentStatus {
-  PENDING
-  VERIFIED
-  REJECTED
-}
+  type AstrologerPricing {
+    id: ID
+    type: PricingType
+    price: Float
+    offerPrice: Float
+    commissionPercent: Float
+    isActive: Boolean
+  }
 
-enum PricingType {
-  CHAT
-  CALL
-  VIDEO
-  AUDIO
-}
+  type AstrologerAddress {
+    street: String
+    city: String
+    state: String
+    country: String
+    pincode: String
+  }
+
+  type AstrologerExperience {
+    platformName: String
+    yearsWorked: Int
+  }
 
-type AstrologerPricing {
-  id: ID
-  type: PricingType
-  price: Float
-  offerPrice: Float
-  commissionPercent: Float
-  isActive: Boolean
-}
+  type AstrologerReview {
+    id: ID
+    rating: Int
+    comment: String
+    reply: String
+    userName: String
+    createdAt: String
+  }
 
-type AstrologerAddress {
-  street: String
-  city: String
-  state: String
-  country: String
-  pincode: String
-}
+  type AstrologerProfile {
+    id: ID
 
-type AstrologerExperience {
-  platformName: String
-  yearsWorked: Int
-}
+    profilePic: String
+    name: String
+    displayName: String
 
-type AstrologerReview {
-  id: ID
-  rating: Int
-  comment: String
-  reply: String
-  userName: String
-  createdAt: String
-}
+    email: String
+    contactNo: String
 
-type AstrologerProfile {
-  id: ID
+    gender: Gender
+    about: String
 
-  profilePic: String
-  name: String
-  displayName: String
+    languages: [String]
+    skills: [String]
+    problems: [String]
 
-  email: String
-  contactNo: String
+    experience: Int
+    rating: Float
 
-  gender: Gender
-  about: String
+    tags: String
+    vtags: String
 
-  languages: [String]
-  skills: [String]
-  problems: [String]
+    status: Boolean
 
-  experience: Int
-  rating: Float
+    createdAt: String
 
-  tags: String
-  vtags: String
+    pricing: [AstrologerPricing]
 
-  status: Boolean
+    wallet: AstrologerWalletInfo
 
-  createdAt: String
+    recentReviews: [AstrologerReview]
 
-  pricing: [AstrologerPricing]
+    addresses: [AstrologerAddress]
 
-  wallet: AstrologerWalletInfo
+    experiences: [AstrologerExperience]
 
-  recentReviews: [AstrologerReview]
+    totalReviews: Int
+    totalSessions: Int
 
-  addresses: [AstrologerAddress]
+    kycDetail: KycDetailResponse
+  }
+  type AstrologerWalletInfo {
+    balanceCoins: Float
+    totalEarned: Int
+    totalWithdrawn: Int
+  }
 
-  experiences: [AstrologerExperience]
+  type AstrologerProfileResponse {
+    success: Boolean!
+    message: String!
+    data: AstrologerProfile
+  }
 
-  totalReviews: Int
-  totalSessions: Int
+  type KycDetailResponse {
+    accountHolderName: String
+    accountNumber: String
+    bankName: String
+    ifsc: String
+    branchName: String
+    panNumber: String
 
-  kycDetail: KycDetailResponse
-}
-type AstrologerWalletInfo {
-  balanceCoins: Float
-  totalEarned: Int
-  totalWithdrawn: Int
-}
+    profileImage: String
+    aadhaarImage: String
+    panImage: String
+    passbookImage: String
 
-type AstrologerProfileResponse {
-  success: Boolean!
-  message: String!
-  data: AstrologerProfile
-}
+    status: DocumentStatus
+  }
+  #--------END--code for getAstrologerProfile----------------------
 
-type KycDetailResponse {
-  accountHolderName: String
-  accountNumber: String
-  bankName: String
-  ifsc: String
-  branchName: String
-  panNumber: String
+  #-----------------start code for getUser Details--------
+  type UserWalletInfo {
+    balanceCoins: Float
+    lockedCoins: Float
+  }
 
-  profileImage: String
-  aadhaarImage: String
-  panImage: String
-  passbookImage: String
+  type UserDetails {
+    id: ID!
+    name: String
+    mobile: String
+    countryCode: String
+    gender: Gender
 
-  status: DocumentStatus
-}
-#--------END--code for getAstrologerProfile----------------------
+    birthDate: String
+    birthTime: String
 
-#-----------------start code for getUser Details--------
-type UserWalletInfo {
-  balanceCoins: Float
-  lockedCoins: Float
-}
+    occupation: String
 
-type UserDetails {
-  id: ID!
-  name: String
-  mobile: String
-  countryCode: String
-  gender: Gender
+    isActive: Boolean
 
-  birthDate: String
-  birthTime: String
+    wallet: UserWalletInfo
 
-  occupation: String
+    totalSessions: Int
+    completedSessions: Int
 
-  isActive: Boolean
+    totalReviews: Int
 
-  wallet: UserWalletInfo
+    createdAt: String
+    updatedAt: String
+  }
+  #--END code for getUser Details-------
 
-  totalSessions: Int
-  completedSessions: Int
+  #-----------------start code for getAstrologerSessions----------------------
 
-  totalReviews: Int
+  input AstrologerSessionFilterInput {
+    page: Int
+    limit: Int
 
-  createdAt: String
-  updatedAt: String
-}
-#--END code for getUser Details-------
+    userName: String
 
-#-----------------start code for getAstrologerSessions----------------------
+    startDate: String
+    endDate: String
 
-input AstrologerSessionFilterInput {
-  page: Int
-  limit: Int
+    sessionType: String
+  }
 
-  userName: String
+  type AstrologerSessionItem {
+    sessionId: String
 
-  startDate: String
-  endDate: String
+    sessionType: String
+    status: String
 
-  sessionType: String
-}
+    userId: String
+    userName: String
+    userMobile: String
+    userCountryCode: String
 
-type AstrologerSessionItem {
-  sessionId: String
+    birthPlace: String
+    birthDate: String
+    birthTime: String
+    occupation: String
+    gender: String
 
-  sessionType: String
-  status: String
+    rating: Int
+    reviewComment: String
 
-  userId: String
-  userName: String
-  userMobile: String
-  userCountryCode: String
+    startedAt: String
+    endedAt: String
+    createdAt: String
 
-  birthPlace: String
-  birthDate: String
-  birthTime: String
-  occupation: String
-  gender: String
+    durationSec: Int
+    durationMinutes: Int
 
-  rating: Int
-  reviewComment: String
+    ratePerMin: Int
 
-  startedAt: String
-  endedAt: String
-  createdAt: String
+    coinsEarned: Int
+    commission: Int
+  }
 
-  durationSec: Int
-  durationMinutes: Int
+  type AstrologerSessionResponse {
+    success: Boolean!
 
-  ratePerMin: Int
+    totalCount: Int!
 
-  coinsEarned: Int
-  commission: Int
-}
+    currentPage: Int!
 
-type AstrologerSessionResponse {
-  success: Boolean!
+    totalPages: Int!
 
-  totalCount: Int!
+    data: [AstrologerSessionItem!]!
+  }
 
-  currentPage: Int!
+  #--END code for getAstrologerSessions----------------------
 
-  totalPages: Int!
+  #-----------START code for get Offer--
+  type Offer {
+    id: ID!
+    offerName: String!
+    price: Float!
+    description: String
+    isActive: Boolean!
+    createdAt: String!
+    updatedAt: String!
+  }
 
-  data: [AstrologerSessionItem!]!
-}
-
-
-
-
-#--END code for getAstrologerSessions----------------------
-
-
-#-----------START code for get Offer--
-type Offer {
-  id: ID!
-  offerName: String!
-  price: Float!
-  description: String
-  isActive: Boolean!
-  createdAt: String!
-  updatedAt: String!
-}
-
-type OfferResponse {
-  success: Boolean!
-  message: String!
-  data: [Offer!]!
-}
-#--------END code for get Offer-------
+  type OfferResponse {
+    success: Boolean!
+    message: String!
+    data: [Offer!]!
+  }
+  #--------END code for get Offer-------
   type Query {
     meAstrologer: Astrologer
     getAstrologerEarnings: AstrologerEarningResponse!
     getAstrologerChatHistory(
-    filter: AstrologerChatHistoryFilterInput
-  ): AstrologerChatHistoryResponse!
+      filter: AstrologerChatHistoryFilterInput
+    ): AstrologerChatHistoryResponse!
 
-  getSessionMessages(
-  sessionId: String!
-): GetSessionMessagesResponse!
+    getSessionMessages(sessionId: String!): GetSessionMessagesResponse!
 
-getAstrologerCallHistory(
-  filter: AstrologerCallHistoryFilterInput
-): AstrologerCallHistoryResponse!
+    getAstrologerCallHistory(
+      filter: AstrologerCallHistoryFilterInput
+    ): AstrologerCallHistoryResponse!
 
-getAstrologerWalletTransactions(
-  page: Int
-  limit: Int
-): WalletTransactionResponse!
+    getAstrologerWalletTransactions(
+      page: Int
+      limit: Int
+    ): WalletTransactionResponse!
 
-getAstrologerReviews(
-  filter: ReviewFilterInput
-): ReviewResponse!
+    getAstrologerReviews(filter: ReviewFilterInput): ReviewResponse!
 
-getAstrologerProfile: AstrologerProfileResponse!
+    getAstrologerProfile: AstrologerProfileResponse!
 
-getUserDetails(userId: String!): UserDetails!
+    getUserDetails(userId: String!): UserDetails!
 
-getAstrologerSessions(
-  filter: AstrologerSessionFilterInput
-): AstrologerSessionResponse!
+    getAstrologerSessions(
+      filter: AstrologerSessionFilterInput
+    ): AstrologerSessionResponse!
 
-getOffers: OfferResponse!
-
-
+    getOffers: OfferResponse!
   }
-
-
- 
 
   type Mutation {
     registerAstrologer(data: RegisterAstrologerInput!): Astrologer!
@@ -631,14 +613,8 @@ getOffers: OfferResponse!
 
     logoutAstrologer: MessageResponse!
 
-    replyToReview(
-  reviewId: String!
-  reply: String!
-): MessageResponse!
+    replyToReview(reviewId: String!, reply: String!): MessageResponse!
 
-updateOfferStatus(
-  offerId: String!
-  isActive: Boolean!
-): MessageResponse!
+    updateOfferStatus(offerId: String!, isActive: Boolean!): MessageResponse!
   }
 `;
