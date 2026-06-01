@@ -597,6 +597,7 @@ export default gql`
   type SessionRemedy {
     id: ID!
     sessionId: String!
+    sessionType: SessionType
     remedyText: String!
     createdAt: String!
   }
