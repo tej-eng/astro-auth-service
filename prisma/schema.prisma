@@ -689,32 +689,38 @@ model Withdrawal {
 }
 
 model Session {
-  id            String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId        String
-  astrologerId  String
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  type          SessionType
-  status        SessionStatus
+  astrologerId String
+ astrologer Astrologer @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
 
-  ratePerMin    Int
-  durationSec   Int
+  type   SessionType
+  status SessionStatus
 
-  coinsDeducted Int
-  coinsEarned   Int
-  commission    Int
+  ratePerMin  Int
+  durationSec Int @default(0)
 
+  coinsDeducted Int                 @default(0)
+  coinsEarned   Int                 @default(0)
+  commission    Int                 @default(0)
+  review        Review?
   startedAt     DateTime?
   endedAt       DateTime?
-
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  messages      Message[]
+  createdAt     DateTime            @default(now())
+  transactions  WalletTransaction[]
+  fraudLogs FraudLog[] 
 
   remedyId      String?
 
   remedy        Remedy?  @relation(fields: [remedyId], references: [id])
-
-  @@index([remedyId])
+  @@index([userId])
+  @@index([astrologerId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 model Payment {
