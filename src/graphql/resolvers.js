@@ -1308,6 +1308,40 @@ getOffers: async () => {
     );
   }
 },
+getRemedies: async () => {
+  try {
+    const remedies = await prisma.remedy.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return {
+      success: true,
+      message: "Remedies fetched successfully",
+
+      data: remedies.map((remedy) => ({
+        id: remedy.id,
+
+        title: remedy.title,
+
+        description: remedy.description,
+
+        isActive: remedy.isActive,
+
+        createdAt: remedy.createdAt.toISOString(),
+
+        updatedAt: remedy.updatedAt.toISOString(),
+      })),
+    };
+  } catch (error) {
+    console.error("getRemedies error:", error);
+
+    throw new Error(
+      error.message || "Failed to fetch remedies"
+    );
+  }
+},
   },
 
   Mutation: {

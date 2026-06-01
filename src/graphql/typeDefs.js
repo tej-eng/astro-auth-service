@@ -568,6 +568,24 @@ export default gql`
     data: [Offer!]!
   }
   #--------END code for get Offer-------
+  #-----   START CODE FOR REMEDY---
+  type Remedy {
+  id: ID!
+  title: String!
+  description: String!
+  isActive: Boolean!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type RemedyResponse {
+  success: Boolean!
+  message: String!
+  data: [Remedy!]!
+}
+
+  #------END CODE FOR REMEDY----------
+
   type Query {
     meAstrologer: Astrologer
     getAstrologerEarnings: AstrologerEarningResponse!
@@ -597,6 +615,8 @@ export default gql`
     ): AstrologerSessionResponse!
 
     getOffers: OfferResponse!
+
+    getRemedies: RemedyResponse!
   }
 
   type Mutation {
