@@ -1342,6 +1342,31 @@ getRemedies: async () => {
     );
   }
 },
+getSessionRemedies: async (_, { sessionId }) => {
+  try {
+    const remedies = await prisma.sessionRemedy.findMany({
+      where: {
+        sessionId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return {
+      success: true,
+      message: "Session remedies fetched successfully",
+      data: remedies.map((r) => ({
+        id: r.id,
+        sessionId: r.sessionId,
+        remedyText: r.remedyText,
+        createdAt: r.createdAt.toISOString(),
+      })),
+    };
+  } catch (error) {
+    throw new Error(error.message);
+  }
+},
   },
 
   Mutation: {
@@ -1491,30 +1516,6 @@ sendRemedy: async (_, { sessionId, remedyText }, { user }) => {
   }
 },
 
-getSessionRemedies: async (_, { sessionId }) => {
-  try {
-    const remedies = await prisma.sessionRemedy.findMany({
-      where: {
-        sessionId,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
 
-    return {
-      success: true,
-      message: "Session remedies fetched successfully",
-      data: remedies.map((r) => ({
-        id: r.id,
-        sessionId: r.sessionId,
-        remedyText: r.remedyText,
-        createdAt: r.createdAt.toISOString(),
-      })),
-    };
-  } catch (error) {
-    throw new Error(error.message);
-  }
-},
   },
 };

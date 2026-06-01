@@ -569,11 +569,15 @@ export default gql`
   }
   #--------END code for get Offer-------
   #-----   START CODE FOR REMEDY---
-  type SessionRemedy {
-    id: ID!
-    remedyText: String!
-    createdAt: String!
-  }
+  
+  type Remedy {
+  id: ID!
+  title: String!
+  description: String!
+  isActive: Boolean!
+  createdAt: String!
+  updatedAt: String!
+}
 
   type RemedyResponse {
     success: Boolean!

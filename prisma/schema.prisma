@@ -717,7 +717,7 @@ model Session {
 
   fraudLogs     FraudLog[]
 
-  remedies      SessionRemedy[]   // 👈 ADD THIS
+  remedies      SessionRemedy[]   
 
   createdAt     DateTime @default(now())
 
