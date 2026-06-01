@@ -569,17 +569,30 @@ export default gql`
   }
   #--------END code for get Offer-------
   #-----   START CODE FOR REMEDY---
-type SessionRemedy {
-  id: ID!
-  remedyText: String!
-  createdAt: String!
-}
+  type SessionRemedy {
+    id: ID!
+    remedyText: String!
+    createdAt: String!
+  }
 
   type RemedyResponse {
     success: Boolean!
     message: String!
     data: [Remedy!]!
   }
+
+  type SessionRemedy {
+  id: ID!
+  sessionId: String!
+  remedyText: String!
+  createdAt: String!
+}
+
+type SessionRemedyResponse {
+  success: Boolean!
+  message: String!
+  data: [SessionRemedy!]!
+}
 
   #------END CODE FOR REMEDY----------
 
@@ -614,6 +627,8 @@ type SessionRemedy {
     getOffers: OfferResponse!
 
     getRemedies: RemedyResponse!
+
+     getSessionRemedies(sessionId: String!): SessionRemedyResponse!
   }
 
   type Mutation {
@@ -634,6 +649,6 @@ type SessionRemedy {
 
     updateOfferStatus(offerId: String!, isActive: Boolean!): MessageResponse!
 
-    sendRemedy(sessionId: String!, remedyId: String!): MessageResponse!
+    sendRemedy(sessionId: String!, remedyText: String!): MessageResponse!
   }
 `;
