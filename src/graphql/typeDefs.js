@@ -553,6 +553,10 @@ type AstrologerSessionResponse {
 
   data: [AstrologerSessionItem!]!
 }
+
+
+
+
 #--END code for getAstrologerSessions----------------------
 
 
@@ -630,6 +634,11 @@ getOffers: OfferResponse!
     replyToReview(
   reviewId: String!
   reply: String!
+): MessageResponse!
+
+updateOfferStatus(
+  offerId: String!
+  isActive: Boolean!
 ): MessageResponse!
   }
 `;
