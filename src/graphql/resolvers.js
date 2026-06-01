@@ -1454,11 +1454,7 @@ getRemedies: async () => {
         throw new Error(error.message || "Failed to update offer status");
       }
     },
-    sendRemedy: async (
-  _,
-  { sessionId, remedyId },
-  { user }
-) => {
+sendRemedy: async (_, { sessionId, remedyText }, { user }) => {
   try {
     if (!user) {
       throw new Error("Unauthorized");
@@ -1478,22 +1474,10 @@ getRemedies: async () => {
       throw new Error("Access denied");
     }
 
-    const remedy = await prisma.remedy.findUnique({
-      where: {
-        id: remedyId,
-      },
-    });
-
-    if (!remedy) {
-      throw new Error("Remedy not found");
-    }
-
-    await prisma.session.update({
-      where: {
-        id: sessionId,
-      },
+    await prisma.sessionRemedy.create({
       data: {
-        remedyId,
+        sessionId,
+        remedyText,
       },
     });
 
@@ -1503,10 +1487,7 @@ getRemedies: async () => {
     };
   } catch (error) {
     console.error("sendRemedy error:", error);
-
-    throw new Error(
-      error.message || "Failed to send remedy"
-    );
+    throw new Error(error.message);
   }
 },
   },
