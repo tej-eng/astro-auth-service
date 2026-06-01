@@ -1305,6 +1305,42 @@ export default {
     );
   }
 },
+
+getOffers: async () => {
+  try {
+    const offers = await prisma.offer.findMany({
+      where: {
+        isActive: true,
+      },
+
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return {
+      success: true,
+      message: "Offers fetched successfully",
+
+      data: offers.map((offer) => ({
+        id: offer.id,
+        offerName: offer.offerName,
+        price: offer.price,
+        description: offer.description || "",
+        isActive: offer.isActive,
+
+        createdAt: offer.createdAt.toISOString(),
+        updatedAt: offer.updatedAt.toISOString(),
+      })),
+    };
+  } catch (error) {
+    console.error("getOffers error:", error);
+
+    throw new Error(
+      error.message || "Failed to fetch offers"
+    );
+  }
+},
   },
 
   Mutation: {

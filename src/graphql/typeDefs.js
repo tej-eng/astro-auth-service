@@ -554,6 +554,25 @@ type AstrologerSessionResponse {
   data: [AstrologerSessionItem!]!
 }
 #--END code for getAstrologerSessions----------------------
+
+
+#-----------START code for get Offer--
+type Offer {
+  id: ID!
+  offerName: String!
+  price: Float!
+  description: String
+  isActive: Boolean!
+  createdAt: String!
+  updatedAt: String!
+}
+
+type OfferResponse {
+  success: Boolean!
+  message: String!
+  data: [Offer!]!
+}
+#--------END code for get Offer-------
   type Query {
     meAstrologer: Astrologer
     getAstrologerEarnings: AstrologerEarningResponse!
@@ -585,6 +604,8 @@ getUserDetails(userId: String!): UserDetails!
 getAstrologerSessions(
   filter: AstrologerSessionFilterInput
 ): AstrologerSessionResponse!
+
+getOffers: OfferResponse!
 
 
   }
