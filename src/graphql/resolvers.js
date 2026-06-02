@@ -1494,8 +1494,9 @@ getSessionRemedies: async (_, { filter = {} }) => {
       }
     },
 
-    updateOfferStatus: async (_, { offerId, isActive }, context) => {
+  updateOfferStatus: async (_, { offerId, isActive }, context) => {
   try {
+    console.log("-----------------get context------------",context.astrologer);
     const astrologerId = context.astrologer.id;
 
     const offer = await prisma.offer.findUnique({
