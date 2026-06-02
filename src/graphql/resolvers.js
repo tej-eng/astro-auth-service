@@ -1493,8 +1493,7 @@ getSessionRemedies: async (_, { filter = {} }) => {
         throw new Error(error.message || "Failed to reply to review");
       }
     },
-
- updateOfferStatus: async (_, { offerId, isActive }, { user }) => {
+updateOfferStatus: async (_, { offerId, isActive }, { user }) => {
   try {
     // Authentication check
     if (!user) {
@@ -1502,6 +1501,9 @@ getSessionRemedies: async (_, { filter = {} }) => {
     }
 
     const astrologerId = user.id;
+
+    console.log("ASTROLOGER ID:", astrologerId);
+    console.log("REQUEST DATA:", { offerId, isActive });
 
     // Check if offer exists
     const offer = await prisma.offer.findUnique({
@@ -1514,17 +1516,18 @@ getSessionRemedies: async (_, { filter = {} }) => {
       throw new Error("Offer not found");
     }
 
-    // Check if admin has enabled this offer
+    // Check if offer is enabled by admin
     if (!offer.isActive) {
       throw new Error(
         "This offer has been disabled by admin"
       );
     }
-    console.log("--------------111111---", { offerId, isActive });
-    // Allow only one active offer per astrologer
+
+    let updateResult = null;
+
+    // Only one active offer per astrologer
     if (isActive) {
-      console.log("--------------22222222---");
-     const res= await prisma.astrologerOffer.updateMany({
+      updateResult = await prisma.astrologerOffer.updateMany({
         where: {
           astrologerId,
           isActive: true,
@@ -1533,10 +1536,15 @@ getSessionRemedies: async (_, { filter = {} }) => {
           isActive: false,
         },
       });
+
+      console.log(
+        "Previous active offers deactivated:",
+        updateResult
+      );
     }
-   console.log("---------aaa-----22222222---", { res });
-    // Create or update astrologer's offer selection
-   const astrologerOffer = await prisma.astrologerOffer.upsert({
+
+    // Create or update astrologer's offer
+    const astrologerOffer = await prisma.astrologerOffer.upsert({
       where: {
         astrologerId_offerId: {
           astrologerId,
@@ -1552,7 +1560,11 @@ getSessionRemedies: async (_, { filter = {} }) => {
         isActive,
       },
     });
-    console.log("--------------3333333---", { astrologerOffer });
+
+    console.log(
+      "Updated Astrologer Offer:",
+      astrologerOffer
+    );
 
     return {
       success: true,
