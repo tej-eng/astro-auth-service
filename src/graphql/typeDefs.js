@@ -553,14 +553,15 @@ export default gql`
 
   #-----------START code for get Offer--
   type Offer {
-    id: ID!
-    offerName: String!
-    price: Float!
-    description: String
-    isActive: Boolean!
-    createdAt: String!
-    updatedAt: String!
-  }
+  id: ID!
+  offerName: String!
+  price: Float!
+  description: String
+  isActive: Boolean!     # admin status
+  selected: Boolean!     # astrologer status
+  createdAt: String!
+  updatedAt: String!
+}
 
   type OfferResponse {
     success: Boolean!

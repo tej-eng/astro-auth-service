@@ -1277,25 +1277,45 @@ export default {
         throw new Error(error.message || "Failed to fetch astrologer sessions");
       }
     },
-getOffers: async () => {
+getOffers: async (_, __, { user }) => {
   try {
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    const astrologerId = user.id;
+
+    // Get all admin-created offers
     const offers = await prisma.offer.findMany({
       orderBy: {
         createdAt: "desc",
       },
     });
 
+    // Get astrologer's selected offers
+    const astrologerOffers =
+      await prisma.astrologerOffer.findMany({
+        where: {
+          astrologerId,
+        },
+      });
+
+    const selectedMap = {};
+
+    astrologerOffers.forEach((item) => {
+      selectedMap[item.offerId] = item.isActive;
+    });
+
     return {
       success: true,
       message: "Offers fetched successfully",
-
       data: offers.map((offer) => ({
         id: offer.id,
         offerName: offer.offerName,
         price: offer.price,
-        description: offer.description || "",
-        isActive: offer.isActive,
-
+        description: offer.description,
+        isActive: offer.isActive, // admin status
+        selected: selectedMap[offer.id] || false, // astrologer status
         createdAt: offer.createdAt.toISOString(),
         updatedAt: offer.updatedAt.toISOString(),
       })),
