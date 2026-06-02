@@ -1494,40 +1494,72 @@ getSessionRemedies: async (_, { filter = {} }) => {
       }
     },
 
-    updateOfferStatus: async (_, { offerId, isActive }) => {
-      try {
-        const offer = await prisma.offer.findUnique({
-          where: {
-            id: offerId,
-          },
-        });
+    updateOfferStatus: async (_, { offerId, isActive }, context) => {
+  try {
+    const astrologerId = context.astrologer.id;
 
-        if (!offer) {
-          throw new Error("Offer not found");
-        }
+    const offer = await prisma.offer.findUnique({
+      where: {
+        id: offerId,
+      },
+    });
 
-        await prisma.offer.update({
-          where: {
-            id: offerId,
-          },
+    if (!offer) {
+      throw new Error("Offer not found");
+    }
 
-          data: {
-            isActive,
-          },
-        });
+    if (!offer.isActive) {
+      throw new Error(
+        "This offer has been disabled by admin"
+      );
+    }
 
-        return {
-          success: true,
-          message: isActive
-            ? "Offer activated successfully"
-            : "Offer deactivated successfully",
-        };
-      } catch (error) {
-        console.error("updateOfferStatus error:", error);
+    // Only one active offer per astrologer
+    if (isActive) {
+      await prisma.astrologerOffer.updateMany({
+        where: {
+          astrologerId,
+          isActive: true,
+        },
+        data: {
+          isActive: false,
+        },
+      });
+    }
 
-        throw new Error(error.message || "Failed to update offer status");
-      }
-    },
+    await prisma.astrologerOffer.upsert({
+      where: {
+        astrologerId_offerId: {
+          astrologerId,
+          offerId,
+        },
+      },
+
+      update: {
+        isActive,
+      },
+
+      create: {
+        astrologerId,
+        offerId,
+        isActive,
+      },
+    });
+
+    return {
+      success: true,
+      message: isActive
+        ? "Offer activated successfully"
+        : "Offer deactivated successfully",
+    };
+  } catch (error) {
+    console.error("updateOfferStatus error:", error);
+
+    throw new Error(
+      error.message || "Failed to update offer status"
+    );
+  }
+},
 sendRemedy: async (_, { sessionId, remedyText }, { user }) => {
   try {
     if (!user) {
