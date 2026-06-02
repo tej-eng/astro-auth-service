@@ -1520,10 +1520,11 @@ getSessionRemedies: async (_, { filter = {} }) => {
         "This offer has been disabled by admin"
       );
     }
-
+    console.log("--------------111111---", { offerId, isActive });
     // Allow only one active offer per astrologer
     if (isActive) {
-      await prisma.astrologerOffer.updateMany({
+      console.log("--------------22222222---");
+     const res= await prisma.astrologerOffer.updateMany({
         where: {
           astrologerId,
           isActive: true,
@@ -1533,9 +1534,9 @@ getSessionRemedies: async (_, { filter = {} }) => {
         },
       });
     }
-
+   console.log("---------aaa-----22222222---", { res });
     // Create or update astrologer's offer selection
-    await prisma.astrologerOffer.upsert({
+   const astrologerOffer = await prisma.astrologerOffer.upsert({
       where: {
         astrologerId_offerId: {
           astrologerId,
@@ -1551,6 +1552,7 @@ getSessionRemedies: async (_, { filter = {} }) => {
         isActive,
       },
     });
+    console.log("--------------3333333---", { astrologerOffer });
 
     return {
       success: true,
