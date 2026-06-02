@@ -1517,11 +1517,11 @@ updateOfferStatus: async (_, { offerId, isActive }, { user }) => {
     }
 
     // Check if offer is enabled by admin
-    if (!offer.isActive) {
-      throw new Error(
-        "This offer has been disabled by admin"
-      );
-    }
+    // if (!offer.isActive) {
+    //   throw new Error(
+    //     "This offer has been disabled by admin"
+    //   );
+    // }
 
     let updateResult = null;
 
