@@ -1494,11 +1494,16 @@ getSessionRemedies: async (_, { filter = {} }) => {
       }
     },
 
-  updateOfferStatus: async (_, { offerId, isActive }, context) => {
+ updateOfferStatus: async (_, { offerId, isActive }, { user }) => {
   try {
-    console.log("-----------------get context------------",context.astrologer);
-    const astrologerId = context.astrologer.id;
+    // Authentication check
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
 
+    const astrologerId = user.id;
+
+    // Check if offer exists
     const offer = await prisma.offer.findUnique({
       where: {
         id: offerId,
@@ -1509,13 +1514,14 @@ getSessionRemedies: async (_, { filter = {} }) => {
       throw new Error("Offer not found");
     }
 
+    // Check if admin has enabled this offer
     if (!offer.isActive) {
       throw new Error(
         "This offer has been disabled by admin"
       );
     }
 
-    // Only one active offer per astrologer
+    // Allow only one active offer per astrologer
     if (isActive) {
       await prisma.astrologerOffer.updateMany({
         where: {
@@ -1528,6 +1534,7 @@ getSessionRemedies: async (_, { filter = {} }) => {
       });
     }
 
+    // Create or update astrologer's offer selection
     await prisma.astrologerOffer.upsert({
       where: {
         astrologerId_offerId: {
@@ -1535,11 +1542,9 @@ getSessionRemedies: async (_, { filter = {} }) => {
           offerId,
         },
       },
-
       update: {
         isActive,
       },
-
       create: {
         astrologerId,
         offerId,
