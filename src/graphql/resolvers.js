@@ -1,5 +1,5 @@
 import prisma from "../config/prisma.js";
-
+import { generateKundali } from "../services/astrologyServices.js";
 import {
   logoutService,
   refreshTokenService,
@@ -1436,6 +1436,66 @@ getSessionRemedies: async (_, { filter = {} }) => {
     throw new Error(error.message);
   }
 },
+getKundali: async (_, { requestSessionId }) => {
+      const intake = await prisma.intake.findFirst({
+        where: {
+          chatId: requestSessionId,
+        },
+      });
+
+      if (!intake) {
+        throw new Error("Intake not found");
+      }
+
+      if (intake.latitude == null || intake.longitude == null) {
+        throw new Error("Birth location coordinates not available");
+      }
+
+      const dob = new Date(intake.birthDate);
+
+      const [hour = "0", minute = "0"] = intake.birthTime.split(":");
+
+      const payload = {
+        day: dob.getDate(),
+        month: dob.getMonth() + 1,
+        year: dob.getFullYear(),
+
+        hour: Number(hour),
+        min: Number(minute),
+
+        lat: Number(intake.latitude),
+        lon: Number(intake.longitude),
+
+        tzone: 5.5,
+      };
+
+      const kundaliData = await generateKundali(payload);
+
+      return {
+        status: true,
+        userId: intake.userId,
+        requestType: intake.requestType,
+        requestSessionId,
+        userName: intake.name,
+
+        data: {
+          user_data: {
+            name: intake.name,
+            gender: intake.gender,
+            birthPlace: intake.birthPlace,
+          },
+
+          postData: {
+            latitude: intake.latitude,
+            longitude: intake.longitude,
+          },
+
+          ...kundaliData,
+        },
+      };
+    },
+  
+
   },
 
   Mutation: {

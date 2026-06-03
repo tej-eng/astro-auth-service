@@ -215,6 +215,10 @@ model Intake {
 
   user       User       @relation(fields: [userId], references: [id])
   astrologer Astrologer @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
+  appliedOffer String?
+  pricePerMin Float?
+  latitude     Float?
+  longitude    Float?
 
   @@index([userId])
   @@index([astrologerId])
@@ -918,7 +922,7 @@ model PricingConfig {
   firstChatPrice      Int     @default(0)
   firstCallPrice      Int     @default(0)
 
-  isSecondOfferEnabled Boolean @default(false)
+  isSecondOfferEnabled Boolean @default(true)
   secondChatPrice      Int     @default(0)
   secondCallPrice      Int     @default(0)
 }
@@ -928,6 +932,9 @@ model UserOfferUsage {
   userId String @unique
 
   visitCount Int @default(0)
+
+  firstOfferUsedAt DateTime?
+  secondOfferUsedAt DateTime?
 
   usedFirst  Boolean @default(false)
   usedSecond Boolean @default(false)

@@ -621,6 +621,17 @@ export default gql`
     CALL
   }
   #------END CODE FOR REMEDY----------
+  #---------------start code for kundali generation----------------------
+ type KundaliResponse {
+  status: Boolean
+  userId: String
+  requestType: String
+  requestSessionId: String
+  userName: String
+  data: String          # or remove the field temporarily
+}
+
+  #---------------END code for kundali generation----------------------
 
   type Query {
     meAstrologer: Astrologer
@@ -655,6 +666,8 @@ export default gql`
     getRemedies: RemedyResponse!
 
     getSessionRemedies(filter: SessionRemedyFilterInput): SessionRemedyResponse!
+
+    getKundali(requestSessionId: String!): KundaliResponse
   }
 
   type Mutation {
