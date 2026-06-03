@@ -1277,166 +1277,155 @@ export default {
         throw new Error(error.message || "Failed to fetch astrologer sessions");
       }
     },
-getOffers: async (_, __, { user }) => {
-  try {
-    if (!user) {
-      throw new Error("Unauthorized");
-    }
+    getOffers: async (_, __, { user }) => {
+      try {
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
 
-    const astrologerId = user.id;
+        const astrologerId = user.id;
 
-    // Get all admin-created offers
-    const offers = await prisma.offer.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    // Get astrologer's selected offers
-    const astrologerOffers =
-      await prisma.astrologerOffer.findMany({
-        where: {
-          astrologerId,
-        },
-      });
-
-    const selectedMap = {};
-
-    astrologerOffers.forEach((item) => {
-      selectedMap[item.offerId] = item.isActive;
-    });
-
-    return {
-      success: true,
-      message: "Offers fetched successfully",
-      data: offers.map((offer) => ({
-        id: offer.id,
-        offerName: offer.offerName,
-        price: offer.price,
-        description: offer.description,
-        isActive: offer.isActive, // admin status
-        selected: selectedMap[offer.id] || false, // astrologer status
-        createdAt: offer.createdAt.toISOString(),
-        updatedAt: offer.updatedAt.toISOString(),
-      })),
-    };
-  } catch (error) {
-    console.error("getOffers error:", error);
-
-    throw new Error(
-      error.message || "Failed to fetch offers"
-    );
-  }
-},
-getRemedies: async () => {
-  try {
-    const remedies = await prisma.remedy.findMany({
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    return {
-      success: true,
-      message: "Remedies fetched successfully",
-
-      data: remedies.map((remedy) => ({
-        id: remedy.id,
-
-        title: remedy.title,
-
-        description: remedy.description,
-
-        isActive: remedy.isActive,
-
-        createdAt: remedy.createdAt.toISOString(),
-
-        updatedAt: remedy.updatedAt.toISOString(),
-      })),
-    };
-  } catch (error) {
-    console.error("getRemedies error:", error);
-
-    throw new Error(
-      error.message || "Failed to fetch remedies"
-    );
-  }
-},
-getSessionRemedies: async (_, { filter = {} }) => {
-  try {
-    const {
-      page = 1,
-      limit = 10,
-      sessionId,
-      startDate,
-      endDate,
-    } = filter;
-
-    const skip = (page - 1) * limit;
-
-    const where = {};
-
-    if (sessionId) {
-      where.sessionId = sessionId;
-    }
-
-    if (startDate || endDate) {
-      where.createdAt = {};
-
-      if (startDate) {
-        where.createdAt.gte = new Date(startDate);
-      }
-
-      if (endDate) {
-        where.createdAt.lte = new Date(endDate);
-      }
-    }
-
-    const totalCount = await prisma.sessionRemedy.count({
-      where,
-    });
-
-    const remedies = await prisma.sessionRemedy.findMany({
-      where,
-      skip,
-      take: limit,
-      orderBy: {
-        createdAt: "desc",
-      },
-      include: {
-        session: {
-          select: {
-            id: true,
-            type: true,
+        // Get all admin-created offers
+        const offers = await prisma.offer.findMany({
+          orderBy: {
+            createdAt: "desc",
           },
-        },
-      },
-    });
+        });
 
-    return {
-      success: true,
-      message: "Session remedies fetched successfully",
+        // Get astrologer's selected offers
+        const astrologerOffers = await prisma.astrologerOffer.findMany({
+          where: {
+            astrologerId,
+          },
+        });
 
-      totalCount,
+        const selectedMap = {};
 
-      currentPage: page,
+        astrologerOffers.forEach((item) => {
+          selectedMap[item.offerId] = item.isActive;
+        });
 
-      totalPages: Math.ceil(totalCount / limit),
+        return {
+          success: true,
+          message: "Offers fetched successfully",
+          data: offers.map((offer) => ({
+            id: offer.id,
+            offerName: offer.offerName,
+            price: offer.price,
+            description: offer.description,
+            isActive: offer.isActive, // admin status
+            selected: selectedMap[offer.id] || false, // astrologer status
+            createdAt: offer.createdAt.toISOString(),
+            updatedAt: offer.updatedAt.toISOString(),
+          })),
+        };
+      } catch (error) {
+        console.error("getOffers error:", error);
 
-      data: remedies.map((r) => ({
-        id: r.id,
-        sessionId: r.sessionId,
-        sessionType: r.session?.type || null,
-        remedyText: r.remedyText,
-        createdAt: r.createdAt.toISOString(),
-      })),
-    };
-  } catch (error) {
-    console.error("getSessionRemedies error:", error);
-    throw new Error(error.message);
-  }
-},
-getKundali: async (_, { requestSessionId }) => {
+        throw new Error(error.message || "Failed to fetch offers");
+      }
+    },
+    getRemedies: async () => {
+      try {
+        const remedies = await prisma.remedy.findMany({
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
+
+        return {
+          success: true,
+          message: "Remedies fetched successfully",
+
+          data: remedies.map((remedy) => ({
+            id: remedy.id,
+
+            title: remedy.title,
+
+            description: remedy.description,
+
+            isActive: remedy.isActive,
+
+            createdAt: remedy.createdAt.toISOString(),
+
+            updatedAt: remedy.updatedAt.toISOString(),
+          })),
+        };
+      } catch (error) {
+        console.error("getRemedies error:", error);
+
+        throw new Error(error.message || "Failed to fetch remedies");
+      }
+    },
+    getSessionRemedies: async (_, { filter = {} }) => {
+      try {
+        const { page = 1, limit = 10, sessionId, startDate, endDate } = filter;
+
+        const skip = (page - 1) * limit;
+
+        const where = {};
+
+        if (sessionId) {
+          where.sessionId = sessionId;
+        }
+
+        if (startDate || endDate) {
+          where.createdAt = {};
+
+          if (startDate) {
+            where.createdAt.gte = new Date(startDate);
+          }
+
+          if (endDate) {
+            where.createdAt.lte = new Date(endDate);
+          }
+        }
+
+        const totalCount = await prisma.sessionRemedy.count({
+          where,
+        });
+
+        const remedies = await prisma.sessionRemedy.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: {
+            createdAt: "desc",
+          },
+          include: {
+            session: {
+              select: {
+                id: true,
+                type: true,
+              },
+            },
+          },
+        });
+
+        return {
+          success: true,
+          message: "Session remedies fetched successfully",
+
+          totalCount,
+
+          currentPage: page,
+
+          totalPages: Math.ceil(totalCount / limit),
+
+          data: remedies.map((r) => ({
+            id: r.id,
+            sessionId: r.sessionId,
+            sessionType: r.session?.type || null,
+            remedyText: r.remedyText,
+            createdAt: r.createdAt.toISOString(),
+          })),
+        };
+      } catch (error) {
+        console.error("getSessionRemedies error:", error);
+        throw new Error(error.message);
+      }
+    },
+    getKundali: async (_, { requestSessionId }) => {
       const intake = await prisma.intake.findFirst({
         where: {
           chatId: requestSessionId,
@@ -1478,7 +1467,7 @@ getKundali: async (_, { requestSessionId }) => {
         requestSessionId,
         userName: intake.name,
 
-        data: {
+        data: JSON.stringify({
           user_data: {
             name: intake.name,
             gender: intake.gender,
@@ -1491,11 +1480,9 @@ getKundali: async (_, { requestSessionId }) => {
           },
 
           ...kundaliData,
-        },
+        }),
       };
     },
-  
-
   },
 
   Mutation: {
@@ -1573,130 +1560,120 @@ getKundali: async (_, { requestSessionId }) => {
         throw new Error(error.message || "Failed to reply to review");
       }
     },
-updateOfferStatus: async (_, { offerId, isActive }, { user }) => {
-  try {
-    // Authentication check
-    if (!user) {
-      throw new Error("Unauthorized");
-    }
+    updateOfferStatus: async (_, { offerId, isActive }, { user }) => {
+      try {
+        // Authentication check
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
 
-    const astrologerId = user.id;
+        const astrologerId = user.id;
 
-    console.log("ASTROLOGER ID:", astrologerId);
-    console.log("REQUEST DATA:", { offerId, isActive });
+        console.log("ASTROLOGER ID:", astrologerId);
+        console.log("REQUEST DATA:", { offerId, isActive });
 
-    // Check if offer exists
-    const offer = await prisma.offer.findUnique({
-      where: {
-        id: offerId,
-      },
-    });
+        // Check if offer exists
+        const offer = await prisma.offer.findUnique({
+          where: {
+            id: offerId,
+          },
+        });
 
-    if (!offer) {
-      throw new Error("Offer not found");
-    }
+        if (!offer) {
+          throw new Error("Offer not found");
+        }
 
-    // Check if offer is enabled by admin
-    // if (!offer.isActive) {
-    //   throw new Error(
-    //     "This offer has been disabled by admin"
-    //   );
-    // }
+        // Check if offer is enabled by admin
+        // if (!offer.isActive) {
+        //   throw new Error(
+        //     "This offer has been disabled by admin"
+        //   );
+        // }
 
-    let updateResult = null;
+        let updateResult = null;
 
-    // Only one active offer per astrologer
-    if (isActive) {
-      updateResult = await prisma.astrologerOffer.updateMany({
-        where: {
-          astrologerId,
-          isActive: true,
-        },
-        data: {
-          isActive: false,
-        },
-      });
+        // Only one active offer per astrologer
+        if (isActive) {
+          updateResult = await prisma.astrologerOffer.updateMany({
+            where: {
+              astrologerId,
+              isActive: true,
+            },
+            data: {
+              isActive: false,
+            },
+          });
 
-      console.log(
-        "Previous active offers deactivated:",
-        updateResult
-      );
-    }
+          console.log("Previous active offers deactivated:", updateResult);
+        }
 
-    // Create or update astrologer's offer
-    const astrologerOffer = await prisma.astrologerOffer.upsert({
-      where: {
-        astrologerId_offerId: {
-          astrologerId,
-          offerId,
-        },
-      },
-      update: {
-        isActive,
-      },
-      create: {
-        astrologerId,
-        offerId,
-        isActive,
-      },
-    });
+        // Create or update astrologer's offer
+        const astrologerOffer = await prisma.astrologerOffer.upsert({
+          where: {
+            astrologerId_offerId: {
+              astrologerId,
+              offerId,
+            },
+          },
+          update: {
+            isActive,
+          },
+          create: {
+            astrologerId,
+            offerId,
+            isActive,
+          },
+        });
 
-    console.log(
-      "Updated Astrologer Offer:",
-      astrologerOffer
-    );
+        console.log("Updated Astrologer Offer:", astrologerOffer);
 
-    return {
-      success: true,
-      message: isActive
-        ? "Offer activated successfully"
-        : "Offer deactivated successfully",
-    };
-  } catch (error) {
-    console.error("updateOfferStatus error:", error);
+        return {
+          success: true,
+          message: isActive
+            ? "Offer activated successfully"
+            : "Offer deactivated successfully",
+        };
+      } catch (error) {
+        console.error("updateOfferStatus error:", error);
 
-    throw new Error(
-      error.message || "Failed to update offer status"
-    );
-  }
-},
-sendRemedy: async (_, { sessionId, remedyText }, { user }) => {
-  try {
-    if (!user) {
-      throw new Error("Unauthorized");
-    }
+        throw new Error(error.message || "Failed to update offer status");
+      }
+    },
+    sendRemedy: async (_, { sessionId, remedyText }, { user }) => {
+      try {
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
 
-    const session = await prisma.session.findUnique({
-      where: {
-        id: sessionId,
-      },
-    });
+        const session = await prisma.session.findUnique({
+          where: {
+            id: sessionId,
+          },
+        });
 
-    if (!session) {
-      throw new Error("Session not found");
-    }
+        if (!session) {
+          throw new Error("Session not found");
+        }
 
-    if (session.astrologerId !== user.id) {
-      throw new Error("Access denied");
-    }
+        if (session.astrologerId !== user.id) {
+          throw new Error("Access denied");
+        }
 
-    await prisma.sessionRemedy.create({
-      data: {
-        sessionId,
-        remedyText,
-      },
-    });
+        await prisma.sessionRemedy.create({
+          data: {
+            sessionId,
+            remedyText,
+          },
+        });
 
-    return {
-      success: true,
-      message: "Remedy sent successfully",
-    };
-  } catch (error) {
-    console.error("sendRemedy error:", error);
-    throw new Error(error.message);
-  }
-},
-
-
+        return {
+          success: true,
+          message: "Remedy sent successfully",
+        };
+      } catch (error) {
+        console.error("sendRemedy error:", error);
+        throw new Error(error.message);
+      }
+    },
   },
 };
