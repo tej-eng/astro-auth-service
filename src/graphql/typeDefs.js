@@ -506,7 +506,7 @@ export default gql`
 
   type AstrologerSessionItem {
     sessionId: String
-
+    ChatId: String
     sessionType: String
     status: String
 
