@@ -1190,6 +1190,7 @@ export default {
             select: {
               userId: true,
               astrologerId: true,
+              chatId: true,
 
               birthPlace: true,
               birthDate: true,
@@ -1229,6 +1230,7 @@ export default {
             userMobile: session.user?.mobile || "",
 
             userCountryCode: session.user?.countryCode || "",
+            chatId: intake?.chatId || null,
 
             birthPlace: intake?.birthPlace || "",
 
