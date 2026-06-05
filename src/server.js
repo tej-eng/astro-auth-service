@@ -23,7 +23,7 @@ app.use(cors({
     origin: ["http://localhost:7001", "https://astro-panel-satge-git-main-tej-engs-projects.vercel.app","https://astro-panel-satge.vercel.app"],
   credentials: true,
 }));
-
+  console.log("request origin:", app.get("origin"));
   app.use(express.json());
   app.use(cookieParser());
   app.use(rateLimiter);
