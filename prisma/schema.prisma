@@ -538,6 +538,7 @@ model Gift {
   amount    Float
   image     String?
   status    String   @default("active")
+  giftHistories GiftHistory[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
