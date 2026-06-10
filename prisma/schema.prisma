@@ -1205,26 +1205,28 @@ model SessionRemedy {
   @@index([createdAt])
 }
 
-model AstrologerOffer {
-  id           String @id @default(uuid())
+model GiftHistory {
+  id String @id @default(uuid())
 
+  userId String
   astrologerId String
-  offerId      String
+  giftId String
 
-  isActive     Boolean @default(false)
+  quantity Int @default(1)
 
-  astrologer   Astrologer @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
+  amount Float
 
-  offer        Offer @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  user User @relation("UserGiftHistory", fields: [userId], references: [id], onDelete: Cascade)
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  astrologer Astrologer @relation("AstrologerGiftHistory", fields: [astrologerId], references: [id], onDelete: Cascade)
 
-  @@unique([astrologerId, offerId])
+  gift Gift @relation(fields: [giftId], references: [id], onDelete: Cascade)
 
+  createdAt DateTime @default(now())
+
+  @@index([userId])
   @@index([astrologerId])
-  @@index([offerId])
-  @@index([isActive])
+  @@index([giftId])
 }
 
 model AstrologerFollow {
