@@ -1518,13 +1518,20 @@ export default {
           astrologerId,
         },
         include: {
-          user: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              mobile: true,
+              countryCode: true,
+            },
+          },
         },
-        skip,
-        take: limit,
         orderBy: {
           createdAt: "desc",
         },
+        skip,
+        take: limit,
       }),
 
       prisma.astrologerFollow.count({
@@ -1535,7 +1542,22 @@ export default {
     ]);
 
     return {
-      followers,
+      followers: followers.map((item) => ({
+        id: item.id,
+        userId: item.userId,
+        astrologerId: item.astrologerId,
+        createdAt: item.createdAt.toISOString(),
+
+        user: item.user
+          ? {
+              id: item.user.id,
+              name: item.user.name,
+              mobile: item.user.mobile,
+              countryCode: item.user.countryCode,
+            }
+          : null,
+      })),
+
       total,
       page,
       limit,
@@ -1545,7 +1567,7 @@ export default {
     console.error("getAstrologerFollowers error:", error);
     throw new Error(error.message);
   }
-    },
+},
   },
 
   Mutation: {
