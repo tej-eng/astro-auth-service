@@ -632,6 +632,34 @@ export default gql`
 }
 
   #---------------END code for kundali generation----------------------
+ #-----------------start code for astrologer followers count-----------
+ type FollowCountResponse {
+  totalFollowers: Int!
+}
+
+type FollowerUser {
+  id: ID!
+  name: String
+  mobile: String
+  countryCode: String
+}
+
+type AstrologerFollower {
+  id: ID!
+  userId: String!
+  astrologerId: String!
+  createdAt: String!
+  user: FollowerUser
+}
+
+type AstrologerFollowersResponse {
+  followers: [AstrologerFollower!]!
+  total: Int!
+  page: Int!
+  limit: Int!
+  totalPages: Int!
+}
+ #----END code for astrologer followers count----------------------
 
   type Query {
     meAstrologer: Astrologer
@@ -668,6 +696,16 @@ export default gql`
     getSessionRemedies(filter: SessionRemedyFilterInput): SessionRemedyResponse!
 
     getKundali(requestSessionId: String!): KundaliResponse
+    getAstrologerFollowersCount(
+  astrologerId: ID!
+): FollowCountResponse!
+
+getAstrologerFollowers(
+    astrologerId: String!
+    page: Int
+    limit: Int
+  ): AstrologerFollowersResponse!
+  
   }
 
   type Mutation {
