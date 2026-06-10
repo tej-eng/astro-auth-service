@@ -1489,8 +1489,6 @@ export default {
     },
     getAstrologerFollowersCount: async (_, { astrologerId }, context) => {
       try {
-        const { prisma } = context;
-
         const totalFollowers = await prisma.astrologerFollow.count({
           where: {
             astrologerId,
@@ -1506,8 +1504,7 @@ export default {
     },
     getAstrologerFollowers: async (
   _,
-  { astrologerId, page = 1, limit = 20 },
-  { prisma }
+  { astrologerId, page = 1, limit = 20 }
 ) => {
   try {
     const skip = (page - 1) * limit;
