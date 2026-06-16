@@ -692,7 +692,7 @@ type ServiceBooking {
 
   name: String!
   email: String!
-  phone: String!
+  mobile: String!
 
   dob: String!
   tob: String!

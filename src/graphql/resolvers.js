@@ -1606,7 +1606,7 @@ export default {
             select: {
               id: true,
               name: true,
-              phone: true,
+              mobile: true,
               countryCode: true,
             },
           },
