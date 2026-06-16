@@ -661,9 +661,9 @@ type AstrologerFollowersResponse {
 }
  #----END code for astrologer followers count-----
  #--------START Booked services----------
- type Service {
+type Service {
   id: ID!
-  title: String!
+  name: String!
   price: Float!
 }
 
