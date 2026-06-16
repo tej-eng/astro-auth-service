@@ -716,7 +716,6 @@ type ServiceBooking {
 type User {
   id: ID!
   name: String
-  email: String
   phone: String
 }
  #--------End Booked services------------
