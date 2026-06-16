@@ -1567,60 +1567,67 @@ export default {
     },
 
     getAstrologerAssignedBookedServices: async (
-      _,
-      { page = 1, limit = 10, bookingStatus, paymentStatus },
-      { user },
-    ) => {
-      try {
-        if (!user) {
-          throw new Error("Unauthorized");
-        }
+  _,
+  { page = 1, limit = 10, bookingStatus, paymentStatus },
+  { user }
+) => {
+  try {
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
 
-        const astrologerId = user.id;
-        const skip = (page - 1) * limit;
+    const astrologerId = user.id;
+    const skip = (page - 1) * limit;
 
-        const where = {
-          astrologerId,
-          ...(bookingStatus && { bookingStatus }),
-          ...(paymentStatus && { paymentStatus }),
-        };
+    const where = {
+      astrologerId,
+      ...(bookingStatus && { bookingStatus }),
+      ...(paymentStatus && { paymentStatus }),
+    };
 
-        const [data, total] = await Promise.all([
-          prisma.serviceBooking.findMany({
-            where,
-            skip,
-            take: limit,
-            orderBy: {
-              createdAt: "desc",
+    const [data, total] = await Promise.all([
+      prisma.serviceBooking.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          service: {
+            select: {
+              id: true,
+              name: true,
+              price: true,
             },
-            include: {
-              service: {
-                select: {
-                  id: true,
-                  name: true,
-                  price: true,
-                },
-              },
-            },
-          }),
+          },
+        },
+      }),
 
-          prisma.serviceBooking.count({
-            where,
-          }),
-        ]);
+      prisma.serviceBooking.count({
+        where,
+      }),
+    ]);
 
-        return {
-          success: true,
-          total,
-          data,
-        };
-      } catch (error) {
-        console.error("getAstrologerAssignedBookedServices error:", error);
+    return {
+      success: true,
+      total,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      limit,
+      data,
+    };
+  } catch (error) {
+    console.error(
+      "getAstrologerAssignedBookedServices error:",
+      error
+    );
 
-        throw new Error(
-          error.message || "Failed to fetch assigned service bookings",
-        );
-      }
+    throw new Error(
+      error.message ||
+        "Failed to fetch assigned service bookings"
+    );
+  }
     },
   },
 

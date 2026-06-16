@@ -671,6 +671,9 @@ type Service {
 type ServiceBookingListResponse {
   success: Boolean!
   total: Int!
+  currentPage: Int!
+  totalPages: Int!
+  limit: Int!
   data: [ServiceBooking!]!
 }
 
