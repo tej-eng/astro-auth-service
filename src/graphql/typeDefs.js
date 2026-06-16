@@ -666,12 +666,14 @@ type AstrologerFollowersResponse {
   title: String!
   price: Float!
 }
- type ServiceBookingListResponse {
+
+type ServiceBookingListResponse {
   success: Boolean!
   total: Int!
   data: [ServiceBooking!]!
 }
-  enum PaymentStatus {
+
+enum PaymentStatus {
   PENDING
   SUCCESS
   FAILED
@@ -691,8 +693,6 @@ type ServiceBooking {
   astrologerId: String
 
   name: String!
-  email: String!
-  mobile: String!
 
   dob: String!
   tob: String!
@@ -710,13 +710,6 @@ type ServiceBooking {
   updatedAt: String!
 
   service: Service
-  user: User
-}
-type User {
-  id: ID!
-  name: String
-  mobile: String
-  countryCode: String
 }
  #--------End Booked services------------
 

@@ -1566,7 +1566,7 @@ export default {
       }
     },
 
-    getAstrologerAssignedBookedServices: async (
+  getAstrologerAssignedBookedServices: async (
   _,
   { page = 1, limit = 10, bookingStatus, paymentStatus },
   { user }
@@ -1577,20 +1577,13 @@ export default {
     }
 
     const astrologerId = user.id;
-
     const skip = (page - 1) * limit;
 
     const where = {
       astrologerId,
+      ...(bookingStatus && { bookingStatus }),
+      ...(paymentStatus && { paymentStatus }),
     };
-
-    if (bookingStatus) {
-      where.bookingStatus = bookingStatus;
-    }
-
-    if (paymentStatus) {
-      where.paymentStatus = paymentStatus;
-    }
 
     const [data, total] = await Promise.all([
       prisma.serviceBooking.findMany({
@@ -1601,13 +1594,11 @@ export default {
           createdAt: "desc",
         },
         include: {
-          service: true,
-          user: {
+          service: {
             select: {
               id: true,
-              name: true,
-              mobile: true,
-              countryCode: true,
+              title: true,
+              price: true,
             },
           },
         },
@@ -1635,6 +1626,7 @@ export default {
     );
   }
 },
+
   },
 
   Mutation: {
