@@ -1607,6 +1607,7 @@ export default {
               id: true,
               name: true,
               phone: true,
+              countryCode: true,
             },
           },
         },

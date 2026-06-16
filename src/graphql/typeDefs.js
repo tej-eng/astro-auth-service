@@ -712,11 +712,11 @@ type ServiceBooking {
   service: Service
   user: User
 }
-
 type User {
   id: ID!
   name: String
-  phone: String
+  mobile: String
+  countryCode: String
 }
  #--------End Booked services------------
 
