@@ -659,7 +659,30 @@ type AstrologerFollowersResponse {
   limit: Int!
   totalPages: Int!
 }
- #----END code for astrologer followers count----------------------
+ #----END code for astrologer followers count-----
+ #--------START Booked services----------
+ type ServiceBookingListResponse {
+  success: Boolean!
+  total: Int!
+  data: [ServiceBooking!]!
+}
+  enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+enum BookingStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+type ServiceBooking {
+  paymentStatus: PaymentStatus!
+  bookingStatus: BookingStatus!
+}
+
+ #--------End Booked services------------
 
   type Query {
     meAstrologer: Astrologer
@@ -705,6 +728,13 @@ getAstrologerFollowers(
     page: Int
     limit: Int
   ): AstrologerFollowersResponse!
+
+   getAstrologerAssignedBookedServices(
+    page: Int
+    limit: Int
+    bookingStatus: BookingStatus
+    paymentStatus: PaymentStatus
+  ): ServiceBookingListResponse!
   
   }
 

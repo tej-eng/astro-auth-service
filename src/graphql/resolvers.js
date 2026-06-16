@@ -1503,68 +1503,133 @@ export default {
       }
     },
     getAstrologerFollowers: async (
-  _,
-  { astrologerId, page = 1, limit = 20 }
-) => {
-  try {
-    const skip = (page - 1) * limit;
+      _,
+      { astrologerId, page = 1, limit = 20 },
+    ) => {
+      try {
+        const skip = (page - 1) * limit;
 
-    const [followers, total] = await Promise.all([
-      prisma.astrologerFollow.findMany({
-        where: {
-          astrologerId,
-        },
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              mobile: true,
-              countryCode: true,
+        const [followers, total] = await Promise.all([
+          prisma.astrologerFollow.findMany({
+            where: {
+              astrologerId,
             },
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        skip,
-        take: limit,
-      }),
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  mobile: true,
+                  countryCode: true,
+                },
+              },
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+            skip,
+            take: limit,
+          }),
 
-      prisma.astrologerFollow.count({
-        where: {
+          prisma.astrologerFollow.count({
+            where: {
+              astrologerId,
+            },
+          }),
+        ]);
+
+        return {
+          followers: followers.map((item) => ({
+            id: item.id,
+            userId: item.userId,
+            astrologerId: item.astrologerId,
+            createdAt: item.createdAt.toISOString(),
+
+            user: item.user
+              ? {
+                  id: item.user.id,
+                  name: item.user.name,
+                  mobile: item.user.mobile,
+                  countryCode: item.user.countryCode,
+                }
+              : null,
+          })),
+
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit),
+        };
+      } catch (error) {
+        console.error("getAstrologerFollowers error:", error);
+        throw new Error(error.message);
+      }
+    },
+    getAstrologerAssignedBookedServices: async (
+      _,
+      { page = 1, limit = 10, bookingStatus, paymentStatus },
+      context,
+    ) => {
+      try {
+        if (!context.astrologer) {
+          throw new Error("Unauthorized");
+        }
+
+        const astrologerId = context.astrologer.id;
+
+        const skip = (page - 1) * limit;
+
+        const where = {
           astrologerId,
-        },
-      }),
-    ]);
+        };
 
-    return {
-      followers: followers.map((item) => ({
-        id: item.id,
-        userId: item.userId,
-        astrologerId: item.astrologerId,
-        createdAt: item.createdAt.toISOString(),
+        if (bookingStatus) {
+          where.bookingStatus = bookingStatus;
+        }
 
-        user: item.user
-          ? {
-              id: item.user.id,
-              name: item.user.name,
-              mobile: item.user.mobile,
-              countryCode: item.user.countryCode,
-            }
-          : null,
-      })),
+        if (paymentStatus) {
+          where.paymentStatus = paymentStatus;
+        }
 
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
-  } catch (error) {
-    console.error("getAstrologerFollowers error:", error);
-    throw new Error(error.message);
-  }
-},
+        const [data, total] = await Promise.all([
+          prisma.serviceBooking.findMany({
+            where,
+            skip,
+            take: limit,
+            orderBy: {
+              createdAt: "desc",
+            },
+            include: {
+              service: true,
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  phone: true,
+                },
+              },
+            },
+          }),
+
+          prisma.serviceBooking.count({
+            where,
+          }),
+        ]);
+
+        return {
+          success: true,
+          total,
+          data,
+        };
+      } catch (error) {
+        console.error("getAstrologerAssignedBookedServices error:", error);
+
+        throw new Error(
+          error.message || "Failed to fetch assigned service bookings",
+        );
+      }
+    },
   },
 
   Mutation: {
@@ -1757,5 +1822,6 @@ export default {
         throw new Error(error.message);
       }
     },
+    
   },
 };

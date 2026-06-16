@@ -136,6 +136,13 @@ enum OfferType {
   ORIGINAL
 }
 
+enum BookingStatus {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
 model User {
   id            String         @id @default(uuid())
   name          String?
@@ -158,6 +165,9 @@ model User {
   reviews       Review[]
   giftsSent GiftHistory[] @relation("UserGiftHistory")
   follows AstrologerFollow[]
+  servicePaymentOrders ServicePaymentOrder[]
+  noticesCreated Notice[] @relation("NoticeCreatedBy")
+  serviceBookings ServiceBooking[]
 
   @@unique([countryCode, mobile])
 }
@@ -281,7 +291,9 @@ model Astrologer {
   applications     AstrologerApplication[]
   offers AstrologerOffer[]
   giftsReceived GiftHistory[] @relation("AstrologerGiftHistory")
- followers AstrologerFollow[]
+  followers AstrologerFollow[]
+  serviceBookings ServiceBooking[]
+  noticeAstrologers NoticeAstrologer[]
 
   @@index([rating])
   @@index([experience])
@@ -513,23 +525,32 @@ model Category {
   id        String    @id @default(cuid())
   name      String    @unique
   slug      String    @unique
+  image     String?
+
   createdAt DateTime  @default(now())
+
   services  Service[]
 }
 
 model Service {
-  id          String      @id @default(cuid())
+  id          String   @id @default(cuid())
+
   name        String
-  slug        String      @unique
-  type        ServiceType
-  categoryId  String?
+  slug        String   @unique
+
   image       String?
   description String?
   longText    String?
+
   price       Float?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  category    Category?   @relation(fields: [categoryId], references: [id])
+
+  categoryId  String?
+
+  category    Category? @relation(fields: [categoryId], references: [id])
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  bookings ServiceBooking[]
 }
 
 model Gift {
@@ -736,6 +757,8 @@ model Session {
   @@index([status])
   @@index([createdAt])
 }
+
+
 
 model Payment {
   id String @id @default(uuid())
@@ -1205,6 +1228,7 @@ model SessionRemedy {
   @@index([sessionId])
   @@index([createdAt])
 }
+
 model AstrologerOffer {
   id           String @id @default(uuid())
 
@@ -1226,24 +1250,24 @@ model AstrologerOffer {
   @@index([offerId])
   @@index([isActive])
 }
+
 model GiftHistory {
-  id String @id @default(uuid())
+  id           String   @id @default(cuid())
 
-  userId String
+  userId       String
   astrologerId String
-  giftId String
+  giftId       String
 
-  quantity Int @default(1)
+  giftName     String
+  giftPrice    Float
 
-  amount Float
+  createdAt    DateTime @default(now())
 
-  user User @relation("UserGiftHistory", fields: [userId], references: [id], onDelete: Cascade)
+  user         User       @relation("UserGiftHistory", fields: [userId], references: [id])
 
-  astrologer Astrologer @relation("AstrologerGiftHistory", fields: [astrologerId], references: [id], onDelete: Cascade)
+  astrologer   Astrologer @relation("AstrologerGiftHistory", fields: [astrologerId], references: [id])
 
-  gift Gift @relation(fields: [giftId], references: [id], onDelete: Cascade)
-
-  createdAt DateTime @default(now())
+  gift         Gift       @relation(fields: [giftId], references: [id])
 
   @@index([userId])
   @@index([astrologerId])
@@ -1257,9 +1281,7 @@ model AstrologerFollow {
   astrologerId String
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
   astrologer Astrologer @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
-
   createdAt DateTime @default(now())
 
   @@unique([userId, astrologerId])
@@ -1267,4 +1289,172 @@ model AstrologerFollow {
   @@index([userId])
 
   @@index([astrologerId])
+}
+model ServiceBooking {
+  id String @id @default(cuid())
+
+  userId String
+  user User @relation(fields: [userId], references: [id])
+
+  serviceId String
+  service Service @relation(fields: [serviceId], references: [id])
+
+  astrologerId String?
+  astrologer Astrologer? @relation(fields: [astrologerId], references: [id])
+
+  name String
+  email String
+  phone String
+
+  dob String
+  tob String
+  pob String
+
+  gender String?
+  concern String?
+
+  amount Float
+
+  paymentStatus PaymentStatus @default(PENDING)
+  bookingStatus BookingStatus @default(PENDING)
+
+  paymentOrders ServicePaymentOrder[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([serviceId])
+  @@index([astrologerId])
+  @@index([paymentStatus])
+  @@index([bookingStatus])
+}
+
+model ServicePaymentOrder {
+  id String @id @default(uuid())
+
+  userId String
+  user User @relation(fields: [userId], references: [id])
+
+  bookingId String
+  booking ServiceBooking @relation(fields: [bookingId], references: [id])
+
+  razorpayOrderId String? @unique
+
+  totalAmount Float
+
+  walletAmount Float @default(0)
+
+  payableAmount Float
+
+  status PaymentOrderStatus @default(CREATED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([bookingId])
+  @@index([razorpayOrderId])
+  @@index([status])
+}
+//-----------
+enum NoticeTargetType {
+  ALL
+  SELECTED
+}
+
+model Notice {
+  id String @id @default(uuid())
+
+  title       String
+  description String @db.Text
+
+  targetType NoticeTargetType @default(ALL)
+
+  isPinned Boolean @default(false)
+  isActive Boolean @default(true)
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdById String?
+
+  createdBy User? @relation("NoticeCreatedBy", fields: [createdById], references: [id])
+
+  astrologers NoticeAstrologer[]
+}
+
+model NoticeAstrologer {
+  id String @id @default(uuid())
+
+  noticeId String
+  notice   Notice @relation(fields: [noticeId], references: [id], onDelete: Cascade)
+
+  astrologerId String
+  astrologer   Astrologer @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
+
+  @@unique([noticeId, astrologerId])
+}
+
+enum BlogStatus {
+  DRAFT
+  SCHEDULED
+  PUBLISHED
+}
+
+model Blog {
+  id String @id @default(cuid())
+
+  title String
+  slug  String @unique
+
+  language String
+
+  shortDescription String @db.Text
+  content          String @db.Text
+
+  featuredImage String?
+
+  publishDate DateTime?
+
+  status BlogStatus @default(DRAFT)
+
+  hashtags String[]
+
+  metaTitle       String?
+  metaDescription String? @db.Text
+  metaKeywords    String?
+
+  schemaMarkup String? @db.Text
+
+  categories BlogCategoryMapping[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BlogCategory {
+  id String @id @default(cuid())
+
+  name String
+  slug String @unique
+
+  blogs BlogCategoryMapping[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model BlogCategoryMapping {
+  blogId         String
+  blogCategoryId String
+
+  blog Blog @relation(fields: [blogId], references: [id])
+
+  category BlogCategory @relation(fields: [blogCategoryId], references: [id])
+
+  @@id([blogId, blogCategoryId])
 }
