@@ -1565,71 +1565,76 @@ export default {
         throw new Error(error.message);
       }
     },
+
     getAstrologerAssignedBookedServices: async (
-      _,
-      { page = 1, limit = 10, bookingStatus, paymentStatus },
-      context,
-    ) => {
-      try {
-        if (!context.astrologer) {
-          throw new Error("Unauthorized");
-        }
+  _,
+  { page = 1, limit = 10, bookingStatus, paymentStatus },
+  { user }
+) => {
+  try {
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
 
-        const astrologerId = context.astrologer.id;
+    const astrologerId = user.id;
 
-        const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-        const where = {
-          astrologerId,
-        };
+    const where = {
+      astrologerId,
+    };
 
-        if (bookingStatus) {
-          where.bookingStatus = bookingStatus;
-        }
+    if (bookingStatus) {
+      where.bookingStatus = bookingStatus;
+    }
 
-        if (paymentStatus) {
-          where.paymentStatus = paymentStatus;
-        }
+    if (paymentStatus) {
+      where.paymentStatus = paymentStatus;
+    }
 
-        const [data, total] = await Promise.all([
-          prisma.serviceBooking.findMany({
-            where,
-            skip,
-            take: limit,
-            orderBy: {
-              createdAt: "desc",
+    const [data, total] = await Promise.all([
+      prisma.serviceBooking.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: {
+          createdAt: "desc",
+        },
+        include: {
+          service: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
             },
-            include: {
-              service: true,
-              user: {
-                select: {
-                  id: true,
-                  name: true,
-                  email: true,
-                  phone: true,
-                },
-              },
-            },
-          }),
+          },
+        },
+      }),
 
-          prisma.serviceBooking.count({
-            where,
-          }),
-        ]);
+      prisma.serviceBooking.count({
+        where,
+      }),
+    ]);
 
-        return {
-          success: true,
-          total,
-          data,
-        };
-      } catch (error) {
-        console.error("getAstrologerAssignedBookedServices error:", error);
+    return {
+      success: true,
+      total,
+      data,
+    };
+  } catch (error) {
+    console.error(
+      "getAstrologerAssignedBookedServices error:",
+      error
+    );
 
-        throw new Error(
-          error.message || "Failed to fetch assigned service bookings",
-        );
-      }
-    },
+    throw new Error(
+      error.message ||
+        "Failed to fetch assigned service bookings"
+    );
+  }
+},
   },
 
   Mutation: {
