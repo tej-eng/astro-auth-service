@@ -661,6 +661,11 @@ type AstrologerFollowersResponse {
 }
  #----END code for astrologer followers count-----
  #--------START Booked services----------
+ type Service {
+  id: ID!
+  title: String!
+  price: Float!
+}
  type ServiceBookingListResponse {
   success: Boolean!
   total: Int!
@@ -677,9 +682,35 @@ enum BookingStatus {
   COMPLETED
   CANCELLED
 }
+
 type ServiceBooking {
+  id: ID!
+
+  userId: String!
+  serviceId: String!
+  astrologerId: String
+
+  name: String!
+  email: String!
+  phone: String!
+
+  dob: String!
+  tob: String!
+  pob: String!
+
+  gender: String
+  concern: String
+
+  amount: Float!
+
   paymentStatus: PaymentStatus!
   bookingStatus: BookingStatus!
+
+  createdAt: String!
+  updatedAt: String!
+
+  service: Service
+  user: User
 }
 
  #--------End Booked services------------
