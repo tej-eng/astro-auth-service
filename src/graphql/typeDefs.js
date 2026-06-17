@@ -685,6 +685,8 @@ enum PaymentStatus {
 
 enum BookingStatus {
   PENDING
+  ASSIGNED
+  IN_PROGRESS
   COMPLETED
   CANCELLED
 }
