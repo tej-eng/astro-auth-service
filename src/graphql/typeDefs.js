@@ -762,10 +762,10 @@ type AstrologerAnalytics {
   targetType: String!
   isPinned: Boolean!
   isActive: Boolean!
-  startDate: DateTime
-  endDate: DateTime
-  createdAt: DateTime!
-  updatedAt: DateTime!
+  startDate: String
+  endDate: String
+  createdAt: String!
+  updatedAt: String!
 }
  #---------End-----------
 
