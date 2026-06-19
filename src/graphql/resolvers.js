@@ -1635,6 +1635,116 @@ export default {
       id: astrologerId,
     },
   });
+    },
+    getAstrologerAnalytics: async (_, { astrologerId }) => {
+  try {
+    const astrologer = await prisma.astrologer.findUnique({
+      where: { id: astrologerId },
+      select: {
+        rating: true,
+      },
+    });
+
+    if (!astrologer) {
+      throw new Error("Astrologer not found");
+    }
+
+    const [
+      wallet,
+      followersCount,
+      totalChats,
+      totalCalls,
+      sessions,
+    ] = await Promise.all([
+      prisma.astrologerWallet.findUnique({
+        where: {
+          astrologerId,
+        },
+        select: {
+          totalEarned: true,
+        },
+      }),
+
+      prisma.astrologerFollow.count({
+        where: {
+          astrologerId,
+        },
+      }),
+
+      prisma.session.count({
+        where: {
+          astrologerId,
+          type: "CHAT",
+          status: "COMPLETED",
+        },
+      }),
+
+      prisma.session.count({
+        where: {
+          astrologerId,
+          type: "CALL",
+          status: "COMPLETED",
+        },
+      }),
+
+      prisma.session.findMany({
+        where: {
+          astrologerId,
+          status: "COMPLETED",
+        },
+        select: {
+          type: true,
+          coinsEarned: true,
+          createdAt: true,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+      }),
+    ]);
+
+    const monthlyMap = {};
+
+    sessions.forEach((session) => {
+      const month = new Date(session.createdAt).toLocaleString(
+        "en-US",
+        {
+          month: "short",
+        }
+      );
+
+      if (!monthlyMap[month]) {
+        monthlyMap[month] = {
+          month,
+          earnings: 0,
+          chats: 0,
+          calls: 0,
+        };
+      }
+
+      monthlyMap[month].earnings += session.coinsEarned || 0;
+
+      if (session.type === "CHAT") {
+        monthlyMap[month].chats += 1;
+      }
+
+      if (session.type === "CALL") {
+        monthlyMap[month].calls += 1;
+      }
+    });
+
+    return {
+      totalEarnings: wallet?.totalEarned || 0,
+      totalFollowers: followersCount,
+      totalChats,
+      totalCalls,
+      averageRating: astrologer.rating || 0,
+      monthlyData: Object.values(monthlyMap),
+    };
+  } catch (error) {
+    console.error("getAstrologerAnalytics Error:", error);
+    throw new Error(error.message);
+  }
 },
   },
 

@@ -737,6 +737,22 @@ type ServiceBooking {
   success: Boolean!
   message: String!
 }
+
+type MonthlyAnalytics {
+  month: String!
+  earnings: Float!
+  chats: Int!
+  calls: Int!
+}
+
+type AstrologerAnalytics {
+  totalEarnings: Float!
+  totalFollowers: Int!
+  totalChats: Int!
+  totalCalls: Int!
+  averageRating: Float!
+  monthlyData: [MonthlyAnalytics!]!
+}
  #----------End -----------
 
   type Query {
@@ -792,6 +808,8 @@ getAstrologerFollowers(
   ): ServiceBookingListResponse!
 
   getAstrologerById(astrologerId: String!): Astrologer
+
+  getAstrologerAnalytics(astrologerId: String!): AstrologerAnalytics!
   
   }
 
