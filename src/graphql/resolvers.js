@@ -1768,6 +1768,55 @@ export default {
     console.error("getAstrologerAnalytics Error:", error);
     throw new Error(error.message);
   }
+   },
+   getAstrologerNotices: async () => {
+  try {
+    const now = new Date();
+
+    const notices = await prisma.notice.findMany({
+      where: {
+        isActive: true,
+
+        OR: [
+          {
+            targetType: "ASTROLOGER",
+          },
+          {
+            targetType: "ALL",
+          },
+        ],
+
+        AND: [
+          {
+            OR: [
+              { startDate: null },
+              { startDate: { lte: now } },
+            ],
+          },
+          {
+            OR: [
+              { endDate: null },
+              { endDate: { gte: now } },
+            ],
+          },
+        ],
+      },
+
+      orderBy: [
+        {
+          isPinned: "desc",
+        },
+        {
+          createdAt: "desc",
+        },
+      ],
+    });
+
+    return notices;
+  } catch (error) {
+    console.error("getAstrologerNotices Error:", error);
+    throw new Error(error.message);
+  }
 },
   },
 

@@ -754,6 +754,20 @@ type AstrologerAnalytics {
   monthlyData: [MonthlyAnalytics!]!
 }
  #----------End -----------
+ #-------start code for notice-----
+ type Notice {
+  id: String!
+  title: String!
+  description: String!
+  targetType: String!
+  isPinned: Boolean!
+  isActive: Boolean!
+  startDate: DateTime
+  endDate: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+ #---------End-----------
 
   type Query {
     meAstrologer: Astrologer
@@ -810,6 +824,9 @@ getAstrologerFollowers(
   getAstrologerById(astrologerId: String!): Astrologer
 
   getAstrologerAnalytics(astrologerId: String!): AstrologerAnalytics!
+   getAstrologerNotices: [Notice!]!
+
+  
   
   }
 
