@@ -1629,6 +1629,13 @@ export default {
     );
   }
     },
+    getAstrologerById: async (_, { astrologerId }) => {
+  return await prisma.astrologer.findUnique({
+    where: {
+      id: astrologerId,
+    },
+  });
+},
   },
 
   Mutation: {
@@ -1821,5 +1828,39 @@ export default {
         throw new Error(error.message);
       }
     },
+  toggleAstrologerService: async (
+  _,
+  { astrologerId, serviceType, status },
+  { user }
+) => {
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  const fieldMap = {
+    CHAT: "isChatActive",
+    CALL: "isCallActive",
+    LIVE: "isLiveActive",
+    PROMOTIONAL: "isPromotional",
+  };
+
+  const field = fieldMap[serviceType];
+
+  await prisma.astrologer.update({
+    where: {
+      id: astrologerId,
+    },
+    data: {
+      [field]: status,
+    },
+  });
+
+  return {
+    success: true,
+    message: `${serviceType} ${
+      status ? "enabled" : "disabled"
+    } successfully`,
+  };
+},
   },
 };

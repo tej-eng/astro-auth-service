@@ -718,6 +718,21 @@ type ServiceBooking {
   service: Service
 }
  #--------End Booked services------------
+ #-----------Start code for change service----
+ enum AstrologerServiceType {
+  CHAT
+  CALL
+  LIVE
+  PROMOTIONAL
+}
+
+
+
+ type CommonResponse {
+  success: Boolean!
+  message: String!
+}
+ #----------End -----------
 
   type Query {
     meAstrologer: Astrologer
@@ -770,6 +785,8 @@ getAstrologerFollowers(
     bookingStatus: BookingStatus
     paymentStatus: PaymentStatus
   ): ServiceBookingListResponse!
+
+  getAstrologerById(astrologerId: String!): Astrologer
   
   }
 
@@ -792,5 +809,11 @@ getAstrologerFollowers(
     updateOfferStatus(offerId: String!, isActive: Boolean!): MessageResponse!
 
     sendRemedy(sessionId: String!, remedyText: String!): MessageResponse!
+
+    toggleAstrologerService(
+    astrologerId: String!
+    serviceType: AstrologerServiceType!
+    status: Boolean!
+  ): CommonResponse!
   }
 `;
