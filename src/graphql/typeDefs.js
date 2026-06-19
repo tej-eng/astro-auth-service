@@ -26,25 +26,30 @@ export default gql`
 
   # ================= TYPES =================
 
-  type Astrologer {
-    id: ID!
-    profilePic: String!
-    name: String!
-    dateOfBirth: String!
-    gender: Gender!
-    languages: [String!]!
-    skills: [String!]!
-    experience: Int!
-    email: String!
-    contactNo: String!
-    about: String!
-    approvalStatus: ApprovalStatus!
-    adminRemarks: String
-    addresses: [Address!]!
-    experiences: [ExperiencePlatform!]!
-    createdAt: String
-    updatedAt: String
-  }
+ type Astrologer {
+  id: ID!
+  profilePic: String!
+  name: String!
+  dateOfBirth: String!
+  gender: Gender!
+  languages: [String!]!
+  skills: [String!]!
+  experience: Int!
+  email: String!
+  contactNo: String!
+  about: String!
+  approvalStatus: ApprovalStatus!
+  adminRemarks: String
+  addresses: [Address!]!
+  experiences: [ExperiencePlatform!]!
+  createdAt: String
+  updatedAt: String
+
+  isChatActive: Boolean
+  isCallActive: Boolean
+  isLiveActive: Boolean
+  isPromotional: Boolean
+}
 
   type Address {
     street: String!
