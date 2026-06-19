@@ -1636,7 +1636,7 @@ export default {
     },
   });
     },
-    getAstrologerAnalytics: async (_, { astrologerId }) => {
+   getAstrologerAnalytics: async (_, { astrologerId }) => {
   try {
     const astrologer = await prisma.astrologer.findUnique({
       where: { id: astrologerId },
@@ -1691,45 +1691,68 @@ export default {
         where: {
           astrologerId,
           status: "COMPLETED",
+
+          // only current year
+          createdAt: {
+            gte: new Date(new Date().getFullYear(), 0, 1),
+            lte: new Date(),
+          },
         },
+
         select: {
           type: true,
           coinsEarned: true,
           createdAt: true,
         },
-        orderBy: {
-          createdAt: "asc",
-        },
       }),
     ]);
 
-    const monthlyMap = {};
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth();
 
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+
+    // Initialize Jan -> Current Month
+    const monthlyData = [];
+
+    for (let i = 0; i <= currentMonth; i++) {
+      monthlyData.push({
+        month: monthNames[i],
+        earnings: 0,
+        chats: 0,
+        calls: 0,
+      });
+    }
+
+    // Fill actual data
     sessions.forEach((session) => {
-      const month = new Date(session.createdAt).toLocaleString(
-        "en-US",
-        {
-          month: "short",
-        }
-      );
+      const sessionDate = new Date(session.createdAt);
 
-      if (!monthlyMap[month]) {
-        monthlyMap[month] = {
-          month,
-          earnings: 0,
-          chats: 0,
-          calls: 0,
-        };
-      }
+      if (sessionDate.getFullYear() !== currentYear) return;
 
-      monthlyMap[month].earnings += session.coinsEarned || 0;
+      const monthIndex = sessionDate.getMonth();
+
+      monthlyData[monthIndex].earnings += session.coinsEarned || 0;
 
       if (session.type === "CHAT") {
-        monthlyMap[month].chats += 1;
+        monthlyData[monthIndex].chats += 1;
       }
 
       if (session.type === "CALL") {
-        monthlyMap[month].calls += 1;
+        monthlyData[monthIndex].calls += 1;
       }
     });
 
@@ -1739,7 +1762,7 @@ export default {
       totalChats,
       totalCalls,
       averageRating: astrologer.rating || 0,
-      monthlyData: Object.values(monthlyMap),
+      monthlyData,
     };
   } catch (error) {
     console.error("getAstrologerAnalytics Error:", error);
