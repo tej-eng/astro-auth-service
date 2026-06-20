@@ -1778,12 +1778,8 @@ export default {
         isActive: true,
 
         OR: [
-          {
-            targetType: "ASTROLOGER",
-          },
-          {
-            targetType: "ALL",
-          },
+          { targetType: "ALL" },
+          { targetType: "SELECTED" },
         ],
 
         AND: [
@@ -1803,12 +1799,8 @@ export default {
       },
 
       orderBy: [
-        {
-          isPinned: "desc",
-        },
-        {
-          createdAt: "desc",
-        },
+        { isPinned: "desc" },
+        { createdAt: "desc" },
       ],
     });
 
@@ -1818,6 +1810,7 @@ export default {
     throw new Error(error.message);
   }
 },
+
   },
 
   Mutation: {
