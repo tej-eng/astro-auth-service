@@ -355,11 +355,13 @@ export default gql`
   }
 
   enum PricingType {
-    CHAT
-    CALL
-    VIDEO
-    AUDIO
-  }
+  CHAT
+  CALL
+  VIDEO
+  AUDIO
+  GIFT_COMMISSION
+  OFFER
+}
 
   type AstrologerPricing {
     id: ID
