@@ -779,23 +779,38 @@ enum AgoraRole {
 }
 
 enum LiveStatus {
+  SCHEDULED
   LIVE
   ENDED
 }
 
-type LiveStream {
-  id: ID!
-  astrologerId: String!
-  title: String!
-  channelName: String!
-  status: LiveStatus!
-  viewersCount: Int
-  startedAt: String
-  endedAt: String
-  createdAt: String
+type LiveAstrologer {
+  id: String!
+  name: String
+  displayName: String
+  profilePic: String
+  rating: Float
 }
 
-type AgoraJoinResponse {
+type LiveStream {
+  id: String!
+  astrologerId: String!
+
+  title: String!
+  channelName: String!
+
+  status: LiveStatus!
+
+  scheduledAt: String
+  endedAt: String
+
+  createdAt: String!
+  updatedAt: String!
+
+  astrologer: LiveAstrologer
+}
+
+type JoinLiveResponse {
   token: String!
   uid: Int!
   appId: String!
@@ -862,12 +877,14 @@ getAstrologerFollowers(
    getAstrologerNotices: [Notice!]!
 
    #---------START CODE FOR LIVE STREAMING---------------
-    getLiveStreams: [LiveStream!]!
+  getLiveStreams: [LiveStream!]!
 
   joinLive(
     channelName: String!
-    role: AgoraRole!
-  ): AgoraJoinResponse!
+    role: String!
+  ): JoinLiveResponse!
+
+  getMyScheduledLives: [LiveStream!]!
   
   #----------END CODE FOR LIVE STREAMING--------------
 
@@ -902,14 +919,18 @@ getAstrologerFollowers(
   ): CommonResponse!
   #---------START CODE FOR LIVE STREAMING---------------
 
-   startLive(
+  startLive(
     title: String!
   ): LiveStream!
 
   endLive(
-    streamId: ID!
+    streamId: String!
   ): Boolean!
 
+  scheduleLive(
+    title: String!
+    scheduledAt: String!
+  ): LiveStream!
   #----------END CODE FOR LIVE STREAMING--------------
   }
 `;

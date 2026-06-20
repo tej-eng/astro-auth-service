@@ -1804,51 +1804,89 @@ export default {
     },
     //---------START CODE FOR LIVE STREAMING-------------
     getLiveStreams: async () => {
-  return prisma.liveStream.findMany({
-    where: {
-      status: "LIVE",
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+      try {
+        const streams = await prisma.liveStream.findMany({
+          where: {
+            status: {
+              in: ["LIVE", "SCHEDULED"],
+            },
+          },
+
+          include: {
+            astrologer: {
+              select: {
+                id: true,
+                name: true,
+                displayName: true,
+                profilePic: true,
+                rating: true,
+              },
+            },
+          },
+
+          orderBy: [
+            {
+              scheduledAt: "asc",
+            },
+          ],
+        });
+
+        return streams.sort((a, b) => {
+          if (a.status === "LIVE" && b.status !== "LIVE") return -1;
+          if (a.status !== "LIVE" && b.status === "LIVE") return 1;
+          return 0;
+        });
+      } catch (error) {
+        console.error("getLiveStreams Error:", error);
+        throw new Error(error.message);
+      }
     },
 
-    joinLive: async (
-  _,
-  { channelName, role }
-) => {
-  const stream =
-    await prisma.liveStream.findFirst({
-      where: {
+    joinLive: async (_, { channelName, role }) => {
+      const stream = await prisma.liveStream.findFirst({
+        where: {
+          channelName,
+          status: "LIVE",
+        },
+      });
+
+      if (!stream) {
+        throw new Error("Live stream not found");
+      }
+
+      const uid = Math.floor(Math.random() * 100000);
+
+      const token = generateRtcToken({
         channelName,
-        status: "LIVE",
-      },
-    });
+        uid,
+        role,
+      });
 
-  if (!stream) {
-    throw new Error(
-      "Live stream not found"
-    );
-  }
+      return {
+        token,
+        uid,
+        appId: process.env.AGORA_APP_ID,
+        channelName,
+      };
+    },
 
-  const uid = Math.floor(
-    Math.random() * 100000
-  );
+    getMyScheduledLives: async (_, __, { user }) => {
+      if (!user) {
+        throw new Error("Unauthorized");
+      }
 
-  const token = generateRtcToken({
-    channelName,
-    uid,
-    role,
-  });
+      return prisma.liveStream.findMany({
+        where: {
+          astrologerId: user.id,
 
-  return {
-    token,
-    uid,
-    appId: process.env.AGORA_APP_ID,
-    channelName,
-  };
-},
+          status: "SCHEDULED",
+        },
+
+        orderBy: {
+          scheduledAt: "asc",
+        },
+      });
+    },
     //-----------END CODE FOR LIVE STREAMING-------------
   },
 
@@ -2078,53 +2116,116 @@ export default {
     },
     //-----------START CODE FOR LIVE STREAMING-----------
     startLive: async (_, { title }, { user }) => {
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
+      if (!user) {
+        throw new Error("Unauthorized");
+      }
 
-  const stream = await prisma.liveStream.create({
-    data: {
-      astrologerId: user.id,
-      title,
-      channelName: `astro-${user.id}`,
-      status: "LIVE",
+      const existingScheduled = await prisma.liveStream.findFirst({
+        where: {
+          astrologerId: user.id,
+
+          status: "SCHEDULED",
+        },
+
+        orderBy: {
+          scheduledAt: "asc",
+        },
+      });
+
+      if (existingScheduled) {
+        return prisma.liveStream.update({
+          where: {
+            id: existingScheduled.id,
+          },
+
+          data: {
+            status: "LIVE",
+          },
+        });
+      }
+
+      return prisma.liveStream.create({
+        data: {
+          astrologerId: user.id,
+
+          title,
+
+          channelName: `astro-${user.id}`,
+
+          status: "LIVE",
+        },
+      });
     },
-  });
 
-  return stream;
-},
+    endLive: async (_, { streamId }, { user }) => {
+      if (!user) {
+        throw new Error("Unauthorized");
+      }
 
-endLive: async (_, { streamId }, { user }) => {
-  if (!user) {
-    throw new Error("Unauthorized");
-  }
+      const stream = await prisma.liveStream.findUnique({
+        where: {
+          id: streamId,
+        },
+      });
 
-  const stream = await prisma.liveStream.findUnique({
-    where: {
-      id: streamId,
+      if (!stream) {
+        throw new Error("Stream not found");
+      }
+
+      if (stream.astrologerId !== user.id) {
+        throw new Error("Access denied");
+      }
+
+      await prisma.liveStream.update({
+        where: {
+          id: streamId,
+        },
+        data: {
+          status: "ENDED",
+          endedAt: new Date(),
+        },
+      });
+
+      return true;
     },
-  });
 
-  if (!stream) {
-    throw new Error("Stream not found");
-  }
+    scheduleLive: async (_, { title, scheduledAt }, { user }) => {
+      try {
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
 
-  if (stream.astrologerId !== user.id) {
-    throw new Error("Access denied");
-  }
+        const scheduleDate = new Date(scheduledAt);
 
-  await prisma.liveStream.update({
-    where: {
-      id: streamId,
+        if (isNaN(scheduleDate.getTime())) {
+          throw new Error("Invalid scheduled date");
+        }
+
+        if (scheduleDate <= new Date()) {
+          throw new Error("Scheduled time must be in future");
+        }
+
+        const stream = await prisma.liveStream.create({
+          data: {
+            astrologerId: user.id,
+
+            title,
+
+            channelName: `astro-${user.id}-${Date.now()}`,
+
+            status: "SCHEDULED",
+
+            scheduledAt: scheduleDate,
+          },
+        });
+
+        return stream;
+      } catch (error) {
+        console.error("scheduleLive Error:", error);
+
+        throw new Error(error.message || "Failed to schedule live");
+      }
     },
-    data: {
-      status: "ENDED",
-      endedAt: new Date(),
-    },
-  });
-
-  return true;
-},
     //----------END CODE FOR LIVE STREAMING--------------
   },
 };
