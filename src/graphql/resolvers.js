@@ -1636,7 +1636,7 @@ export default {
     },
   });
     },
-   getAstrologerAnalytics: async (_, { astrologerId }) => {
+    getAstrologerAnalytics: async (_, { astrologerId }) => {
   try {
     const astrologer = await prisma.astrologer.findUnique({
       where: { id: astrologerId },
@@ -1768,8 +1768,8 @@ export default {
     console.error("getAstrologerAnalytics Error:", error);
     throw new Error(error.message);
   }
-   },
-   getAstrologerNotices: async () => {
+    },
+    getAstrologerNotices: async (_, { astrologerId }) => {
   try {
     const now = new Date();
 
@@ -1778,8 +1778,17 @@ export default {
         isActive: true,
 
         OR: [
-          { targetType: "ALL" },
-          { targetType: "SELECTED" },
+          {
+            targetType: "ALL",
+          },
+          {
+            targetType: "SELECTED",
+            astrologers: {
+              some: {
+                astrologerId,
+              },
+            },
+          },
         ],
 
         AND: [
@@ -1809,7 +1818,7 @@ export default {
     console.error("getAstrologerNotices Error:", error);
     throw new Error(error.message);
   }
-},
+    },
 
   },
 

@@ -767,6 +767,7 @@ type AstrologerAnalytics {
   createdAt: String!
   updatedAt: String!
 }
+
  #---------End-----------
 
   type Query {
