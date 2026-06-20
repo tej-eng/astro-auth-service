@@ -772,6 +772,38 @@ type AstrologerAnalytics {
 
  #---------End-----------
 
+ #---------START CODE FOR LIVE STREAMING---------------
+enum AgoraRole {
+  HOST
+  AUDIENCE
+}
+
+enum LiveStatus {
+  LIVE
+  ENDED
+}
+
+type LiveStream {
+  id: ID!
+  astrologerId: String!
+  title: String!
+  channelName: String!
+  status: LiveStatus!
+  viewersCount: Int
+  startedAt: String
+  endedAt: String
+  createdAt: String
+}
+
+type AgoraJoinResponse {
+  token: String!
+  uid: Int!
+  appId: String!
+  channelName: String!
+}
+  
+#----------END CODE FOR LIVE STREAMING--------------
+
   type Query {
     meAstrologer: Astrologer
     getAstrologerEarnings: AstrologerEarningResponse!
@@ -829,6 +861,16 @@ getAstrologerFollowers(
   getAstrologerAnalytics(astrologerId: String!): AstrologerAnalytics!
    getAstrologerNotices: [Notice!]!
 
+   #---------START CODE FOR LIVE STREAMING---------------
+    getLiveStreams: [LiveStream!]!
+
+  joinLive(
+    channelName: String!
+    role: AgoraRole!
+  ): AgoraJoinResponse!
+  
+  #----------END CODE FOR LIVE STREAMING--------------
+
   
   
   }
@@ -858,5 +900,16 @@ getAstrologerFollowers(
     serviceType: AstrologerServiceType!
     status: Boolean!
   ): CommonResponse!
+  #---------START CODE FOR LIVE STREAMING---------------
+
+   startLive(
+    title: String!
+  ): LiveStream!
+
+  endLive(
+    streamId: ID!
+  ): Boolean!
+
+  #----------END CODE FOR LIVE STREAMING--------------
   }
 `;

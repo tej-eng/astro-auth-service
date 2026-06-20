@@ -6,6 +6,7 @@ import {
   verifyOtpService,
   requestOtpService,
 } from "../services/auth.service.js";
+import { generateRtcToken } from "../utils/agoraToken.js";
 
 export default {
   Query: {
@@ -1567,259 +1568,288 @@ export default {
     },
 
     getAstrologerAssignedBookedServices: async (
-  _,
-  { page = 1, limit = 10, bookingStatus, paymentStatus },
-  { user }
-) => {
-  try {
-    if (!user) {
-      throw new Error("Unauthorized");
-    }
+      _,
+      { page = 1, limit = 10, bookingStatus, paymentStatus },
+      { user },
+    ) => {
+      try {
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
 
-    const astrologerId = user.id;
-    const skip = (page - 1) * limit;
+        const astrologerId = user.id;
+        const skip = (page - 1) * limit;
 
-    const where = {
-      astrologerId,
-      ...(bookingStatus && { bookingStatus }),
-      ...(paymentStatus && { paymentStatus }),
-    };
+        const where = {
+          astrologerId,
+          ...(bookingStatus && { bookingStatus }),
+          ...(paymentStatus && { paymentStatus }),
+        };
 
-    const [data, total] = await Promise.all([
-      prisma.serviceBooking.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: {
-          createdAt: "desc",
-        },
-        include: {
-          service: {
-            select: {
-              id: true,
-              name: true,
-              price: true,
+        const [data, total] = await Promise.all([
+          prisma.serviceBooking.findMany({
+            where,
+            skip,
+            take: limit,
+            orderBy: {
+              createdAt: "desc",
             },
-          },
-        },
-      }),
+            include: {
+              service: {
+                select: {
+                  id: true,
+                  name: true,
+                  price: true,
+                },
+              },
+            },
+          }),
 
-      prisma.serviceBooking.count({
-        where,
-      }),
-    ]);
+          prisma.serviceBooking.count({
+            where,
+          }),
+        ]);
 
-    return {
-      success: true,
-      total,
-      currentPage: page,
-      totalPages: Math.ceil(total / limit),
-      limit,
-      data,
-    };
-  } catch (error) {
-    console.error(
-      "getAstrologerAssignedBookedServices error:",
-      error
-    );
+        return {
+          success: true,
+          total,
+          currentPage: page,
+          totalPages: Math.ceil(total / limit),
+          limit,
+          data,
+        };
+      } catch (error) {
+        console.error("getAstrologerAssignedBookedServices error:", error);
 
-    throw new Error(
-      error.message ||
-        "Failed to fetch assigned service bookings"
-    );
-  }
+        throw new Error(
+          error.message || "Failed to fetch assigned service bookings",
+        );
+      }
     },
     getAstrologerById: async (_, { astrologerId }) => {
-  return await prisma.astrologer.findUnique({
+      return await prisma.astrologer.findUnique({
+        where: {
+          id: astrologerId,
+        },
+      });
+    },
+    getAstrologerAnalytics: async (_, { astrologerId }) => {
+      try {
+        const astrologer = await prisma.astrologer.findUnique({
+          where: { id: astrologerId },
+          select: {
+            rating: true,
+          },
+        });
+
+        if (!astrologer) {
+          throw new Error("Astrologer not found");
+        }
+
+        const [wallet, followersCount, totalChats, totalCalls, sessions] =
+          await Promise.all([
+            prisma.astrologerWallet.findUnique({
+              where: {
+                astrologerId,
+              },
+              select: {
+                totalEarned: true,
+              },
+            }),
+
+            prisma.astrologerFollow.count({
+              where: {
+                astrologerId,
+              },
+            }),
+
+            prisma.session.count({
+              where: {
+                astrologerId,
+                type: "CHAT",
+                status: "COMPLETED",
+              },
+            }),
+
+            prisma.session.count({
+              where: {
+                astrologerId,
+                type: "CALL",
+                status: "COMPLETED",
+              },
+            }),
+
+            prisma.session.findMany({
+              where: {
+                astrologerId,
+                status: "COMPLETED",
+
+                // only current year
+                createdAt: {
+                  gte: new Date(new Date().getFullYear(), 0, 1),
+                  lte: new Date(),
+                },
+              },
+
+              select: {
+                type: true,
+                coinsEarned: true,
+                createdAt: true,
+              },
+            }),
+          ]);
+
+        const currentYear = new Date().getFullYear();
+        const currentMonth = new Date().getMonth();
+
+        const monthNames = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+
+        // Initialize Jan -> Current Month
+        const monthlyData = [];
+
+        for (let i = 0; i <= currentMonth; i++) {
+          monthlyData.push({
+            month: monthNames[i],
+            earnings: 0,
+            chats: 0,
+            calls: 0,
+          });
+        }
+
+        // Fill actual data
+        sessions.forEach((session) => {
+          const sessionDate = new Date(session.createdAt);
+
+          if (sessionDate.getFullYear() !== currentYear) return;
+
+          const monthIndex = sessionDate.getMonth();
+
+          monthlyData[monthIndex].earnings += session.coinsEarned || 0;
+
+          if (session.type === "CHAT") {
+            monthlyData[monthIndex].chats += 1;
+          }
+
+          if (session.type === "CALL") {
+            monthlyData[monthIndex].calls += 1;
+          }
+        });
+
+        return {
+          totalEarnings: wallet?.totalEarned || 0,
+          totalFollowers: followersCount,
+          totalChats,
+          totalCalls,
+          averageRating: astrologer.rating || 0,
+          monthlyData,
+        };
+      } catch (error) {
+        console.error("getAstrologerAnalytics Error:", error);
+        throw new Error(error.message);
+      }
+    },
+    getAstrologerNotices: async (_, { astrologerId }) => {
+      try {
+        const now = new Date();
+
+        const notices = await prisma.notice.findMany({
+          where: {
+            isActive: true,
+
+            OR: [
+              {
+                targetType: "ALL",
+              },
+              {
+                targetType: "SELECTED",
+                astrologers: {
+                  some: {
+                    astrologerId,
+                  },
+                },
+              },
+            ],
+
+            AND: [
+              {
+                OR: [{ startDate: null }, { startDate: { lte: now } }],
+              },
+              {
+                OR: [{ endDate: null }, { endDate: { gte: now } }],
+              },
+            ],
+          },
+
+          orderBy: [{ isPinned: "desc" }, { createdAt: "desc" }],
+        });
+
+        return notices;
+      } catch (error) {
+        console.error("getAstrologerNotices Error:", error);
+        throw new Error(error.message);
+      }
+    },
+    //---------START CODE FOR LIVE STREAMING-------------
+    getLiveStreams: async () => {
+  return prisma.liveStream.findMany({
     where: {
-      id: astrologerId,
+      status: "LIVE",
+    },
+    orderBy: {
+      createdAt: "desc",
     },
   });
     },
-    getAstrologerAnalytics: async (_, { astrologerId }) => {
-  try {
-    const astrologer = await prisma.astrologer.findUnique({
-      where: { id: astrologerId },
-      select: {
-        rating: true,
-      },
-    });
 
-    if (!astrologer) {
-      throw new Error("Astrologer not found");
-    }
-
-    const [
-      wallet,
-      followersCount,
-      totalChats,
-      totalCalls,
-      sessions,
-    ] = await Promise.all([
-      prisma.astrologerWallet.findUnique({
-        where: {
-          astrologerId,
-        },
-        select: {
-          totalEarned: true,
-        },
-      }),
-
-      prisma.astrologerFollow.count({
-        where: {
-          astrologerId,
-        },
-      }),
-
-      prisma.session.count({
-        where: {
-          astrologerId,
-          type: "CHAT",
-          status: "COMPLETED",
-        },
-      }),
-
-      prisma.session.count({
-        where: {
-          astrologerId,
-          type: "CALL",
-          status: "COMPLETED",
-        },
-      }),
-
-      prisma.session.findMany({
-        where: {
-          astrologerId,
-          status: "COMPLETED",
-
-          // only current year
-          createdAt: {
-            gte: new Date(new Date().getFullYear(), 0, 1),
-            lte: new Date(),
-          },
-        },
-
-        select: {
-          type: true,
-          coinsEarned: true,
-          createdAt: true,
-        },
-      }),
-    ]);
-
-    const currentYear = new Date().getFullYear();
-    const currentMonth = new Date().getMonth();
-
-    const monthNames = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-
-    // Initialize Jan -> Current Month
-    const monthlyData = [];
-
-    for (let i = 0; i <= currentMonth; i++) {
-      monthlyData.push({
-        month: monthNames[i],
-        earnings: 0,
-        chats: 0,
-        calls: 0,
-      });
-    }
-
-    // Fill actual data
-    sessions.forEach((session) => {
-      const sessionDate = new Date(session.createdAt);
-
-      if (sessionDate.getFullYear() !== currentYear) return;
-
-      const monthIndex = sessionDate.getMonth();
-
-      monthlyData[monthIndex].earnings += session.coinsEarned || 0;
-
-      if (session.type === "CHAT") {
-        monthlyData[monthIndex].chats += 1;
-      }
-
-      if (session.type === "CALL") {
-        monthlyData[monthIndex].calls += 1;
-      }
-    });
-
-    return {
-      totalEarnings: wallet?.totalEarned || 0,
-      totalFollowers: followersCount,
-      totalChats,
-      totalCalls,
-      averageRating: astrologer.rating || 0,
-      monthlyData,
-    };
-  } catch (error) {
-    console.error("getAstrologerAnalytics Error:", error);
-    throw new Error(error.message);
-  }
-    },
-    getAstrologerNotices: async (_, { astrologerId }) => {
-  try {
-    const now = new Date();
-
-    const notices = await prisma.notice.findMany({
+    joinLive: async (
+  _,
+  { channelName, role }
+) => {
+  const stream =
+    await prisma.liveStream.findFirst({
       where: {
-        isActive: true,
-
-        OR: [
-          {
-            targetType: "ALL",
-          },
-          {
-            targetType: "SELECTED",
-            astrologers: {
-              some: {
-                astrologerId,
-              },
-            },
-          },
-        ],
-
-        AND: [
-          {
-            OR: [
-              { startDate: null },
-              { startDate: { lte: now } },
-            ],
-          },
-          {
-            OR: [
-              { endDate: null },
-              { endDate: { gte: now } },
-            ],
-          },
-        ],
+        channelName,
+        status: "LIVE",
       },
-
-      orderBy: [
-        { isPinned: "desc" },
-        { createdAt: "desc" },
-      ],
     });
 
-    return notices;
-  } catch (error) {
-    console.error("getAstrologerNotices Error:", error);
-    throw new Error(error.message);
+  if (!stream) {
+    throw new Error(
+      "Live stream not found"
+    );
   }
-    },
 
+  const uid = Math.floor(
+    Math.random() * 100000
+  );
+
+  const token = generateRtcToken({
+    channelName,
+    uid,
+    role,
+  });
+
+  return {
+    token,
+    uid,
+    appId: process.env.AGORA_APP_ID,
+    channelName,
+  };
+},
+    //-----------END CODE FOR LIVE STREAMING-------------
   },
 
   Mutation: {
@@ -2012,39 +2042,89 @@ export default {
         throw new Error(error.message);
       }
     },
-  toggleAstrologerService: async (
-  _,
-  { astrologerId, serviceType, status },
-  { user }
-) => {
+    toggleAstrologerService: async (
+      _,
+      { astrologerId, serviceType, status },
+      { user },
+    ) => {
+      if (!user) {
+        throw new Error("Unauthorized");
+      }
+
+      const fieldMap = {
+        CHAT: "isChatActive",
+        CALL: "isCallActive",
+        LIVE: "isLiveActive",
+        PROMOTIONAL: "isPromotional",
+      };
+
+      const field = fieldMap[serviceType];
+
+      await prisma.astrologer.update({
+        where: {
+          id: astrologerId,
+        },
+        data: {
+          [field]: status,
+        },
+      });
+
+      return {
+        success: true,
+        message: `${serviceType} ${
+          status ? "enabled" : "disabled"
+        } successfully`,
+      };
+    },
+    //-----------START CODE FOR LIVE STREAMING-----------
+    startLive: async (_, { title }, { user }) => {
   if (!user) {
     throw new Error("Unauthorized");
   }
 
-  const fieldMap = {
-    CHAT: "isChatActive",
-    CALL: "isCallActive",
-    LIVE: "isLiveActive",
-    PROMOTIONAL: "isPromotional",
-  };
-
-  const field = fieldMap[serviceType];
-
-  await prisma.astrologer.update({
-    where: {
-      id: astrologerId,
-    },
+  const stream = await prisma.liveStream.create({
     data: {
-      [field]: status,
+      astrologerId: user.id,
+      title,
+      channelName: `astro-${user.id}`,
+      status: "LIVE",
     },
   });
 
-  return {
-    success: true,
-    message: `${serviceType} ${
-      status ? "enabled" : "disabled"
-    } successfully`,
-  };
+  return stream;
 },
+
+endLive: async (_, { streamId }, { user }) => {
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  const stream = await prisma.liveStream.findUnique({
+    where: {
+      id: streamId,
+    },
+  });
+
+  if (!stream) {
+    throw new Error("Stream not found");
+  }
+
+  if (stream.astrologerId !== user.id) {
+    throw new Error("Access denied");
+  }
+
+  await prisma.liveStream.update({
+    where: {
+      id: streamId,
+    },
+    data: {
+      status: "ENDED",
+      endedAt: new Date(),
+    },
+  });
+
+  return true;
+},
+    //----------END CODE FOR LIVE STREAMING--------------
   },
 };
