@@ -95,10 +95,13 @@ export const verifyOtpService = async (contactNo, otp, res) => {
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
 
-  await prisma.astrologer.update({
-    where: { id: astrologer.id },
-    data: { refreshToken },
-  });
+ await prisma.astrologer.update({
+  where: { id: astrologer.id },
+  data: {
+    refreshToken,
+    isOnline: true,
+  },
+});
 
   await redis.set(
     `refresh:${astrologer.id}`,
@@ -202,6 +205,7 @@ export const logoutService = async (req, res) => {
   await prisma.astrologer.update({
     where: { id: decoded.id },
     data: { refreshToken: null },
+    isOnline: false,
   });
 
   await redis.del(`refresh:${decoded.id}`);
