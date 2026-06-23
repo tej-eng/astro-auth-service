@@ -94,15 +94,14 @@ export const verifyOtpService = async (contactNo, otp, res) => {
 
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
-   console.log("cccccccccccccccccccccccc");
  await prisma.astrologer.update({
   where: { id: astrologer.id },
   data: {
     refreshToken,
     isOnline: true,
+    
   },
 });
-console.log("----------eeeeeeeeeeeeeeeee------------------------");
   await redis.set(
     `refresh:${astrologer.id}`,
     refreshToken,
@@ -201,13 +200,13 @@ export const logoutService = async (req, res) => {
   } catch {
     throw new Error("Invalid refresh token");
   }
-
+console.log("ssssssssssssssssssssssss");
   await prisma.astrologer.update({
     where: { id: decoded.id },
     data: { refreshToken: null },
     isOnline: false,
   });
-
+console.log("tttttttttttttttttttttttttt");
   await redis.del(`refresh:${decoded.id}`);
 
   if (res) {
