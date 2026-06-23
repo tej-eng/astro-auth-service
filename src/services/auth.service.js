@@ -190,28 +190,28 @@ export const logoutService = async (req, res) => {
   console.log("-----------1111111111111");
   if (!req || !req.cookies) throw new Error("Request context missing");
 
-  const token = req.cookies[REFRESH_COOKIE_NAME];
-  console.log("2222222222222222");
+  // const token = req.cookies[REFRESH_COOKIE_NAME];
+  // console.log("2222222222222222",token);
 
-  if (!token) return "Already logged out";
+  // if (!token) return "Already logged out";
 
-  let decoded;
+  // let decoded;
 
-  try {
-    console.log("3333333333333333333333333");
-    decoded = verifyRefreshToken(token);
-  } catch {
-    console.log("4444444444444444444444");
-    throw new Error("Invalid refresh token");
-  }
+  // try {
+  //   console.log("3333333333333333333333333");
+  //   decoded = verifyRefreshToken(token);
+  // } catch {
+  //   console.log("4444444444444444444444");
+  //   throw new Error("Invalid refresh token");
+  // }
 console.log("ssssssssssssssssssssssss");
   await prisma.astrologer.update({
     where: { id: decoded.id },
     data: { refreshToken: null },
     isOnline: false,
   });
-console.log("tttttttttttttttttttttttttt");
-  await redis.del(`refresh:${decoded.id}`);
+  //console.log("tttttttttttttttttttttttttt");
+  //await redis.del(`refresh:${decoded.id}`);
 
   if (res) {
     res.clearCookie(REFRESH_COOKIE_NAME, {
