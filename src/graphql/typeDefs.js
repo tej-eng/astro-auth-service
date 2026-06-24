@@ -174,6 +174,7 @@ export default gql`
     reviewComment: String
 
     lastMessage: String
+    source: String 
   }
 
   type AstrologerChatHistoryResponse {
@@ -190,7 +191,7 @@ export default gql`
 
     userName: String
     status: SessionStatus
-
+    source: String
     startDate: String
     endDate: String
   }
@@ -504,14 +505,14 @@ input AstrologerSessionFilterInput {
   userName: String
   startDate: String
   endDate: String
-  sessionType: SessionType  #  Changed from String to SessionType enum
+  sessionType: SessionType 
 }
 
 type AstrologerSessionItem {
   sessionId: String
   chatId: String
-  sessionType: SessionType  #  Changed from String to SessionType enum
-  status: SessionStatus     #  Changed from String to SessionStatus enum
+  sessionType: SessionType  
+  status: SessionStatus     
   userId: String
   userName: String
   userMobile: String
