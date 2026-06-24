@@ -909,175 +909,137 @@ export default {
       }
     },
     getAstrologerProfile: async (_, __, { user }) => {
-      try {
-        if (!user) {
-          throw new Error("Unauthorized");
-        }
+  try {
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
 
-        const astrologerId = user.id;
+    const astrologerId = user.id;
 
-        const astrologer = await prisma.astrologer.findUnique({
-          where: {
-            id: astrologerId,
+    const astrologer = await prisma.astrologer.findUnique({
+      where: {
+        id: astrologerId,
+      },
+      include: {
+        pricing: true,
+        wallet: true,
+        reviews: {
+          orderBy: {
+            createdAt: "desc",
           },
-
-          include: {
-            pricing: true,
-
-            wallet: true,
-
-            reviews: {
-              orderBy: {
-                createdAt: "desc",
-              },
-              take: 5,
-              select: {
-                id: true,
-                rating: true,
-                comment: true,
-                reply: true,
-                userName: true,
-                createdAt: true,
-              },
-            },
-
-            addresses: true,
-
-            experiences: true,
-
-            kycDetail: true,
+          take: 5,
+          select: {
+            id: true,
+            rating: true,
+            comment: true,
+            reply: true,
+            userName: true,
+            createdAt: true,
           },
-        });
+        },
+        addresses: true,
+        experiences: true,
+        kycDetail: true,
+      },
+    });
 
-        if (!astrologer) {
-          throw new Error("Astrologer profile not found");
-        }
+    if (!astrologer) {
+      throw new Error("Astrologer profile not found");
+    }
 
-        const totalReviews = await prisma.review.count({
-          where: {
-            astrologerId,
-          },
-        });
+    const totalReviews = await prisma.review.count({
+      where: {
+        astrologerId,
+      },
+    });
 
-        const totalSessions = await prisma.session.count({
-          where: {
-            astrologerId,
-            status: "COMPLETED",
-          },
-        });
+    const totalSessions = await prisma.session.count({
+      where: {
+        astrologerId,
+        status: "COMPLETED",
+      },
+    });
 
-        return {
-          success: true,
-
-          message: "Astrologer profile fetched successfully",
-
-          data: {
-            id: astrologer.id,
-
-            profilePic: astrologer.profilePic || "",
-
-            name: astrologer.name || "",
-
-            displayName: astrologer.displayName || "",
-
-            email: astrologer.email || "",
-
-            contactNo: astrologer.contactNo || "",
-
-            about: astrologer.about || "",
-
-            gender: astrologer.gender,
-
-            languages: astrologer.languages || [],
-
-            skills: astrologer.skills || [],
-
-            problems: astrologer.problems || [],
-
-            experience: astrologer.experience || 0,
-
-            rating: astrologer.rating || 0,
-
-            tags: astrologer.tags || "",
-
-            vtags: astrologer.vtags || "",
-
-            status: astrologer.status || false,
-
-            createdAt: astrologer.createdAt
-              ? astrologer.createdAt.toISOString()
-              : null,
-
-            totalReviews,
-
-            totalSessions,
-
-            pricing: (astrologer.pricing || []).map((item) => ({
-              id: item.id,
-              type: item.type,
-              price: item.price,
-              offerPrice: item.offerPrice,
-              commissionPercent: item.commissionPercent,
-              isActive: item.isActive,
-            })),
-
-            wallet: astrologer.wallet
-              ? {
-                  balanceCoins: astrologer.wallet.balanceCoins || 0,
-                  totalEarned: astrologer.wallet.totalEarned || 0,
-                  totalWithdrawn: astrologer.wallet.totalWithdrawn || 0,
-                }
-              : null,
-
-            recentReviews: (astrologer.reviews || []).map((review) => ({
-              id: review.id,
-              rating: review.rating,
-              comment: review.comment || "",
-              reply: review.reply || "",
-              userName: review.userName || "",
-              createdAt: review.createdAt
-                ? review.createdAt.toISOString()
-                : null,
-            })),
-
-            addresses: astrologer.addresses || [],
-
-            experiences: astrologer.experiences || [],
-
-            kycDetail: astrologer.kycDetail
-              ? {
-                  accountHolderName:
-                    astrologer.kycDetail.accountHolderName || "",
-
-                  accountNumber: astrologer.kycDetail.accountNumber || "",
-
-                  bankName: astrologer.kycDetail.bankName || "",
-
-                  ifsc: astrologer.kycDetail.ifsc || "",
-
-                  branchName: astrologer.kycDetail.branchName || "",
-
-                  panNumber: astrologer.kycDetail.panNumber || "",
-
-                  profileImage: astrologer.kycDetail.profileImage || "",
-
-                  aadhaarImage: astrologer.kycDetail.aadhaarImage || "",
-
-                  panImage: astrologer.kycDetail.panImage || "",
-
-                  passbookImage: astrologer.kycDetail.passbookImage || "",
-
-                  status: astrologer.kycDetail.status || "PENDING",
-                }
-              : null,
-          },
-        };
-      } catch (error) {
-        console.error("getAstrologerProfile error:", error);
-
-        throw new Error(error.message || "Failed to fetch astrologer profile");
-      }
-    },
+    return {
+      success: true,
+      message: "Astrologer profile fetched successfully",
+      data: {
+        id: astrologer.id,
+        profilePic: astrologer.profilePic || "", 
+        name: astrologer.name || "",
+        displayName: astrologer.displayName || "",
+        email: astrologer.email || "",
+        contactNo: astrologer.contactNo || "",
+        about: astrologer.about || "",
+        gender: astrologer.gender,
+        languages: astrologer.languages || [],
+        skills: astrologer.skills || [],
+        problems: astrologer.problems || [],
+        experience: astrologer.experience || 0,
+        rating: astrologer.rating || 0,
+        tags: astrologer.tags || "",
+        vtags: astrologer.vtags || "",
+        status: astrologer.status || false,
+        isCallActive: astrologer.isCallActive || false,
+        isChatActive: astrologer.isChatActive || false,
+        isLiveActive: astrologer.isLiveActive || false,
+        isBusy: astrologer.isBusy || false,
+        isOnline: astrologer.isOnline || false,
+        isPromotional: astrologer.isPromotional || false,
+        createdAt: astrologer.createdAt
+          ? astrologer.createdAt.toISOString()
+          : null,
+        totalReviews,
+        totalSessions,
+        pricing: (astrologer.pricing || []).map((item) => ({
+          id: item.id,
+          type: item.type,
+          price: item.price,
+          offerPrice: item.offerPrice,
+          commissionPercent: item.commissionPercent,
+          isActive: item.isActive,
+        })),
+        wallet: astrologer.wallet
+          ? {
+              balanceCoins: astrologer.wallet.balanceCoins || 0,
+              totalEarned: astrologer.wallet.totalEarned || 0,
+              totalWithdrawn: astrologer.wallet.totalWithdrawn || 0,
+            }
+          : null,
+        recentReviews: (astrologer.reviews || []).map((review) => ({
+          id: review.id,
+          rating: review.rating,
+          comment: review.comment || "",
+          reply: review.reply || "",
+          userName: review.userName || "",
+          createdAt: review.createdAt
+            ? review.createdAt.toISOString()
+            : null,
+        })),
+        addresses: astrologer.addresses || [],
+        experiences: astrologer.experiences || [],
+        kycDetail: astrologer.kycDetail
+          ? {
+              accountHolderName:
+                astrologer.kycDetail.accountHolderName || "",
+              accountNumber: astrologer.kycDetail.accountNumber || "",
+              bankName: astrologer.kycDetail.bankName || "",
+              ifsc: astrologer.kycDetail.ifsc || "",
+              branchName: astrologer.kycDetail.branchName || "",
+              panNumber: astrologer.kycDetail.panNumber || "",
+              aadhaarImage: astrologer.kycDetail.aadhaarImage || "",
+              panImage: astrologer.kycDetail.panImage || "",
+              passbookImage: astrologer.kycDetail.passbookImage || "",
+              status: astrologer.kycDetail.status || "PENDING",
+            }
+          : null,
+      },
+    };
+  } catch (error) {
+    console.error("getAstrologerProfile error:", error);
+    throw new Error(error.message || "Failed to fetch astrologer profile");
+  }
+},
 
     getAstrologerSessions: async (_, { filter = {} }, { user }) => {
       try {

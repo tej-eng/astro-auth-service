@@ -455,8 +455,6 @@ export default gql`
     ifsc: String
     branchName: String
     panNumber: String
-
-    profileImage: String
     aadhaarImage: String
     panImage: String
     passbookImage: String
