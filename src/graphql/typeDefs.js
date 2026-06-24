@@ -249,7 +249,7 @@ export default gql`
 
     coinsEarned: Int
     commission: Int
-
+    source: String 
     lastMessage: String
   }
 
@@ -258,7 +258,7 @@ export default gql`
     totalCount: Int!
     currentPage: Int!
     totalPages: Int!
-
+    
     data: [AstrologerCallHistoryItem!]!
   }
 
@@ -268,7 +268,7 @@ export default gql`
 
     userName: String
     status: SessionStatus
-
+    source: String
     startDate: String
     endDate: String
   }

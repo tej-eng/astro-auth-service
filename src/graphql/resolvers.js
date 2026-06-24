@@ -449,177 +449,167 @@ export default {
         throw new Error(error.message || "Failed to fetch messages");
       }
     },
-    getAstrologerCallHistory: async (_, { filter = {} }, { user }) => {
-      try {
-        /* =====================================
+
+   getAstrologerCallHistory: async (_, { filter = {} }, { user }) => {
+  try {
+    /* =====================================
        AUTH CHECK
     ===================================== */
-        if (!user) {
-          throw new Error("Unauthorized");
-        }
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
 
-        const astrologerId = user.id;
+    const astrologerId = user.id;
 
-        const {
-          page = 1,
-          limit = 10,
-          userName,
-          status,
-          startDate,
-          endDate,
-        } = filter;
+    const {
+      page = 1,
+      limit = 10,
+      userName,
+      status,
+      startDate,
+      endDate,
+      source, 
+    } = filter;
 
-        const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-        console.log("ASTROLOGER CALL HISTORY:", astrologerId);
+    console.log("ASTROLOGER CALL HISTORY:", astrologerId);
 
-        /* =====================================
+    /* =====================================
        FILTER
     ===================================== */
-        const where = {
-          astrologerId,
+    const where = {
+      astrologerId,
+      type: "CALL",
 
-          type: "CALL",
+      ...(status && {
+        status,
+      }),
 
-          ...(status && {
-            status,
-          }),
+      ...(source && { 
+        source,
+      }),
 
-          ...(startDate || endDate
-            ? {
-                createdAt: {
-                  ...(startDate && {
-                    gte: new Date(startDate),
-                  }),
-
-                  ...(endDate && {
-                    lte: new Date(endDate),
-                  }),
-                },
-              }
-            : {}),
-
-          ...(userName && {
-            user: {
-              name: {
-                contains: userName,
-                mode: "insensitive",
-              },
+      ...(startDate || endDate
+        ? {
+            createdAt: {
+              ...(startDate && {
+                gte: new Date(startDate),
+              }),
+              ...(endDate && {
+                lte: new Date(endDate),
+              }),
             },
-          }),
-        };
+          }
+        : {}),
 
-        /* =====================================
+      ...(userName && {
+        user: {
+          name: {
+            contains: userName,
+            mode: "insensitive",
+          },
+        },
+      }),
+    };
+
+    /* =====================================
        TOTAL COUNT
     ===================================== */
-        const totalCount = await prisma.session.count({
-          where,
-        });
+    const totalCount = await prisma.session.count({
+      where,
+    });
 
-        /* =====================================
+    /* =====================================
        FETCH SESSIONS
     ===================================== */
-        const sessions = await prisma.session.findMany({
-          where,
-
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                mobile: true,
-                countryCode: true,
-              },
-            },
-
-            messages: {
-              orderBy: {
-                createdAt: "desc",
-              },
-
-              take: 1,
-
-              select: {
-                roomId: true,
-                message: true,
-              },
-            },
+    const sessions = await prisma.session.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            mobile: true,
+            countryCode: true,
           },
-
+        },
+        messages: {
           orderBy: {
             createdAt: "desc",
           },
+          take: 1,
+          select: {
+            roomId: true,
+            message: true,
+          },
+        },
+        intakes: {
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 1,
+          select: {
+            source: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      skip,
+      take: limit,
+    });
 
-          skip,
-          take: limit,
-        });
-
-        /* =====================================
+    /* =====================================
        RESPONSE
     ===================================== */
-        const data = sessions.map((session) => {
-          const lastMessage = session.messages?.[0] || null;
+    const data = sessions.map((session) => {
+      const lastMessage = session.messages?.[0] || null;
+      const intake = session.intakes?.[0] || null;
 
-          let durationMinutes = 0;
-
-          if (session.durationSec) {
-            durationMinutes = Math.ceil(session.durationSec / 60);
-          }
-
-          return {
-            sessionId: session.id,
-
-            roomId: lastMessage?.roomId || null,
-
-            userName: session.user?.name || null,
-
-            userMobile: session.user?.mobile || null,
-
-            userCountryCode: session.user?.countryCode || null,
-
-            startedAt: session.startedAt
-              ? session.startedAt.toISOString()
-              : null,
-
-            endedAt: session.endedAt ? session.endedAt.toISOString() : null,
-
-            createdAt: session.createdAt
-              ? session.createdAt.toISOString()
-              : null,
-
-            status: session.status,
-
-            durationSec: session.durationSec || 0,
-
-            durationMinutes,
-
-            ratePerMin: session.ratePerMin || 0,
-
-            coinsEarned: session.coinsEarned || 0,
-
-            commission: session.commission || 0,
-
-            lastMessage: lastMessage?.message || null,
-          };
-        });
-
-        return {
-          success: true,
-
-          totalCount,
-
-          currentPage: page,
-
-          totalPages: Math.ceil(totalCount / limit),
-
-          data,
-        };
-      } catch (error) {
-        console.error("getAstrologerCallHistory error:", error);
-
-        throw new Error(error.message || "Failed to fetch call history");
+      let durationMinutes = 0;
+      if (session.durationSec) {
+        durationMinutes = Math.ceil(session.durationSec / 60);
       }
-    },
+
+      return {
+        sessionId: session.id,
+        roomId: lastMessage?.roomId || null,
+        userName: session.user?.name || null,
+        userMobile: session.user?.mobile || null,
+        userCountryCode: session.user?.countryCode || null,
+        startedAt: session.startedAt
+          ? session.startedAt.toISOString()
+          : null,
+        endedAt: session.endedAt ? session.endedAt.toISOString() : null,
+        createdAt: session.createdAt
+          ? session.createdAt.toISOString()
+          : null,
+        status: session.status,
+        durationSec: session.durationSec || 0,
+        durationMinutes,
+        ratePerMin: session.ratePerMin || 0,
+        coinsEarned: session.coinsEarned || 0,
+        commission: session.commission || 0,
+        lastMessage: lastMessage?.message || null,
+        source: session.source || null, 
+        intakeSource: intake?.source || null, 
+      };
+    });
+
+    return {
+      success: true,
+      totalCount,
+      currentPage: page,
+      totalPages: Math.ceil(totalCount / limit),
+      data,
+    };
+  } catch (error) {
+    console.error("getAstrologerCallHistory error:", error);
+    throw new Error(error.message || "Failed to fetch call history");
+  }
+},
 
     getAstrologerWalletTransactions: async (
       _,
