@@ -5,6 +5,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
   verifyRefreshToken,
+  verifyAccessToken,
 } from "../config/jwt.js";
 
 const OTP_EXPIRE = 300;
@@ -187,33 +188,86 @@ export const refreshTokenService = async (req, res) => {
 };
 
 // ================= LOGOUT =================
+// export const logoutService = async (req, res) => {
+//   if (!req || !req.cookies) throw new Error("Request context missing");
+
+//   const token = req.cookies[REFRESH_COOKIE_NAME];
+
+//   if (!token) return "Already logged out";
+
+//   let decoded;
+
+//   try {
+//     decoded = verifyRefreshToken(token);
+//   } catch {
+//     throw new Error("Invalid refresh token");
+//   }
+
+//   await prisma.astrologer.update({
+//     where: { id: decoded.id },
+//     data: { refreshToken: null },
+//     isOnline: false,
+//   });
+
+//   await redis.del(`refresh:${decoded.id}`);
+
+//   if (res) {
+//     res.clearCookie(REFRESH_COOKIE_NAME, {
+//       httpOnly: true,
+//       sameSite: "lax",
+//       path: "/",
+//     });
+//   }
+
+//   return "Logged out successfully";
+// };
+
 export const logoutService = async (req, res) => {
-  if (!req || !req.cookies) throw new Error("Request context missing");
+  if (!req?.cookies) {
+    throw new Error("Request context missing");
+  }
 
-  const token = req.cookies[REFRESH_COOKIE_NAME];
+  const token = req.cookies.accessToken;
 
-  if (!token) return "Already logged out";
+  if (!token) {
+    throw new Error("Access token missing");
+  }
 
   let decoded;
 
   try {
-    decoded = verifyRefreshToken(token);
-  } catch {
-    throw new Error("Invalid refresh token");
+    decoded = verifyAccessToken(token);
+    console.log("dddddddddddddddddddddddddddddddddddddddddd--------------",decoded);
+  } catch (error) {
+    throw new Error("Invalid access token");
   }
 
   await prisma.astrologer.update({
-    where: { id: decoded.id },
-    data: { refreshToken: null },
-    isOnline: false,
+    where: {
+      id: decoded.id,
+    },
+    data: {
+      refreshToken: null,
+      isOnline: false,
+    },
   });
 
   await redis.del(`refresh:${decoded.id}`);
 
   if (res) {
-    res.clearCookie(REFRESH_COOKIE_NAME, {
+    res.clearCookie("accessToken", {
       httpOnly: true,
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
+      domain: ".dhwaniastro.com",
+      path: "/",
+    });
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      domain: ".dhwaniastro.com",
       path: "/",
     });
   }
