@@ -450,7 +450,7 @@ export default {
       }
     },
 
-   getAstrologerCallHistory: async (_, { filter = {} }, { user }) => {
+  getAstrologerCallHistory: async (_, { filter = {} }, { user }) => {
   try {
     /* =====================================
        AUTH CHECK
@@ -468,7 +468,7 @@ export default {
       status,
       startDate,
       endDate,
-      source, 
+      source,
     } = filter;
 
     const skip = (page - 1) * limit;
@@ -486,7 +486,7 @@ export default {
         status,
       }),
 
-      ...(source && { 
+      ...(source && {
         source,
       }),
 
@@ -544,15 +544,6 @@ export default {
             message: true,
           },
         },
-        intakes: {
-          orderBy: {
-            createdAt: "desc",
-          },
-          take: 1,
-          select: {
-            source: true,
-          },
-        },
       },
       orderBy: {
         createdAt: "desc",
@@ -566,7 +557,6 @@ export default {
     ===================================== */
     const data = sessions.map((session) => {
       const lastMessage = session.messages?.[0] || null;
-      const intake = session.intakes?.[0] || null;
 
       let durationMinutes = 0;
       if (session.durationSec) {
@@ -594,7 +584,6 @@ export default {
         commission: session.commission || 0,
         lastMessage: lastMessage?.message || null,
         source: session.source || null, 
-        intakeSource: intake?.source || null, 
       };
     });
 
