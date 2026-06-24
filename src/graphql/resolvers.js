@@ -1029,7 +1029,7 @@ export default {
   }
 },
 
-   getAstrologerSessions: async (_, { filter = {} }, { user }) => {
+  getAstrologerSessions: async (_, { filter = {} }, { user }) => {
   try {
     if (!user) {
       throw new Error("Unauthorized");
@@ -1045,7 +1045,7 @@ export default {
       startDate,
       endDate,
       sessionType,
-      source, 
+      source,
     } = filter;
 
     const skip = (page - 1) * limit;
@@ -1197,8 +1197,9 @@ export default {
         commission: session.commission || 0,
         rating: session.review?.rating ?? null,
         reviewComment: session.review?.comment ?? null,
-        source: session.source || null, 
-    });
+        source: session.source || null,
+      }; 
+    }); 
 
     return {
       success: true,
