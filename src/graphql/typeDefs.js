@@ -496,64 +496,52 @@ export default gql`
   #--END code for getUser Details-------
 
   #-----------------start code for getAstrologerSessions----------------------
+#-----------------start code for getAstrologerSessions----------------------
 
-  input AstrologerSessionFilterInput {
-    page: Int
-    limit: Int
+input AstrologerSessionFilterInput {
+  page: Int
+  limit: Int
+  userName: String
+  startDate: String
+  endDate: String
+  sessionType: SessionType  #  Changed from String to SessionType enum
+}
 
-    userName: String
+type AstrologerSessionItem {
+  sessionId: String
+  chatId: String
+  sessionType: SessionType  #  Changed from String to SessionType enum
+  status: SessionStatus     #  Changed from String to SessionStatus enum
+  userId: String
+  userName: String
+  userMobile: String
+  userCountryCode: String
+  birthPlace: String
+  birthDate: String
+  birthTime: String
+  occupation: String
+  gender: String
+  rating: Int
+  reviewComment: String
+  startedAt: String
+  endedAt: String
+  createdAt: String
+  durationSec: Int
+  durationMinutes: Int
+  ratePerMin: Int
+  coinsEarned: Int
+  commission: Int
+}
 
-    startDate: String
-    endDate: String
+type AstrologerSessionResponse {
+  success: Boolean!
+  totalCount: Int!
+  currentPage: Int!
+  totalPages: Int!
+  data: [AstrologerSessionItem!]!
+}
 
-    sessionType: String
-  }
-
-  type AstrologerSessionItem {
-    sessionId: String
-    chatId: String
-    sessionType: String
-    status: String
-
-    userId: String
-    userName: String
-    userMobile: String
-    userCountryCode: String
-
-    birthPlace: String
-    birthDate: String
-    birthTime: String
-    occupation: String
-    gender: String
-
-    rating: Int
-    reviewComment: String
-
-    startedAt: String
-    endedAt: String
-    createdAt: String
-
-    durationSec: Int
-    durationMinutes: Int
-
-    ratePerMin: Int
-
-    coinsEarned: Int
-    commission: Int
-  }
-
-  type AstrologerSessionResponse {
-    success: Boolean!
-
-    totalCount: Int!
-
-    currentPage: Int!
-
-    totalPages: Int!
-
-    data: [AstrologerSessionItem!]!
-  }
-
+#--END code for getAstrologerSessions----------------------
   #--END code for getAstrologerSessions----------------------
 
   #-----------START code for get Offer--

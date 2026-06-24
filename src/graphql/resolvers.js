@@ -1042,208 +1042,179 @@ export default {
 },
 
     getAstrologerSessions: async (_, { filter = {} }, { user }) => {
-      try {
-        if (!user) {
-          throw new Error("Unauthorized");
-        }
+  try {
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
 
-        const astrologerId = user.id;
+    const astrologerId = user.id;
+    console.log("ASTROLOGER ID:", astrologerId);
 
-        const {
-          page = 1,
-          limit = 10,
-          userName,
-          startDate,
-          endDate,
-          sessionType,
-        } = filter;
+    const {
+      page = 1,
+      limit = 10,
+      userName,
+      startDate,
+      endDate,
+      sessionType,
+    } = filter;
 
-        const skip = (page - 1) * limit;
+    const skip = (page - 1) * limit;
 
-        const where = {
-          astrologerId,
+    const where = {
+      astrologerId,
+      status: "COMPLETED",
+    };
 
-          status: "COMPLETED",
-
-          ...(sessionType && {
-            type: sessionType,
-          }),
-
-          ...(startDate || endDate
-            ? {
-                createdAt: {
-                  ...(startDate && {
-                    gte: new Date(startDate),
-                  }),
-                  ...(endDate && {
-                    lte: new Date(endDate),
-                  }),
-                },
-              }
-            : {}),
-
-          ...(userName && {
-            user: {
-              name: {
-                contains: userName,
-                mode: "insensitive",
-              },
-            },
-          }),
-        };
-
-        const totalCount = await prisma.session.count({
-          where,
-        });
-
-        const sessions = await prisma.session.findMany({
-          where,
-
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                mobile: true,
-                countryCode: true,
-              },
-            },
-
-            review: {
-              select: {
-                rating: true,
-                comment: true,
-              },
-            },
-          },
-
-          orderBy: {
-            createdAt: "desc",
-          },
-
-          skip,
-          take: limit,
-        });
-
-        const intakeConditions = sessions.map((session) => ({
-          userId: session.userId,
-          astrologerId: session.astrologerId,
-        }));
-
-        let intakeMap = new Map();
-
-        if (intakeConditions.length > 0) {
-          const intakes = await prisma.intake.findMany({
-            where: {
-              OR: intakeConditions,
-            },
-
-            orderBy: {
-              createdAt: "desc",
-            },
-
-            select: {
-              userId: true,
-              astrologerId: true,
-              chatId: true,
-
-              birthPlace: true,
-              birthDate: true,
-              birthTime: true,
-              occupation: true,
-              gender: true,
-              name: true,
-
-              createdAt: true,
-            },
-          });
-
-          for (const intake of intakes) {
-            const key = `${intake.userId}_${intake.astrologerId}`;
-
-            if (!intakeMap.has(key)) {
-              intakeMap.set(key, intake);
-            }
-          }
-        }
-
-        const data = sessions.map((session) => {
-          const intake =
-            intakeMap.get(`${session.userId}_${session.astrologerId}`) || null;
-
-          return {
-            sessionId: session.id,
-
-            sessionType: session.type,
-
-            status: session.status,
-
-            userId: session.userId,
-
-            userName: session.user?.name || "",
-
-            userMobile: session.user?.mobile || "",
-
-            userCountryCode: session.user?.countryCode || "",
-            chatId: intake?.chatId || null,
-
-            birthPlace: intake?.birthPlace || "",
-
-            birthDate: intake?.birthDate
-              ? intake.birthDate.toISOString()
-              : null,
-
-            birthTime: intake?.birthTime || "",
-
-            occupation: intake?.occupation || "",
-
-            gender: intake?.gender || null,
-
-            startedAt: session.startedAt
-              ? session.startedAt.toISOString()
-              : null,
-
-            endedAt: session.endedAt ? session.endedAt.toISOString() : null,
-
-            createdAt: session.createdAt
-              ? session.createdAt.toISOString()
-              : null,
-
-            durationSec: session.durationSec || 0,
-
-            durationMinutes: session.durationSec
-              ? Math.ceil(session.durationSec / 60)
-              : 0,
-
-            ratePerMin: session.ratePerMin || 0,
-
-            coinsEarned: session.coinsEarned || 0,
-
-            commission: session.commission || 0,
-
-            rating: session.review?.rating ?? null,
-
-            reviewComment: session.review?.comment ?? null,
-          };
-        });
-
-        return {
-          success: true,
-
-          totalCount,
-
-          currentPage: page,
-
-          totalPages: Math.ceil(totalCount / limit),
-
-          data,
-        };
-      } catch (error) {
-        console.error("getAstrologerSessions error:", error);
-
-        throw new Error(error.message || "Failed to fetch astrologer sessions");
+    //  Fix: Convert sessionType to uppercase and validate
+    if (sessionType) {
+      const sessionTypeUpper = sessionType.toUpperCase();
+      // Only add to where if it's a valid SessionType enum value
+      if (["CHAT", "CALL"].includes(sessionTypeUpper)) {
+        where.type = sessionTypeUpper;
       }
-    },
+    }
+
+    // Handle date filters
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) {
+        where.createdAt.gte = new Date(startDate);
+      }
+      if (endDate) {
+        where.createdAt.lte = new Date(endDate);
+      }
+    }
+
+    // Handle userName filter
+    if (userName) {
+      where.user = {
+        name: {
+          contains: userName,
+          mode: "insensitive",
+        },
+      };
+    }
+
+    const totalCount = await prisma.session.count({
+      where,
+    });
+
+    const sessions = await prisma.session.findMany({
+      where,
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            mobile: true,
+            countryCode: true,
+          },
+        },
+        review: {
+          select: {
+            rating: true,
+            comment: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      skip,
+      take: limit,
+    });
+
+    const intakeConditions = sessions.map((session) => ({
+      userId: session.userId,
+      astrologerId: session.astrologerId,
+    }));
+
+    let intakeMap = new Map();
+
+    if (intakeConditions.length > 0) {
+      const intakes = await prisma.intake.findMany({
+        where: {
+          OR: intakeConditions,
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        select: {
+          userId: true,
+          astrologerId: true,
+          chatId: true,
+          birthPlace: true,
+          birthDate: true,
+          birthTime: true,
+          occupation: true,
+          gender: true,
+          name: true,
+          createdAt: true,
+        },
+      });
+
+      for (const intake of intakes) {
+        const key = `${intake.userId}_${intake.astrologerId}`;
+        if (!intakeMap.has(key)) {
+          intakeMap.set(key, intake);
+        }
+      }
+    }
+
+    const data = sessions.map((session) => {
+      const intake =
+        intakeMap.get(`${session.userId}_${session.astrologerId}`) || null;
+
+      return {
+        sessionId: session.id,
+        sessionType: session.type, // This will be "CHAT" or "CALL"
+        status: session.status,
+        userId: session.userId,
+        userName: session.user?.name || "",
+        userMobile: session.user?.mobile || "",
+        userCountryCode: session.user?.countryCode || "",
+        chatId: intake?.chatId || null,
+        birthPlace: intake?.birthPlace || "",
+        birthDate: intake?.birthDate
+          ? intake.birthDate.toISOString()
+          : null,
+        birthTime: intake?.birthTime || "",
+        occupation: intake?.occupation || "",
+        gender: intake?.gender || null,
+        startedAt: session.startedAt
+          ? session.startedAt.toISOString()
+          : null,
+        endedAt: session.endedAt
+          ? session.endedAt.toISOString()
+          : null,
+        createdAt: session.createdAt
+          ? session.createdAt.toISOString()
+          : null,
+        durationSec: session.durationSec || 0,
+        durationMinutes: session.durationSec
+          ? Math.ceil(session.durationSec / 60)
+          : 0,
+        ratePerMin: session.ratePerMin || 0,
+        coinsEarned: session.coinsEarned || 0,
+        commission: session.commission || 0,
+        rating: session.review?.rating ?? null,
+        reviewComment: session.review?.comment ?? null,
+      };
+    });
+
+    return {
+      success: true,
+      totalCount,
+      currentPage: page,
+      totalPages: Math.ceil(totalCount / limit),
+      data,
+    };
+  } catch (error) {
+    console.error("getAstrologerSessions error:", error);
+    throw new Error(error.message || "Failed to fetch astrologer sessions");
+  }
+},
     getOffers: async (_, __, { user }) => {
       try {
         if (!user) {
