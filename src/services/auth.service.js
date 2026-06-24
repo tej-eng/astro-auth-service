@@ -116,7 +116,8 @@ export const verifyOtpService = async (contactNo, otp, res) => {
         secure: true,
         sameSite: "none",
         domain: ".dhwaniastro.com",
-        maxAge:  1 * 24 * 60 * 60 * 1000, //for testing 1 day, can be changed to 15 * 60 * 1000 for 15 mins in production
+       // maxAge:  1 * 24 * 60 * 60 * 1000, //for testing 1 day, can be changed to 15 * 60 * 1000 for 15 mins in production
+        maxAge: 2 * 60 * 1000, // 2 minutes
         path: "/",
       });
 
@@ -190,28 +191,28 @@ export const logoutService = async (req, res) => {
   console.log("-----------1111111111111");
   if (!req || !req.cookies) throw new Error("Request context missing");
 
-  // const token = req.cookies[REFRESH_COOKIE_NAME];
-  // console.log("2222222222222222",token);
+  const token = req.cookies[REFRESH_COOKIE_NAME];
+  console.log("2222222222222222",token);
 
-  // if (!token) return "Already logged out";
+  if (!token) return "Already logged out";
 
-  // let decoded;
+  let decoded;
 
-  // try {
-  //   console.log("3333333333333333333333333");
-  //   decoded = verifyRefreshToken(token);
-  // } catch {
-  //   console.log("4444444444444444444444");
-  //   throw new Error("Invalid refresh token");
-  // }
+  try {
+    console.log("3333333333333333333333333");
+    decoded = verifyRefreshToken(token);
+  } catch {
+    console.log("4444444444444444444444");
+    throw new Error("Invalid refresh token");
+  }
 console.log("ssssssssssssssssssssssss");
-  await prisma.astrologer.update({
+  const check = await prisma.astrologer.update({
     where: { id: decoded.id },
     data: { refreshToken: null },
     isOnline: false,
   });
-  //console.log("tttttttttttttttttttttttttt");
-  //await redis.del(`refresh:${decoded.id}`);
+  console.log("check-------",check);
+  await redis.del(`refresh:${decoded.id}`);
 
   if (res) {
     res.clearCookie(REFRESH_COOKIE_NAME, {
