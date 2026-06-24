@@ -503,6 +503,7 @@ input AstrologerSessionFilterInput {
   page: Int
   limit: Int
   userName: String
+  source: String
   startDate: String
   endDate: String
   sessionType: SessionType 
@@ -532,6 +533,7 @@ type AstrologerSessionItem {
   ratePerMin: Int
   coinsEarned: Int
   commission: Int
+  source: String
 }
 
 type AstrologerSessionResponse {

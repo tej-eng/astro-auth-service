@@ -1029,7 +1029,7 @@ export default {
   }
 },
 
-    getAstrologerSessions: async (_, { filter = {} }, { user }) => {
+   getAstrologerSessions: async (_, { filter = {} }, { user }) => {
   try {
     if (!user) {
       throw new Error("Unauthorized");
@@ -1045,6 +1045,7 @@ export default {
       startDate,
       endDate,
       sessionType,
+      source, 
     } = filter;
 
     const skip = (page - 1) * limit;
@@ -1054,12 +1055,20 @@ export default {
       status: "COMPLETED",
     };
 
-    //  Fix: Convert sessionType to uppercase and validate
+    // Fix: Convert sessionType to uppercase and validate
     if (sessionType) {
       const sessionTypeUpper = sessionType.toUpperCase();
       // Only add to where if it's a valid SessionType enum value
       if (["CHAT", "CALL"].includes(sessionTypeUpper)) {
         where.type = sessionTypeUpper;
+      }
+    }
+
+    if (source) {
+      const sourceUpper = source.toUpperCase();
+      // Only add to where if it's a valid source
+      if (["WEB", "ANDROID", "IOS"].includes(sourceUpper)) {
+        where.source = sourceUpper;
       }
     }
 
@@ -1156,7 +1165,7 @@ export default {
 
       return {
         sessionId: session.id,
-        sessionType: session.type, // This will be "CHAT" or "CALL"
+        sessionType: session.type,
         status: session.status,
         userId: session.userId,
         userName: session.user?.name || "",
@@ -1188,7 +1197,7 @@ export default {
         commission: session.commission || 0,
         rating: session.review?.rating ?? null,
         reviewComment: session.review?.comment ?? null,
-      };
+        source: session.source || null, 
     });
 
     return {
