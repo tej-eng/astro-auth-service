@@ -1890,8 +1890,8 @@ export default {
         },
       });
     },
-    
-    getSessionMessages: async (_, { roomId }, { user }) => {
+
+    getCurrentChatMessages: async (_, { roomId }, { user }) => {
   try {
     if (!user) {
       throw new Error("Unauthorized");

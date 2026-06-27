@@ -896,7 +896,7 @@ getAstrologerFollowers(
   getMyScheduledLives: [LiveStream!]!
   
 
-   getSessionMessages(roomId: String!): ChatMessagesResponse!
+   getCurrentChatMessages(roomId: String!): ChatMessagesResponse!
 
   
   
