@@ -808,6 +808,27 @@ type JoinLiveResponse {
   
 #----------END CODE FOR LIVE STREAMING--------------
 
+#-----------start-current chat messages that are running chat-------------
+type ChatMessagesResponse {
+  success: Boolean!
+  totalCount: Int!
+  data: [ChatMessage!]!
+}
+
+type ChatMessage {
+  id: ID!
+  msgId: String
+  roomId: String
+  senderId: String
+  receiverId: String
+  message: String
+  image: String
+  sender: String
+  replyTo: String
+  createdAt: String
+}
+#-------END ------------------------------------------------
+
   type Query {
     meAstrologer: Astrologer
     getAstrologerEarnings: AstrologerEarningResponse!
@@ -865,7 +886,6 @@ getAstrologerFollowers(
   getAstrologerAnalytics(astrologerId: String!): AstrologerAnalytics!
    getAstrologerNotices: [Notice!]!
 
-   #---------START CODE FOR LIVE STREAMING---------------
   getLiveStreams: [LiveStream!]!
 
   joinLive(
@@ -875,7 +895,8 @@ getAstrologerFollowers(
 
   getMyScheduledLives: [LiveStream!]!
   
-  #----------END CODE FOR LIVE STREAMING--------------
+
+   getSessionMessages(roomId: String!): ChatMessagesResponse!
 
   
   

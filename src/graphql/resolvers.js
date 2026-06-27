@@ -6,6 +6,11 @@ import {
   verifyOtpService,
   requestOtpService,
 } from "../services/auth.service.js";
+
+import {
+  getChatMessages,
+} from "../services/messageService.js";
+
 import { generateRtcToken } from "../utils/agoraToken.js";
 
 export default {
@@ -1809,6 +1814,19 @@ export default {
         },
       });
     },
+
+  getSessionMessages: async (_, { roomId }, { user }) => {
+  try {
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    return await getChatMessages(roomId);
+  } catch (error) {
+    console.error("getSessionMessages:", error);
+    throw new Error(error.message || "Failed to fetch messages");
+  }
+},
     //-----------END CODE FOR LIVE STREAMING-------------
   },
 

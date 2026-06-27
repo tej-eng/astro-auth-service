@@ -6,6 +6,10 @@ import {
   verifyOtpService,
   requestOtpService,
 } from "../services/auth.service.js";
+
+import {
+  getChatMessages,
+} from "../services/messageService.js";
 import { generateRtcToken } from "../utils/agoraToken.js";
 
 export default {
@@ -1802,7 +1806,6 @@ export default {
         throw new Error(error.message);
       }
     },
-    //---------START CODE FOR LIVE STREAMING-------------
     getLiveStreams: async () => {
       try {
         const streams = await prisma.liveStream.findMany({
@@ -1887,7 +1890,19 @@ export default {
         },
       });
     },
-    //-----------END CODE FOR LIVE STREAMING-------------
+    
+    getSessionMessages: async (_, { roomId }, { user }) => {
+  try {
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    return await getChatMessages(roomId);
+  } catch (error) {
+    console.error("getSessionMessages:", error);
+    throw new Error(error.message || "Failed to fetch messages");
+  }
+},
   },
 
   Mutation: {
