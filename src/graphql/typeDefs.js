@@ -828,6 +828,16 @@ type ChatMessage {
   createdAt: String
 }
 #-------END ------------------------------------------------
+#----------start get remedy for chat-----------
+
+
+type GetRemediesResponse {
+  success: Boolean!
+  message: String!
+  data: [Remedy!]!
+}
+
+#----------End get remedy for chat-------------
 
   type Query {
     meAstrologer: Astrologer
@@ -897,7 +907,8 @@ getAstrologerFollowers(
   
 
    getCurrentChatMessages(roomId: String!): ChatMessagesResponse!
-
+   
+   getRemediesForChat: GetRemediesResponse!
   
   
   }

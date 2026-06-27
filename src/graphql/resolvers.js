@@ -7,9 +7,7 @@ import {
   requestOtpService,
 } from "../services/auth.service.js";
 
-import {
-  getChatMessages,
-} from "../services/messageService.js";
+import { getChatMessages } from "../services/messageService.js";
 
 import { generateRtcToken } from "../utils/agoraToken.js";
 
@@ -1729,7 +1727,6 @@ export default {
         throw new Error(error.message);
       }
     },
-    //---------START CODE FOR LIVE STREAMING-------------
     getLiveStreams: async () => {
       try {
         const streams = await prisma.liveStream.findMany({
@@ -1815,19 +1812,51 @@ export default {
       });
     },
 
-  getCurrentChatMessages: async (_, { roomId }, { user }) => {
+    getCurrentChatMessages: async (_, { roomId }, { user }) => {
+      try {
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
+
+        return await getChatMessages(roomId);
+      } catch (error) {
+        console.error("getSessionMessages:", error);
+        throw new Error(error.message || "Failed to fetch messages");
+      }
+    },
+ getRemediesForChat: async (_, __, { user }) => {
   try {
     if (!user) {
       throw new Error("Unauthorized");
     }
 
-    return await getChatMessages(roomId);
+    const remedies = await prisma.remedy.findMany({
+      where: {
+        isActive: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return {
+      success: true,
+      message: "Remedies fetched successfully",
+      data: remedies.map((remedy) => ({
+        id: remedy.id,
+        title: remedy.title,
+        description: remedy.description,
+        isActive: remedy.isActive,
+        createdAt: remedy.createdAt.toISOString(),
+        updatedAt: remedy.updatedAt.toISOString(),
+      })),
+    };
   } catch (error) {
-    console.error("getSessionMessages:", error);
-    throw new Error(error.message || "Failed to fetch messages");
+    console.error("getRemedies error:", error);
+    throw new Error(error.message || "Failed to fetch remedies");
   }
 },
-    //-----------END CODE FOR LIVE STREAMING-------------
+  
   },
 
   Mutation: {
@@ -2046,7 +2075,6 @@ export default {
         } successfully`,
       };
     },
-    //-----------START CODE FOR LIVE STREAMING-----------
     startLive: async (_, { title }, { user }) => {
       if (!user) {
         throw new Error("Unauthorized");
@@ -2158,6 +2186,5 @@ export default {
         throw new Error(error.message || "Failed to schedule live");
       }
     },
-    //----------END CODE FOR LIVE STREAMING--------------
   },
 };

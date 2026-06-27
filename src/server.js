@@ -23,7 +23,6 @@ app.use(cors({
     origin: ["http://localhost:7001", "https://astro-panel-satge-git-main-tej-engs-projects.vercel.app","https://astro-panel-satge.vercel.app"],
   credentials: true,
 }));
-  console.log("request origin:", app.get("origin"));
   app.use(express.json());
   app.use(cookieParser());
   app.use(rateLimiter);
@@ -54,7 +53,7 @@ app.use(
 const PORT = process.env.PORT || 4000;
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`🚀 Server running at http://192.168.1.10:${PORT}/graphql`);
+  console.log(` Server running at http://192.168.1.10:${PORT}/graphql`);
 });
 }
 
