@@ -764,6 +764,7 @@ model Session {
   commission    Int @default(0)
   source        String?
   review    Review?
+  roomId         String?
   startedAt DateTime?
   endedAt   DateTime?
 
