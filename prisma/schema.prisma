@@ -1194,7 +1194,7 @@ enum PlatformType {
 
 model AppVersion {
   id String @id @default(uuid())
-
+  appType            AppType
   platform PlatformType
 
   latestVersion  String

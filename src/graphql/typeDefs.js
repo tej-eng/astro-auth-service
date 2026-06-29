@@ -839,6 +839,31 @@ type GetRemediesResponse {
 
 #----------End get remedy for chat-------------
 
+#-----------START CODE FOR GET APP VERSION---
+
+type AppVersionData {
+  id: ID!
+  appType: String!
+  platform: String!
+  latestVersion: String!
+  minimumVersion: String!
+  forceUpdate: Boolean!
+  maintenanceMode: Boolean!
+  maintenanceMessage: String
+  playStoreUrl: String
+  appStoreUrl: String
+  releaseNotes: String
+  createdAt: String!
+  updatedAt: String!
+}
+
+type GetAstrologerAppVersionResponse {
+  success: Boolean!
+  message: String!
+  data: AppVersionData
+}
+#----------END CODE FOR APP VERSION----
+
   type Query {
     meAstrologer: Astrologer
     getAstrologerEarnings: AstrologerEarningResponse!
@@ -906,9 +931,11 @@ getAstrologerFollowers(
   getMyScheduledLives: [LiveStream!]!
   
 
-   getCurrentChatMessages(roomId: String!): ChatMessagesResponse!
+  getCurrentChatMessages(roomId: String!): ChatMessagesResponse!
    
-   getRemediesForChat: GetRemediesResponse!
+  getRemediesForChat: GetRemediesResponse!
+
+  getAstrologerAppVersion(platform: String!): GetAstrologerAppVersionResponse!
   
   
   }

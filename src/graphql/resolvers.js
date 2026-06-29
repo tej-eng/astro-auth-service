@@ -1824,7 +1824,7 @@ export default {
         throw new Error(error.message || "Failed to fetch messages");
       }
     },
- getRemediesForChat: async (_, __, { user }) => {
+    getRemediesForChat: async (_, __, { user }) => {
   try {
     if (!user) {
       throw new Error("Unauthorized");
@@ -1855,7 +1855,56 @@ export default {
     console.error("getRemedies error:", error);
     throw new Error(error.message || "Failed to fetch remedies");
   }
-},
+    },
+
+    getAstrologerAppVersion: async (_, { platform }, { user }) => {
+      try {
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
+
+        const appVersion = await prisma.appVersion.findFirst({
+          where: {
+            appType: "ASTROLOGER",
+            platform: platform.toUpperCase(),
+          },
+        });
+
+        if (!appVersion) {
+          return {
+            success: false,
+            message: "App version not found",
+            data: null,
+          };
+        }
+
+        return {
+          success: true,
+          message: "App version fetched successfully",
+          data: {
+            id: appVersion.id,
+            appType: appVersion.appType,
+            platform: appVersion.platform,
+            latestVersion: appVersion.latestVersion,
+            minimumVersion: appVersion.minimumVersion,
+            forceUpdate: appVersion.forceUpdate,
+            maintenanceMode: appVersion.maintenanceMode,
+            maintenanceMessage: appVersion.maintenanceMessage,
+            playStoreUrl: appVersion.playStoreUrl,
+            appStoreUrl: appVersion.appStoreUrl,
+            releaseNotes: appVersion.releaseNotes,
+            createdAt: appVersion.createdAt.toISOString(),
+            updatedAt: appVersion.updatedAt.toISOString(),
+          },
+        };
+      } catch (error) {
+        console.error("getAstrologerAppVersion error:", error);
+
+        throw new Error(
+          error.message || "Failed to fetch app version"
+        );
+      }
+    },
   
   },
 
