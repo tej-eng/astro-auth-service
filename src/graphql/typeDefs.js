@@ -2,7 +2,8 @@ import gql from "graphql-tag";
 
 export default gql`
   # ================= ENUMS =================
-
+  scalar Upload
+  
   enum Gender {
     MALE
     FEMALE
@@ -864,6 +865,14 @@ type GetAstrologerAppVersionResponse {
 }
 #----------END CODE FOR APP VERSION----
 
+#---------------START UPLOAD FILE--------
+type UploadFileResponse {
+  success: Boolean!
+  url: String!
+  filename: String!
+}
+#--------------END UPLOAD FILE-----------
+
   type Query {
     meAstrologer: Astrologer
     getAstrologerEarnings: AstrologerEarningResponse!
@@ -980,5 +989,7 @@ getAstrologerFollowers(
     scheduledAt: String!
   ): LiveStream!
   #----------END CODE FOR LIVE STREAMING--------------
+
+  uploadFile(file: Upload!): UploadFileResponse!
   }
 `;

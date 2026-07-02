@@ -10,8 +10,13 @@ import {
 import { getChatMessages } from "../services/messageService.js";
 
 import { generateRtcToken } from "../utils/agoraToken.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import GraphQLUpload from "graphql-upload/GraphQLUpload.mjs";
 
 export default {
+  Upload: GraphQLUpload,
   Query: {
     /* =====================================
        ASTROLOGER EARNINGS
@@ -2233,6 +2238,50 @@ export default {
         console.error("scheduleLive Error:", error);
 
         throw new Error(error.message || "Failed to schedule live");
+      }
+    },
+
+    uploadFile: async (_, { file }, {user}) => {
+      try {
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
+        const { createReadStream, filename, mimetype } = await file;
+
+        // Validate image
+        if (!mimetype.startsWith("image/")) {
+          throw new Error("Only image files are allowed");
+        }
+
+        // Generate unique filename
+        const ext = filename.split(".").pop();
+        const newFileName = `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(7)}.${ext}`;
+
+        const uploadPath = path.join(__dirname, "..", "uploads", newFileName);
+        console.log("Saving file toAAAAAAAAAAAAAAA:", uploadPath);
+
+        // Save file
+        await new Promise((resolve, reject) => {
+          const stream = createReadStream();
+          const out = fs.createWriteStream(uploadPath);
+
+          stream.pipe(out);
+          out.on("finish", resolve);
+          out.on("error", reject);
+        });
+
+        // Return URL (adjust domain)
+        const fileUrl = `https://dhwaniastro.com/v2/uploads/${newFileName}`;
+
+        return {
+          url: fileUrl,
+          filename: newFileName,
+        };
+      } catch (error) {
+        console.error("uploadImage error:", error);
+        throw new Error(error.message || "Upload failed");
       }
     },
   },
