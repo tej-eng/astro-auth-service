@@ -2284,7 +2284,7 @@ export default {
           out.on("error", reject);
           stream.on("error", reject);
         });
-        console.log("url-----------: ",url);
+        console.log("url-----------: ",fileUrl);
         console.log("file name------: ",newFileName);
         return {
           success: true,
