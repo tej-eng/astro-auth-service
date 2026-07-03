@@ -3,7 +3,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-
+import graphqlUploadExpress from "graphql-upload/graphqlUploadExpress.mjs";
 import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import {
@@ -25,6 +25,13 @@ app.use(cors({
 }));
   app.use(express.json());
   app.use(cookieParser());
+  
+  app.use(
+  graphqlUploadExpress({
+    maxFileSize: 10 * 1024 * 1024, // 10MB
+    maxFiles: 1,
+  })
+);
   app.use(rateLimiter);
 
   // ================= APOLLO SERVER =================

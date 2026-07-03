@@ -866,6 +866,7 @@ type GetAstrologerAppVersionResponse {
 #----------END CODE FOR APP VERSION----
 
 #---------------START UPLOAD FILE--------
+ #sscalar JSON
 type UploadFileResponse {
   success: Boolean!
   url: String!

@@ -10,12 +10,15 @@ import {
 import { getChatMessages } from "../services/messageService.js";
 
 import { generateRtcToken } from "../utils/agoraToken.js";
+//const GraphQLJSON = require("graphql-type-json");
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import GraphQLUpload from "graphql-upload/GraphQLUpload.mjs";
 
+
 export default {
+  //JSON: GraphQLJSON,
   Upload: GraphQLUpload,
   Query: {
     /* =====================================
