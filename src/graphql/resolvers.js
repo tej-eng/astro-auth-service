@@ -2242,61 +2242,67 @@ export default {
       }
     },
 
-    uploadFile: async (_, { file }, { user }) => {
-      try {
-        if (!user) {
-          throw new Error("Unauthorized");
-        }
+   uploadFile: async (_, { file }, { user }) => {
+  try {
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
 
-        const { createReadStream, filename, mimetype } = await file;
+    const { createReadStream, filename, mimetype } = await file;
 
-        // Validate image
-        if (!mimetype.startsWith("image/")) {
-          throw new Error("Only image files are allowed");
-        }
+    // Allow only images
+    if (!mimetype.startsWith("image/")) {
+      throw new Error("Only image files are allowed");
+    }
 
-        // Generate unique filename
-        const ext = filename.split(".").pop();
-        const newFileName = `${Date.now()}-${Math.random()
-          .toString(36)
-          .substring(7)}.${ext}`;
+    const ext = path.extname(filename);
+    const newFileName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 8)}${ext}`;
 
-        // uploads folder
-        const uploadDir = path.join(__dirname, "..", "uploads");
-        console.log("uploadDir----------:",uploadDir);
-        console.log("-ext---------------:",ext);
-        // Create uploads folder if it doesn't exist
-        if (!fs.existsSync(uploadDir)) {
-          fs.mkdirSync(uploadDir, { recursive: true });
-        }
+    // Upload directory from .env
+    const uploadDir =
+      process.env.UPLOAD_DIR || path.join(__dirname, "..", "uploads");
 
-        const uploadPath = path.join(uploadDir, newFileName);
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
 
-        console.log("Saving file:", uploadPath);
+    const uploadPath = path.join(uploadDir, newFileName);
 
-        await new Promise((resolve, reject) => {
-          const stream = createReadStream();
-          const out = fs.createWriteStream(uploadPath);
+    console.log("Upload Directory :", uploadDir);
+    console.log("Saving File      :", uploadPath);
 
-          stream.pipe(out);
+    await new Promise((resolve, reject) => {
+      const stream = createReadStream();
+      const out = fs.createWriteStream(uploadPath);
 
-          out.on("finish", resolve);
-          out.on("error", reject);
-          stream.on("error", reject);
-        });
-        console.log("file name------: ",newFileName);
-        console.log("uploadPath-----: ",uploadPath);
+      stream.pipe(out);
 
-        return {
-          success: true,
-          message: "File uploaded successfully",
-          url: uploadPath,
-          filename: newFileName,
-        };
-      } catch (error) {
-        console.error("uploadFile error:", error);
-        throw new Error(error.message || "Upload failed");
-      }
-    },
+      out.on("finish", resolve);
+      out.on("error", reject);
+      stream.on("error", reject);
+    });
+
+    // Public URL returned to frontend/Redis
+    const baseUrl =
+      process.env.UPLOAD_BASE_URL ||
+      "https://dhwaniastro.com/astro/v2/uploads";
+
+    const fileUrl = `${baseUrl}/${newFileName}`;
+
+    console.log("Public URL :", fileUrl);
+
+    return {
+      success: true,
+      message: "File uploaded successfully",
+      url: fileUrl,
+      filename: newFileName,
+    };
+  } catch (error) {
+    console.error("uploadFile error:", error);
+    throw new Error(error.message || "Upload failed");
+  }
+},
   },
 };

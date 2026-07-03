@@ -2,15 +2,23 @@ services:
   astro-auth-service:
     build: .
     container_name: astro-auth-service
-    restart: always   #  auto restart on crash
+    restart: always
+
     env_file:
       - .env
+
     ports:
       - "8008:8008"
+
+    volumes:
+      # Shared uploads folder on host
+      - /var/www/chat-uploads:/shared/chat-uploads
+
     networks:
       - dhwaniastro-net
-    mem_limit: 50m     #  memory limit
-    memswap_limit: 50m #  prevent swap (force crash)
+
+    mem_limit: 50m
+    memswap_limit: 50m
 
 networks:
   dhwaniastro-net:
