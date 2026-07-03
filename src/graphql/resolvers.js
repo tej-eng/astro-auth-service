@@ -14,6 +14,8 @@ import { generateRtcToken } from "../utils/agoraToken.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 import GraphQLUpload from "graphql-upload/GraphQLUpload.mjs";
 
 
@@ -2244,48 +2246,56 @@ export default {
       }
     },
 
-    uploadFile: async (_, { file }, {user}) => {
-      try {
-        if (!user) {
-          throw new Error("Unauthorized");
-        }
-        const { createReadStream, filename, mimetype } = await file;
+   uploadFile: async (_, { file }, { user }) => {
+  try {
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
 
-        // Validate image
-        if (!mimetype.startsWith("image/")) {
-          throw new Error("Only image files are allowed");
-        }
+    const { createReadStream, filename, mimetype } = await file;
 
-        // Generate unique filename
-        const ext = filename.split(".").pop();
-        const newFileName = `${Date.now()}-${Math.random()
-          .toString(36)
-          .substring(7)}.${ext}`;
+    // Validate image
+    if (!mimetype.startsWith("image/")) {
+      throw new Error("Only image files are allowed");
+    }
 
-        const uploadPath = path.join(__dirname, "..", "uploads", newFileName);
-        console.log("Saving file toAAAAAAAAAAAAAAA:", uploadPath);
+    // Generate unique filename
+    const ext = filename.split(".").pop();
+    const newFileName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(7)}.${ext}`;
 
-        // Save file
-        await new Promise((resolve, reject) => {
-          const stream = createReadStream();
-          const out = fs.createWriteStream(uploadPath);
+    // uploads folder
+    const uploadDir = path.join(__dirname, "..", "uploads");
 
-          stream.pipe(out);
-          out.on("finish", resolve);
-          out.on("error", reject);
-        });
+    // Create uploads folder if it doesn't exist
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
 
-        // Return URL (adjust domain)
-        const fileUrl = `https://dhwaniastro.com/v2/uploads/${newFileName}`;
+    const uploadPath = path.join(uploadDir, newFileName);
 
-        return {
-          url: fileUrl,
-          filename: newFileName,
-        };
-      } catch (error) {
-        console.error("uploadImage error:", error);
-        throw new Error(error.message || "Upload failed");
-      }
-    },
+    console.log("Saving file:", uploadPath);
+
+    await new Promise((resolve, reject) => {
+      const stream = createReadStream();
+      const out = fs.createWriteStream(uploadPath);
+
+      stream.pipe(out);
+
+      out.on("finish", resolve);
+      out.on("error", reject);
+      stream.on("error", reject);
+    });
+
+    return {
+      url: `https://dhwaniastro.com/v2/uploads/${newFileName}`,
+      filename: newFileName,
+    };
+  } catch (error) {
+    console.error("uploadFile error:", error);
+    throw new Error(error.message || "Upload failed");
+  }
+},
   },
 };
