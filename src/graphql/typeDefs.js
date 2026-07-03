@@ -214,6 +214,7 @@ export default gql`
     sender: String
 
     replyTo: String
+    time: String
 
     createdAt: String
   }

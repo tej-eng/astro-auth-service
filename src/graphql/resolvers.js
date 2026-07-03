@@ -449,6 +449,7 @@ export default {
             sender: msg.sender,
 
             replyTo: msg.replyTo ? JSON.stringify(msg.replyTo) : null,
+            time:msg.time,
 
             createdAt: msg.createdAt.toISOString(),
           })),
