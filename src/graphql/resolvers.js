@@ -18,7 +18,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 import GraphQLUpload from "graphql-upload/GraphQLUpload.mjs";
 
-
 export default {
   //JSON: GraphQLJSON,
   Upload: GraphQLUpload,
@@ -1835,36 +1834,36 @@ export default {
       }
     },
     getRemediesForChat: async (_, __, { user }) => {
-  try {
-    if (!user) {
-      throw new Error("Unauthorized");
-    }
+      try {
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
 
-    const remedies = await prisma.remedy.findMany({
-      where: {
-        isActive: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+        const remedies = await prisma.remedy.findMany({
+          where: {
+            isActive: true,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
 
-    return {
-      success: true,
-      message: "Remedies fetched successfully",
-      data: remedies.map((remedy) => ({
-        id: remedy.id,
-        title: remedy.title,
-        description: remedy.description,
-        isActive: remedy.isActive,
-        createdAt: remedy.createdAt.toISOString(),
-        updatedAt: remedy.updatedAt.toISOString(),
-      })),
-    };
-  } catch (error) {
-    console.error("getRemedies error:", error);
-    throw new Error(error.message || "Failed to fetch remedies");
-  }
+        return {
+          success: true,
+          message: "Remedies fetched successfully",
+          data: remedies.map((remedy) => ({
+            id: remedy.id,
+            title: remedy.title,
+            description: remedy.description,
+            isActive: remedy.isActive,
+            createdAt: remedy.createdAt.toISOString(),
+            updatedAt: remedy.updatedAt.toISOString(),
+          })),
+        };
+      } catch (error) {
+        console.error("getRemedies error:", error);
+        throw new Error(error.message || "Failed to fetch remedies");
+      }
     },
 
     getAstrologerAppVersion: async (_, { platform }, { user }) => {
@@ -1910,12 +1909,9 @@ export default {
       } catch (error) {
         console.error("getAstrologerAppVersion error:", error);
 
-        throw new Error(
-          error.message || "Failed to fetch app version"
-        );
+        throw new Error(error.message || "Failed to fetch app version");
       }
     },
-  
   },
 
   Mutation: {
@@ -2246,56 +2242,60 @@ export default {
       }
     },
 
-   uploadFile: async (_, { file }, { user }) => {
-  try {
-    if (!user) {
-      throw new Error("Unauthorized");
-    }
+    uploadFile: async (_, { file }, { user }) => {
+      try {
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
 
-    const { createReadStream, filename, mimetype } = await file;
+        const { createReadStream, filename, mimetype } = await file;
 
-    // Validate image
-    if (!mimetype.startsWith("image/")) {
-      throw new Error("Only image files are allowed");
-    }
+        // Validate image
+        if (!mimetype.startsWith("image/")) {
+          throw new Error("Only image files are allowed");
+        }
 
-    // Generate unique filename
-    const ext = filename.split(".").pop();
-    const newFileName = `${Date.now()}-${Math.random()
-      .toString(36)
-      .substring(7)}.${ext}`;
+        // Generate unique filename
+        const ext = filename.split(".").pop();
+        const newFileName = `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(7)}.${ext}`;
 
-    // uploads folder
-    const uploadDir = path.join(__dirname, "..", "uploads");
+        // uploads folder
+        const uploadDir = path.join(__dirname, "..", "uploads");
+        console.log("uploadDir----------:",uploadDir);
+        console.log("-ext---------------:",ext);
+        // Create uploads folder if it doesn't exist
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
 
-    // Create uploads folder if it doesn't exist
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
+        const uploadPath = path.join(uploadDir, newFileName);
 
-    const uploadPath = path.join(uploadDir, newFileName);
+        console.log("Saving file:", uploadPath);
 
-    console.log("Saving file:", uploadPath);
+        await new Promise((resolve, reject) => {
+          const stream = createReadStream();
+          const out = fs.createWriteStream(uploadPath);
 
-    await new Promise((resolve, reject) => {
-      const stream = createReadStream();
-      const out = fs.createWriteStream(uploadPath);
+          stream.pipe(out);
 
-      stream.pipe(out);
-
-      out.on("finish", resolve);
-      out.on("error", reject);
-      stream.on("error", reject);
-    });
-
-    return {
-      url: `https://dhwaniastro.com/v2/uploads/${newFileName}`,
-      filename: newFileName,
-    };
-  } catch (error) {
-    console.error("uploadFile error:", error);
-    throw new Error(error.message || "Upload failed");
-  }
-},
+          out.on("finish", resolve);
+          out.on("error", reject);
+          stream.on("error", reject);
+        });
+        console.log("url-----------: ",url);
+        console.log("file name------: ",newFileName);
+        return {
+          success: true,
+          message: "File uploaded successfully",
+          url: fileUrl,
+          filename: newFileName,
+        };
+      } catch (error) {
+        console.error("uploadFile error:", error);
+        throw new Error(error.message || "Upload failed");
+      }
+    },
   },
 };
