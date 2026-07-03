@@ -2284,12 +2284,13 @@ export default {
           out.on("error", reject);
           stream.on("error", reject);
         });
-        console.log("url-----------: ",fileUrl);
         console.log("file name------: ",newFileName);
+        console.log("uploadPath-----: ",uploadPath);
+
         return {
           success: true,
           message: "File uploaded successfully",
-          url: fileUrl,
+          url: uploadPath,
           filename: newFileName,
         };
       } catch (error) {
