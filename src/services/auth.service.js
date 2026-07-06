@@ -110,7 +110,7 @@ await redis.set(
     online: true,
     socketId: null,
     appState: "foreground",
-    playerId: null, // update later from app
+    playerId: null, 
     lastSeen: Date.now(),
     Source:"web",
   })
