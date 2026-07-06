@@ -7,6 +7,7 @@ import {
   verifyRefreshToken,
   verifyAccessToken,
 } from "../config/jwt.js";
+import { Source } from "graphql";
 
 const OTP_EXPIRE = 300;
 const OTP_RATE_LIMIT = 3;
@@ -103,7 +104,17 @@ export const verifyOtpService = async (contactNo, otp, res) => {
     isOnline: true,
   },
 });
-
+await redis.set(
+  `presence:astro:${astrologer.id}`,
+  JSON.stringify({
+    online: true,
+    socketId: null,
+    appState: "foreground",
+    playerId: null, // update later from app
+    lastSeen: Date.now(),
+    Source:"web",
+  })
+);
   await redis.set(
     `refresh:${astrologer.id}`,
     refreshToken,
