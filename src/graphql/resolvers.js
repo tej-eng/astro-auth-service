@@ -1822,6 +1822,7 @@ export default {
       });
     },
 
+
     getCurrentChatMessages: async (_, { roomId }, { user }) => {
       try {
         if (!user) {
@@ -1913,6 +1914,22 @@ export default {
         throw new Error(error.message || "Failed to fetch app version");
       }
     },
+
+    getCurrentAstrologer: async (_, __, { astrologer }) => {
+  if (!astrologer) {
+    throw new Error("Unauthorized");
+  }
+
+  return prisma.astrologer.findUnique({
+    where: {
+      id: astrologer.id,
+    },
+    select: {
+      name: true,
+      contactNo: true,
+    },
+  });
+},
   },
 
   Mutation: {

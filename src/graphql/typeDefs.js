@@ -876,6 +876,14 @@ type UploadFileResponse {
 }
 #--------------END UPLOAD FILE-----------
 
+#---------START CODE FOR CURRENT ASTROLOGER-----
+type CurrentAstrologer {
+  id: ID!
+  name: String
+  contactNo: String
+}
+#---------END CODE FOR CURRENT ASTROLOGER-------
+
   type Query {
     meAstrologer: Astrologer
     getAstrologerEarnings: AstrologerEarningResponse!
@@ -948,6 +956,8 @@ getAstrologerFollowers(
   getRemediesForChat: GetRemediesResponse!
 
   getAstrologerAppVersion(platform: String!): GetAstrologerAppVersionResponse!
+
+  getCurrentAstrologer: CurrentAstrologer!
   
   
   }
