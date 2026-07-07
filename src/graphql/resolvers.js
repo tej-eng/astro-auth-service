@@ -449,7 +449,7 @@ export default {
             sender: msg.sender,
 
             replyTo: msg.replyTo ? JSON.stringify(msg.replyTo) : null,
-            time:msg.time,
+            time: msg.time,
 
             createdAt: msg.createdAt.toISOString(),
           })),
@@ -1822,7 +1822,6 @@ export default {
       });
     },
 
-
     getCurrentChatMessages: async (_, { roomId }, { user }) => {
       try {
         if (!user) {
@@ -1916,20 +1915,23 @@ export default {
     },
 
     getCurrentAstrologer: async (_, __, { astrologer }) => {
-  if (!astrologer) {
-    throw new Error("Unauthorized");
-  }
+      console.log(req.cookies);
+      console.log(req.cookies.accessToken);
+      console.log(req.headers.authorization);
+      if (!astrologer) {
+        throw new Error("Unauthorized");
+      }
 
-  return prisma.astrologer.findUnique({
-    where: {
-      id: astrologer.id,
+      return prisma.astrologer.findUnique({
+        where: {
+          id: astrologer.id,
+        },
+        select: {
+          name: true,
+          contactNo: true,
+        },
+      });
     },
-    select: {
-      name: true,
-      contactNo: true,
-    },
-  });
-},
   },
 
   Mutation: {
@@ -2260,67 +2262,67 @@ export default {
       }
     },
 
-   uploadFile: async (_, { file }, { user }) => {
-  try {
-    if (!user) {
-      throw new Error("Unauthorized");
-    }
+    uploadFile: async (_, { file }, { user }) => {
+      try {
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
 
-    const { createReadStream, filename, mimetype } = await file;
+        const { createReadStream, filename, mimetype } = await file;
 
-    // Allow only images
-    if (!mimetype.startsWith("image/")) {
-      throw new Error("Only image files are allowed");
-    }
+        // Allow only images
+        if (!mimetype.startsWith("image/")) {
+          throw new Error("Only image files are allowed");
+        }
 
-    const ext = path.extname(filename);
-    const newFileName = `${Date.now()}-${Math.random()
-      .toString(36)
-      .substring(2, 8)}${ext}`;
+        const ext = path.extname(filename);
+        const newFileName = `${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(2, 8)}${ext}`;
 
-    // Upload directory from .env
-    const uploadDir =
-      process.env.UPLOAD_DIR || path.join(__dirname, "..", "uploads");
+        // Upload directory from .env
+        const uploadDir =
+          process.env.UPLOAD_DIR || path.join(__dirname, "..", "uploads");
 
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
 
-    const uploadPath = path.join(uploadDir, newFileName);
+        const uploadPath = path.join(uploadDir, newFileName);
 
-    console.log("Upload Directory :", uploadDir);
-    console.log("Saving File      :", uploadPath);
+        console.log("Upload Directory :", uploadDir);
+        console.log("Saving File      :", uploadPath);
 
-    await new Promise((resolve, reject) => {
-      const stream = createReadStream();
-      const out = fs.createWriteStream(uploadPath);
+        await new Promise((resolve, reject) => {
+          const stream = createReadStream();
+          const out = fs.createWriteStream(uploadPath);
 
-      stream.pipe(out);
+          stream.pipe(out);
 
-      out.on("finish", resolve);
-      out.on("error", reject);
-      stream.on("error", reject);
-    });
+          out.on("finish", resolve);
+          out.on("error", reject);
+          stream.on("error", reject);
+        });
 
-    // Public URL returned to frontend/Redis
-    const baseUrl =
-      process.env.UPLOAD_BASE_URL ||
-      "https://dhwaniastro.com/astro/v2/uploads";
+        // Public URL returned to frontend/Redis
+        const baseUrl =
+          process.env.UPLOAD_BASE_URL ||
+          "https://dhwaniastro.com/astro/v2/uploads";
 
-    const fileUrl = `${baseUrl}/${newFileName}`;
+        const fileUrl = `${baseUrl}/${newFileName}`;
 
-    console.log("Public URL :", fileUrl);
+        console.log("Public URL :", fileUrl);
 
-    return {
-      success: true,
-      message: "File uploaded successfully",
-      url: fileUrl,
-      filename: newFileName,
-    };
-  } catch (error) {
-    console.error("uploadFile error:", error);
-    throw new Error(error.message || "Upload failed");
-  }
-},
+        return {
+          success: true,
+          message: "File uploaded successfully",
+          url: fileUrl,
+          filename: newFileName,
+        };
+      } catch (error) {
+        console.error("uploadFile error:", error);
+        throw new Error(error.message || "Upload failed");
+      }
+    },
   },
 };
