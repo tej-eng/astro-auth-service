@@ -1952,6 +1952,8 @@ export default {
     },
 
     refreshAstrologerToken: async (_, __, { req, res }) => {
+       console.log("========== REFRESH ==========");
+       console.log(req.cookies);
       return refreshTokenService(req, res);
     },
     replyToReview: async (_, { reviewId, reply }, { user }) => {
