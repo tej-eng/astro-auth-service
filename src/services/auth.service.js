@@ -167,8 +167,9 @@ res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
 
 // ================= REFRESH =================
 export const refreshTokenService = async (req, res) => {
+  console.log("------------comming in Rfersh token service-------------");
   if (!req || !req.cookies) throw new Error("Request context missing");
-
+   
   const token = req.cookies[REFRESH_COOKIE_NAME];
 
   if (!token) throw new Error("Refresh token missing");

@@ -47,9 +47,6 @@ app.use(
   "/graphql",
   expressMiddleware(server, {
     context: async ({ req, res }) => {
-      console.log("Cookies:", req.cookies);
-      console.log("Access:", req.cookies.accessToken);
-       console.log("Authorization:", req.headers.authorization);
       const user = await auth(req); 
       return { req, res, user };
     },
