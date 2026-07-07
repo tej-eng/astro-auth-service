@@ -228,7 +228,7 @@ export const refreshTokenService = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       path: "/",
-      maxAge: 1 * 24 * 60 * 60 * 1000,
+      maxAge: 60 * 1000,
     });
 
     res.cookie(REFRESH_COOKIE_NAME, newRefreshToken, {
