@@ -1914,15 +1914,15 @@ export default {
       }
     },
 
-    getCurrentAstrologer: async (_, __, { astrologer }) => {
+    getCurrentAstrologer: async (_, __, { user }) => {
       
-      if (!astrologer) {
+      if (!user) {
         throw new Error("Unauthorized");
       }
 
       return prisma.astrologer.findUnique({
         where: {
-          id: astrologer.id,
+          id: user.id,
         },
         select: {
           name: true,
