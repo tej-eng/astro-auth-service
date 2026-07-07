@@ -7,7 +7,7 @@ import {
   verifyRefreshToken,
   verifyAccessToken,
 } from "../config/jwt.js";
-import { Source } from "graphql";
+import crypto from "crypto";
 
 const OTP_EXPIRE = 300;
 const OTP_RATE_LIMIT = 3;
@@ -15,7 +15,8 @@ const OTP_RATE_WINDOW = 600;
 const LOGIN_FAIL_LIMIT = 5;
 const LOGIN_FAIL_WINDOW = 900;
 
-const REFRESH_COOKIE_NAME = "astro_refresh_token";
+const REFRESH_COOKIE_NAME = "refreshToken";
+const ACCESS_COOKIE_NAME = "accessToken";
 const REFRESH_EXPIRE_DAYS = 7;
 
 // ================= REGISTER =================
@@ -26,7 +27,8 @@ export const registerAstrologerService = async (data) => {
 
   if (exists) throw new Error("Astrologer already registered");
 
-  if (!data.profilePic.match(/\.(jpg|jpeg|png)$/i)) {
+  // Fixed: Added optional chaining and null check
+  if (!data.profilePic || !data.profilePic.match(/\.(jpg|jpeg|png)$/i)) {
     throw new Error("Invalid profile picture format");
   }
 
@@ -48,8 +50,8 @@ export const requestOtpService = async (contactNo) => {
   });
 
   if (!astrologer) throw new Error("Astrologer not found");
-  //if (astrologer.approvalStatus !== "APPROVED")
-    //throw new Error("Astrologer not approved");
+  // if (astrologer.approvalStatus !== "APPROVED")
+  //   throw new Error("Astrologer not approved");
 
   const rateKey = `otp_rate:${contactNo}`;
   const count = await redis.incr(rateKey);
@@ -90,57 +92,74 @@ export const verifyOtpService = async (contactNo, otp, res) => {
     where: { contactNo },
   });
 
-  if (!astrologer) throw new Error("Astrologer not found");
+  if (!astrologer) {
+    throw new Error("Astrologer not found");
+  }
 
-  const payload = { id: astrologer.id, role: "ASTROLOGER" };
+  const sessionId = crypto.randomUUID();
+  
+  // Logout previous device automatically
+  const oldSession = await redis.get(`astro:session:${astrologer.id}`);
+  if (oldSession) {
+    // Optional: Emit force_logout through socket if connected
+    await redis.del(`astro:session:${astrologer.id}`);
+    await redis.del(`refresh:${astrologer.id}`);
+  }
+
+  const payload = { id: astrologer.id, role: "ASTROLOGER", sessionId };
 
   const accessToken = generateAccessToken(payload);
   const refreshToken = generateRefreshToken(payload);
 
- await prisma.astrologer.update({
-  where: { id: astrologer.id },
-  data: {
-    refreshToken,
-    isOnline: true,
-  },
-});
-await redis.set(
-  `presence:astro:${astrologer.id}`,
-  JSON.stringify({
-    online: true,
-    socketId: null,
-    appState: "foreground",
-    playerId: null, 
-    lastSeen: Date.now(),
-    Source:"web",
-  })
-);
+  await prisma.astrologer.update({
+    where: { id: astrologer.id },
+    data: {
+      refreshToken,
+      isOnline: true,
+    },
+  });
+
   await redis.set(
-    `refresh:${astrologer.id}`,
-    refreshToken,
-    "EX",
-    REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
+    `presence:astro:${astrologer.id}`,
+    JSON.stringify({
+      online: true,
+      socketId: null,
+      appState: "foreground",
+      playerId: null,
+      lastSeen: Date.now(),
+      Source: "web",
+    })
   );
 
-  //  Safe cookie set (important for tests)
-  if (res) {
-   res.cookie("accessToken", accessToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        domain: ".dhwaniastro.com",
-        maxAge:  1 * 24 * 60 * 60 * 1000, //for testing 1 day, can be changed to 15 * 60 * 1000 for 15 mins in production
-        path: "/",
-      });
+  await redis.set(
+    `astro:session:${astrologer.id}`,
+    JSON.stringify({
+      sessionId,
+      loginAt: Date.now(),
+    }),
+    "EX",
+    REFRESH_EXPIRE_DAYS * 24 * 60 * 60
+  );
 
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "none",
-        domain: ".dhwaniastro.com",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        path: "/",
-      });
+  // Safe cookie set (important for tests)
+  if (res) {
+    res.cookie(ACCESS_COOKIE_NAME, accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      domain: process.env.NODE_ENV === "production" ? ".dhwaniastro.com" : undefined,
+      maxAge: 1 * 24 * 60 * 60 * 1000, // 1 day for testing
+      path: "/",
+    });
+
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      domain: process.env.NODE_ENV === "production" ? ".dhwaniastro.com" : undefined,
+      maxAge: REFRESH_EXPIRE_DAYS * 24 * 60 * 60 * 1000,
+      path: "/",
+    });
   }
 
   return { accessToken, astrologer };
@@ -154,23 +173,41 @@ export const refreshTokenService = async (req, res) => {
 
   if (!token) throw new Error("Refresh token missing");
 
-  const decoded = verifyRefreshToken(token);
+  let decoded;
+  try {
+    decoded = verifyRefreshToken(token);
+  } catch (error) {
+    throw new Error("Invalid refresh token");
+  }
+
+  // Check session exists
+  const session = await redis.get(`astro:session:${decoded.id}`);
+  if (!session) {
+    throw new Error("Session expired");
+  }
+
+  const { sessionId } = JSON.parse(session);
+  if (sessionId !== decoded.sessionId) {
+    throw new Error("Logged in from another device");
+  }
 
   const astrologer = await prisma.astrologer.findUnique({
     where: { id: decoded.id },
   });
 
-  if (!astrologer || astrologer.refreshToken !== token)
-    throw new Error("Refresh token mismatch");
+  if (!astrologer) throw new Error("Astrologer not found");
+  if (astrologer.refreshToken !== token) throw new Error("Refresh token mismatch");
 
   const newAccessToken = generateAccessToken({
     id: astrologer.id,
     role: "ASTROLOGER",
+    sessionId,
   });
 
   const newRefreshToken = generateRefreshToken({
     id: astrologer.id,
     role: "ASTROLOGER",
+    sessionId,
   });
 
   await prisma.astrologer.update({
@@ -182,10 +219,18 @@ export const refreshTokenService = async (req, res) => {
     `refresh:${astrologer.id}`,
     newRefreshToken,
     "EX",
-    REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
+    REFRESH_EXPIRE_DAYS * 24 * 60 * 60
   );
 
   if (res) {
+    res.cookie(ACCESS_COOKIE_NAME, newAccessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+      maxAge: 1 * 24 * 60 * 60 * 1000,
+    });
+
     res.cookie(REFRESH_COOKIE_NAME, newRefreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -199,59 +244,30 @@ export const refreshTokenService = async (req, res) => {
 };
 
 // ================= LOGOUT =================
-// export const logoutService = async (req, res) => {
-//   if (!req || !req.cookies) throw new Error("Request context missing");
-
-//   const token = req.cookies[REFRESH_COOKIE_NAME];
-
-//   if (!token) return "Already logged out";
-
-//   let decoded;
-
-//   try {
-//     decoded = verifyRefreshToken(token);
-//   } catch {
-//     throw new Error("Invalid refresh token");
-//   }
-
-//   await prisma.astrologer.update({
-//     where: { id: decoded.id },
-//     data: { refreshToken: null },
-//     isOnline: false,
-//   });
-
-//   await redis.del(`refresh:${decoded.id}`);
-
-//   if (res) {
-//     res.clearCookie(REFRESH_COOKIE_NAME, {
-//       httpOnly: true,
-//       sameSite: "lax",
-//       path: "/",
-//     });
-//   }
-
-//   return "Logged out successfully";
-// };
-
 export const logoutService = async (req, res) => {
   if (!req?.cookies) {
     throw new Error("Request context missing");
   }
 
-  const token = req.cookies.accessToken;
+  const token = req.cookies[ACCESS_COOKIE_NAME];
 
   if (!token) {
     throw new Error("Access token missing");
   }
 
   let decoded;
-
   try {
     decoded = verifyAccessToken(token);
-    console.log("dddddddddddddddddddddddddddddddddddddddddd--------------",decoded);
   } catch (error) {
     throw new Error("Invalid access token");
   }
+
+  // Delete all session data
+  await Promise.all([
+    redis.del(`astro:session:${decoded.id}`),
+    redis.del(`refresh:${decoded.id}`),
+    redis.del(`presence:astro:${decoded.id}`),
+  ]);
 
   await prisma.astrologer.update({
     where: {
@@ -263,22 +279,20 @@ export const logoutService = async (req, res) => {
     },
   });
 
-  await redis.del(`refresh:${decoded.id}`);
-
   if (res) {
-    res.clearCookie("accessToken", {
+    res.clearCookie(ACCESS_COOKIE_NAME, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      domain: ".dhwaniastro.com",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      domain: process.env.NODE_ENV === "production" ? ".dhwaniastro.com" : undefined,
       path: "/",
     });
 
-    res.clearCookie("refreshToken", {
+    res.clearCookie(REFRESH_COOKIE_NAME, {
       httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      domain: ".dhwaniastro.com",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      domain: process.env.NODE_ENV === "production" ? ".dhwaniastro.com" : undefined,
       path: "/",
     });
   }

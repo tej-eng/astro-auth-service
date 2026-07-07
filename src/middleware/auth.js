@@ -1,26 +1,45 @@
 import jwt from "jsonwebtoken";
 import prisma from "../config/prisma.js";
+import redis from "../config/redis.js";
 
 const auth = async (req) => {
   try {
-    const authHeader = req?.headers?.authorization;
+    const token =
+      req.cookies?.accessToken ||
+      req.headers?.authorization?.replace("Bearer ", "");
 
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return null; // ❌ no res.status here
+    if (!token) {
+      return null;
     }
-
-    const token = authHeader.replace("Bearer ", "");
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // 🔥 fetch full user (recommended)
+    // Token generated before sessionId support
+    if (!decoded.sessionId) {
+      return null;
+    }
+
+    const session = await redis.get(`astro:session:${decoded.id}`);
+
+    if (!session) {
+      return null;
+    }
+
+    const { sessionId } = JSON.parse(session);
+
+    if (sessionId !== decoded.sessionId) {
+      return null;
+    }
+
     const user = await prisma.astrologer.findUnique({
-      where: { id: decoded.id },
+      where: {
+        id: decoded.id,
+      },
     });
 
     return user;
   } catch (err) {
-    return null; // ❌ never throw / never use res
+    return null;
   }
 };
 
