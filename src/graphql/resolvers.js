@@ -1915,9 +1915,7 @@ export default {
     },
 
     getCurrentAstrologer: async (_, __, { astrologer }) => {
-      console.log(req.cookies);
-      console.log(req.cookies.accessToken);
-      console.log(req.headers.authorization);
+      
       if (!astrologer) {
         throw new Error("Unauthorized");
       }
