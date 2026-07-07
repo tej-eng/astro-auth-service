@@ -1952,7 +1952,7 @@ export default {
     },
 
     refreshAstrologerToken: async (_, __, { req, res }) => {
-       console.log("========== REFRESH ==========");
+       console.log("========== REFRESH ==========----");
        console.log(req.cookies);
       return refreshTokenService(req, res);
     },
