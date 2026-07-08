@@ -10,6 +10,7 @@ import {
 import { getChatMessages } from "../services/messageService.js";
 
 import { generateRtcToken } from "../utils/agoraToken.js";
+import { GraphQLError } from "graphql";
 //const GraphQLJSON = require("graphql-type-json");
 import fs from "fs";
 import path from "path";
@@ -1915,9 +1916,12 @@ export default {
     },
 
     getCurrentAstrologer: async (_, __, { user }) => {
-      
       if (!user) {
-        throw new Error("Unauthorized");
+        throw new GraphQLError("Unauthorized", {
+          extensions: {
+            code: "UNAUTHENTICATED",
+          },
+        });
       }
 
       return prisma.astrologer.findUnique({
@@ -1952,8 +1956,8 @@ export default {
     },
 
     refreshAstrologerToken: async (_, __, { req, res }) => {
-       console.log("========== REFRESH ==========----");
-       console.log(req.cookies);
+      console.log("========== REFRESH ==========----");
+      console.log(req.cookies);
       return refreshTokenService(req, res);
     },
     replyToReview: async (_, { reviewId, reply }, { user }) => {
