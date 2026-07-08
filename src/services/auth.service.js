@@ -162,7 +162,7 @@ export const verifyOtpService = async (contactNo, otp, res) => {
     });
   }
 
-  return { accessToken, astrologer };
+  return { accessToken,refreshToken, astrologer };
 };
 
 // ================= REFRESH =================

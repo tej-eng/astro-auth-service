@@ -99,6 +99,7 @@ export default gql`
 
   type AstrologerAuthPayload {
     accessToken: String!
+    refreshToken: String!
     astrologer: Astrologer!
   }
 
