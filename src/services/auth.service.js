@@ -251,11 +251,13 @@ export const refreshTokenService = async (req, res) => {
 
 // ================= LOGOUT =================
 export const logoutService = async (req, res) => {
+  console.log("-----------comming in logoutService-------");
   if (!req?.cookies) {
     throw new Error("Request context missing");
   }
 
-  const token = req.cookies[ACCESS_COOKIE_NAME];
+  const token = req.cookies[REFRESH_COOKIE_NAME];
+  console.log("---------------token---------:",token);
 
   if (!token) {
     throw new Error("Access token missing");
@@ -263,7 +265,8 @@ export const logoutService = async (req, res) => {
 
   let decoded;
   try {
-    decoded = verifyAccessToken(token);
+    decoded = verifyRefreshToken(token);
+    console.log("------------",decoded);
   } catch (error) {
     throw new Error("Invalid access token");
   }
