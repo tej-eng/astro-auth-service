@@ -97,7 +97,7 @@ export const verifyOtpService = async (contactNo, otp, res) => {
   }
 
   const sessionId = crypto.randomUUID();
-  
+
   // Logout previous device automatically
   const oldSession = await redis.get(`astro:session:${astrologer.id}`);
   if (oldSession) {
@@ -128,7 +128,7 @@ export const verifyOtpService = async (contactNo, otp, res) => {
       playerId: null,
       lastSeen: Date.now(),
       Source: "web",
-    })
+    }),
   );
 
   await redis.set(
@@ -138,28 +138,28 @@ export const verifyOtpService = async (contactNo, otp, res) => {
       loginAt: Date.now(),
     }),
     "EX",
-    REFRESH_EXPIRE_DAYS * 24 * 60 * 60
+    REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
   );
 
   // Safe cookie set (important for tests)
   if (res) {
     res.cookie(ACCESS_COOKIE_NAME, accessToken, {
-  httpOnly: true,
-  secure: true,
-  sameSite: "none",
-  domain: ".dhwaniastro.com",
-  path: "/",
-  maxAge: 24 * 60 * 60 * 1000,
-});
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      domain: ".dhwaniastro.com",
+      path: "/",
+      maxAge: 60 * 1000,
+    });
 
-res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
-  httpOnly: true,
-  secure: true,
-  sameSite: "none",
-  domain: ".dhwaniastro.com",
-  path: "/",
-  maxAge: REFRESH_EXPIRE_DAYS * 24 * 60 * 60 * 1000,
-});
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      domain: ".dhwaniastro.com",
+      path: "/",
+      maxAge: REFRESH_EXPIRE_DAYS * 24 * 60 * 60 * 1000,
+    });
   }
 
   return { accessToken, astrologer };
@@ -169,7 +169,7 @@ res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
 export const refreshTokenService = async (req, res) => {
   console.log("------------comming in Rfersh token service-------------");
   if (!req || !req.cookies) throw new Error("Request context missing");
-   
+
   const token = req.cookies[REFRESH_COOKIE_NAME];
 
   if (!token) throw new Error("Refresh token missing");
@@ -177,7 +177,7 @@ export const refreshTokenService = async (req, res) => {
   let decoded;
   try {
     decoded = verifyRefreshToken(token);
-    console.log("-----------------decoded-----------:",decoded);
+    console.log("-----------------decoded-----------:", decoded);
   } catch (error) {
     throw new Error("Invalid refresh token");
   }
@@ -198,7 +198,8 @@ export const refreshTokenService = async (req, res) => {
   });
 
   if (!astrologer) throw new Error("Astrologer not found");
-  if (astrologer.refreshToken !== token) throw new Error("Refresh token mismatch");
+  if (astrologer.refreshToken !== token)
+    throw new Error("Refresh token mismatch");
 
   const newAccessToken = generateAccessToken({
     id: astrologer.id,
@@ -221,23 +222,25 @@ export const refreshTokenService = async (req, res) => {
     `refresh:${astrologer.id}`,
     newRefreshToken,
     "EX",
-    REFRESH_EXPIRE_DAYS * 24 * 60 * 60
+    REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
   );
-console.log("-------new refresh token ------------",newRefreshToken);
-console.log("------------------",newAccessToken);
+  console.log("-------new refresh token ------------", newRefreshToken);
+  console.log("------------------", newAccessToken);
   if (res) {
     res.cookie(ACCESS_COOKIE_NAME, newAccessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
+      domain: ".dhwaniastro.com",
       path: "/",
       maxAge: 60 * 1000,
     });
 
     res.cookie(REFRESH_COOKIE_NAME, newRefreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
+      domain: ".dhwaniastro.com",
       path: "/",
       maxAge: REFRESH_EXPIRE_DAYS * 24 * 60 * 60 * 1000,
     });
@@ -285,17 +288,17 @@ export const logoutService = async (req, res) => {
   if (res) {
     res.clearCookie(ACCESS_COOKIE_NAME, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      domain: process.env.NODE_ENV === "production" ? ".dhwaniastro.com" : undefined,
+      secure: true,
+      sameSite: "none",
+      domain: ".dhwaniastro.com",
       path: "/",
     });
 
     res.clearCookie(REFRESH_COOKIE_NAME, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      domain: process.env.NODE_ENV === "production" ? ".dhwaniastro.com" : undefined,
+      secure: true,
+      sameSite: "none",
+      domain: ".dhwaniastro.com",
       path: "/",
     });
   }
