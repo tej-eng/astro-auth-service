@@ -167,7 +167,6 @@ export const verifyOtpService = async (contactNo, otp, res) => {
 
 // ================= REFRESH =================
 export const refreshTokenService = async (req, res) => {
-  console.log("------------comming in Rfersh token service-------------");
   if (!req || !req.cookies) throw new Error("Request context missing");
 
   const token = req.cookies[REFRESH_COOKIE_NAME];
@@ -177,7 +176,6 @@ export const refreshTokenService = async (req, res) => {
   let decoded;
   try {
     decoded = verifyRefreshToken(token);
-    console.log("-----------------decoded-----------:", decoded);
   } catch (error) {
     throw new Error("Invalid refresh token");
   }
@@ -224,8 +222,6 @@ export const refreshTokenService = async (req, res) => {
     "EX",
     REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
   );
-  console.log("-------new refresh token ------------", newRefreshToken);
-  console.log("------------------", newAccessToken);
   if (res) {
     res.cookie(ACCESS_COOKIE_NAME, newAccessToken, {
       httpOnly: true,
@@ -251,13 +247,11 @@ export const refreshTokenService = async (req, res) => {
 
 // ================= LOGOUT =================
 export const logoutService = async (req, res) => {
-  console.log("-----------comming in logoutService-------");
   if (!req?.cookies) {
     throw new Error("Request context missing");
   }
 
   const token = req.cookies[REFRESH_COOKIE_NAME];
-  console.log("---------------token---------:",token);
 
   if (!token) {
     throw new Error("Access token missing");
@@ -266,7 +260,6 @@ export const logoutService = async (req, res) => {
   let decoded;
   try {
     decoded = verifyRefreshToken(token);
-    console.log("------------",decoded);
   } catch (error) {
     throw new Error("Invalid access token");
   }
