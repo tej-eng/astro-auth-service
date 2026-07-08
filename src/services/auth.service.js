@@ -177,6 +177,7 @@ export const refreshTokenService = async (req, res) => {
   let decoded;
   try {
     decoded = verifyRefreshToken(token);
+    console.log("-----------------decoded-----------:",decoded);
   } catch (error) {
     throw new Error("Invalid refresh token");
   }
@@ -222,7 +223,8 @@ export const refreshTokenService = async (req, res) => {
     "EX",
     REFRESH_EXPIRE_DAYS * 24 * 60 * 60
   );
-
+console.log("-------new refresh token ------------",newRefreshToken);
+console.log("------------------",newAccessToken);
   if (res) {
     res.cookie(ACCESS_COOKIE_NAME, newAccessToken, {
       httpOnly: true,
