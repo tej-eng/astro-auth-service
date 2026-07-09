@@ -4,26 +4,21 @@ import redis from "../config/redis.js";
 
 const auth = async (req) => {
   try {
-    const token =
-      req.cookies?.accessToken ||
-      req.headers?.authorization?.replace("Bearer ", "");
+   const token =
+  req.cookies?.accessToken ||
+  req.headers?.authorization?.replace("Bearer ", "");
 
-    if (!token) {
-      return null;
-    }
+console.log("TOKEN:", token);
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+const decoded = jwt.verify(token, process.env.JWT_SECRET);
+console.log("DECODED:", decoded);
 
-    // Token generated before sessionId support
-    if (!decoded.sessionId) {
-      return null;
-    }
+const session = await redis.get(`astro:session:${decoded.id}`);
+console.log("REDIS SESSION:", session);
 
-    const session = await redis.get(`astro:session:${decoded.id}`);
-
-    if (!session) {
-      return null;
-    }
+if (session) {
+  console.log("PARSED:", JSON.parse(session));
+}
 
     const { sessionId } = JSON.parse(session);
 

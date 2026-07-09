@@ -1835,11 +1835,9 @@ export default {
         throw new Error(error.message || "Failed to fetch messages");
       }
     },
-    getRemediesForChat: async (_, __, { user }) => {
+    getRemediesForChat: async (_, __,) => {
       try {
-        if (!user) {
-          throw new Error("Unauthorized");
-        }
+
 
         const remedies = await prisma.remedy.findMany({
           where: {
