@@ -125,6 +125,7 @@ export default gql`
     coins: Int
     description: String
     createdAt: String
+      sessionId: String
   }
 
   type AstrologerEarningResponse {

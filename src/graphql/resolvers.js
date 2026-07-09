@@ -23,39 +23,35 @@ export default {
   //JSON: GraphQLJSON,
   Upload: GraphQLUpload,
   Query: {
-    /* =====================================
-       ASTROLOGER EARNINGS
-    ===================================== */
     getAstrologerEarnings: async (_, __, { user }) => {
       try {
         if (!user) {
           throw new Error("Unauthorized");
         }
-
         const astrologerId = user.id;
-
-        /* =====================================
-           GET WALLET
-        ===================================== */
         const wallet = await prisma.astrologerWallet.findUnique({
           where: {
             astrologerId,
           },
-
           include: {
             transactions: {
               orderBy: {
                 createdAt: "desc",
               },
-
               take: 20,
+              select: {
+                id: true,
+                type: true,
+                amount: true,
+                coins: true,
+                description: true,
+                createdAt: true,
+                sessionId: true,
+              },
             },
           },
         });
 
-        /* =====================================
-           EMPTY WALLET RESPONSE
-        ===================================== */
         if (!wallet) {
           return {
             summary: {
@@ -70,9 +66,6 @@ export default {
           };
         }
 
-        /* =====================================
-           SESSION STATS
-        ===================================== */
         const sessions = await prisma.session.findMany({
           where: {
             astrologerId,
@@ -92,9 +85,6 @@ export default {
           totalChatMinutes += Math.ceil((s.durationSec || 0) / 60);
         });
 
-        /* =====================================
-           FINAL RESPONSE
-        ===================================== */
         return {
           summary: {
             totalEarnings: wallet.totalEarned || 0,
@@ -118,7 +108,7 @@ export default {
             coins: t.coins || 0,
 
             description: t.description || "",
-
+            sessionId: t.sessionId,
             createdAt: t.createdAt.toISOString(),
           })),
         };
@@ -129,9 +119,6 @@ export default {
       }
     },
 
-    /* =====================================
-       ASTROLOGER CHAT HISTORY
-    ===================================== */
     getAstrologerChatHistory: async (_, { filter = {} }, { user }) => {
       try {
         if (!user) {
@@ -1835,38 +1822,38 @@ export default {
         throw new Error(error.message || "Failed to fetch messages");
       }
     },
-getRemediesForChat: async (_, __, { user }) => {
-  console.log("USER:", user);
+    getRemediesForChat: async (_, __, { user }) => {
+      console.log("USER:", user);
 
-  try {
-    const remedies = await prisma.remedy.findMany({
-      where: {
-        isActive: true,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
+      try {
+        const remedies = await prisma.remedy.findMany({
+          where: {
+            isActive: true,
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+        });
 
-    console.log("REMEDIES:", remedies);
+        console.log("REMEDIES:", remedies);
 
-    return {
-      success: true,
-      message: "Remedies fetched successfully",
-      data: remedies.map((r) => ({
-        id: r.id,
-        title: r.title,
-        description: r.description,
-        isActive: r.isActive,
-        createdAt: r.createdAt.toISOString(),
-        updatedAt: r.updatedAt.toISOString(),
-      })),
-    };
-  } catch (error) {
-    console.error("FULL ERROR:", error);
-    throw error;
-  }
-},
+        return {
+          success: true,
+          message: "Remedies fetched successfully",
+          data: remedies.map((r) => ({
+            id: r.id,
+            title: r.title,
+            description: r.description,
+            isActive: r.isActive,
+            createdAt: r.createdAt.toISOString(),
+            updatedAt: r.updatedAt.toISOString(),
+          })),
+        };
+      } catch (error) {
+        console.error("FULL ERROR:", error);
+        throw error;
+      }
+    },
 
     getAstrologerAppVersion: async (_, { platform }, { user }) => {
       try {

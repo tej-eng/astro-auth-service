@@ -119,17 +119,17 @@ export const verifyOtpService = async (contactNo, otp, res) => {
     },
   });
 
-  await redis.set(
-    `presence:astro:${astrologer.id}`,
-    JSON.stringify({
-      online: true,
-      socketId: null,
-      appState: "foreground",
-      playerId: null,
-      lastSeen: Date.now(),
-      Source: "web",
-    }),
-  );
+  // await redis.set(
+  //   `presence:astro:${astrologer.id}`,
+  //   JSON.stringify({
+  //     online: true,
+  //     socketId: null,
+  //     appState: "foreground",
+  //     playerId: null,
+  //     lastSeen: Date.now(),
+  //     Source: "web",
+  //   }),
+  // );
 
   await redis.set(
     `astro:session:${astrologer.id}`,
