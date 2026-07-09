@@ -1943,8 +1943,6 @@ export default {
     },
 
     refreshAstrologerToken: async (_, __, { req, res }) => {
-      console.log("========== REFRESH ==========----");
-      console.log(req.cookies);
       return refreshTokenService(req, res);
     },
     replyToReview: async (_, { reviewId, reply }, { user }) => {
@@ -2281,8 +2279,6 @@ export default {
 
         const uploadPath = path.join(uploadDir, newFileName);
 
-        console.log("Upload Directory :", uploadDir);
-        console.log("Saving File      :", uploadPath);
 
         await new Promise((resolve, reject) => {
           const stream = createReadStream();
@@ -2302,7 +2298,6 @@ export default {
 
         const fileUrl = `${baseUrl}/${newFileName}`;
 
-        console.log("Public URL :", fileUrl);
 
         return {
           success: true,

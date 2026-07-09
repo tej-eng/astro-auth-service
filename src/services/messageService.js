@@ -8,14 +8,7 @@ import {
   verifyAccessToken,
 } from "../config/jwt.js";
 
-const OTP_EXPIRE = 300;
-const OTP_RATE_LIMIT = 3;
-const OTP_RATE_WINDOW = 600;
-const LOGIN_FAIL_LIMIT = 5;
-const LOGIN_FAIL_WINDOW = 900;
 
-const REFRESH_COOKIE_NAME = "astro_refresh_token";
-const REFRESH_EXPIRE_DAYS = 7;
 
 // ================= REGISTER =================
 export const getChatMessages = async (roomId) => {

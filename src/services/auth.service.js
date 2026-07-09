@@ -250,7 +250,8 @@ export const logoutService = async (req, res) => {
   if (!req?.cookies) {
     throw new Error("Request context missing");
   }
-console.log("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" )
+console.log("-------comming in -logoutService--------" )
+
   const token = req.cookies[REFRESH_COOKIE_NAME];
 
   if (!token) {
