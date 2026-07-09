@@ -1835,36 +1835,38 @@ export default {
         throw new Error(error.message || "Failed to fetch messages");
       }
     },
-    getRemediesForChat: async (_, __,) => {
-      try {
+getRemediesForChat: async (_, __, { user }) => {
+  console.log("USER:", user);
 
+  try {
+    const remedies = await prisma.remedy.findMany({
+      where: {
+        isActive: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-        const remedies = await prisma.remedy.findMany({
-          where: {
-            isActive: true,
-          },
-          orderBy: {
-            createdAt: "desc",
-          },
-        });
+    console.log("REMEDIES:", remedies);
 
-        return {
-          success: true,
-          message: "Remedies fetched successfully",
-          data: remedies.map((remedy) => ({
-            id: remedy.id,
-            title: remedy.title,
-            description: remedy.description,
-            isActive: remedy.isActive,
-            createdAt: remedy.createdAt.toISOString(),
-            updatedAt: remedy.updatedAt.toISOString(),
-          })),
-        };
-      } catch (error) {
-        console.error("getRemedies error:", error);
-        throw new Error(error.message || "Failed to fetch remedies");
-      }
-    },
+    return {
+      success: true,
+      message: "Remedies fetched successfully",
+      data: remedies.map((r) => ({
+        id: r.id,
+        title: r.title,
+        description: r.description,
+        isActive: r.isActive,
+        createdAt: r.createdAt.toISOString(),
+        updatedAt: r.updatedAt.toISOString(),
+      })),
+    };
+  } catch (error) {
+    console.error("FULL ERROR:", error);
+    throw error;
+  }
+},
 
     getAstrologerAppVersion: async (_, { platform }, { user }) => {
       try {
