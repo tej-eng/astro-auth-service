@@ -46,6 +46,7 @@ export const registerAstrologerService = async (data) => {
 
 // ================= REQUEST OTP =================
 export const requestOtpService = async (contactNo) => {
+  console.log("-------contactNo----------: ",contactNo);
   const astrologer = await prisma.astrologer.findFirst({
     where: { contactNo },
   });
