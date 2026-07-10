@@ -34,8 +34,9 @@ if (session) {
 
     return user;
   } catch (err) {
-    return null;
-  }
+  console.error("AUTH ERROR:", err.message);
+  return null;
+}
 };
 
 export default auth;

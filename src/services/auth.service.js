@@ -149,7 +149,7 @@ export const verifyOtpService = async (contactNo, otp, res) => {
       sameSite: "none",
       domain: ".dhwaniastro.com",
       path: "/",
-      maxAge: 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
@@ -229,7 +229,7 @@ export const refreshTokenService = async (req, res) => {
       sameSite: "none",
       domain: ".dhwaniastro.com",
       path: "/",
-      maxAge: 60 * 1000,
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
     res.cookie(REFRESH_COOKIE_NAME, newRefreshToken, {

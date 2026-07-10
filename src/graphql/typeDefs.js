@@ -289,7 +289,7 @@ export default gql`
     coins: Int
 
     description: String
-
+sessionId: String
     createdAt: String!
   }
 
