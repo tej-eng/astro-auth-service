@@ -8,6 +8,7 @@ import {
   verifyAccessToken,
 } from "../config/jwt.js";
 import crypto from "crypto";
+import { sendOTP } from "./smsService.js";
 
 const OTP_EXPIRE = 300;
 const OTP_RATE_LIMIT = 3;
@@ -61,8 +62,13 @@ export const requestOtpService = async (contactNo) => {
     throw new Error("Too many OTP requests. Try later.");
 
   const otp = generateOtp();
-
+  const countryCode="+91";
   await redis.set(`astrologer_otp:${contactNo}`, otp, "EX", OTP_EXPIRE);
+   await sendOTP({
+  countryCode,
+  contactNo,
+  otp,
+});
 
   console.log("OTP:", otp);
 
