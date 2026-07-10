@@ -64,10 +64,11 @@ export const requestOtpService = async (contactNo) => {
 
   const otp = generateOtp();
   const countryCode="+91";
+  const mobile=contactNo.trim();
   await redis.set(`astrologer_otp:${contactNo}`, otp, "EX", OTP_EXPIRE);
    await sendOTP({
   countryCode,
-  contactNo,
+  mobile,
   otp,
 });
 
