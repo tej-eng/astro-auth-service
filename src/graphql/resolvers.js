@@ -603,9 +603,7 @@ export default {
       { user },
     ) => {
       try {
-        /* =====================================
-       AUTH CHECK
-    ===================================== */
+   
         if (!user) {
           throw new Error("Unauthorized");
         }
@@ -614,18 +612,13 @@ export default {
 
         const skip = (page - 1) * limit;
 
-        /* =====================================
-       GET ASTROLOGER WALLET
-    ===================================== */
+      
         const wallet = await prisma.astrologerWallet.findUnique({
           where: {
             astrologerId,
           },
         });
 
-        /* =====================================
-       EMPTY WALLET RESPONSE
-    ===================================== */
         if (!wallet) {
           return {
             success: true,
@@ -640,18 +633,14 @@ export default {
           };
         }
 
-        /* =====================================
-       TOTAL COUNT
-    ===================================== */
+  
         const totalCount = await prisma.walletTransaction.count({
           where: {
             astrologerWalletId: wallet.id,
           },
         });
 
-        /* =====================================
-       FETCH TRANSACTIONS
-    ===================================== */
+     
         const transactions = await prisma.walletTransaction.findMany({
           where: {
             astrologerWalletId: wallet.id,
@@ -666,9 +655,7 @@ export default {
           take: limit,
         });
 
-        /* =====================================
-       RESPONSE
-    ===================================== */
+    
         return {
           success: true,
 
@@ -680,7 +667,7 @@ export default {
 
           data: transactions.map((txn) => ({
             id: txn.id,
-
+  sessionId: txn.sessionId,
             type: txn.type,
 
             amount: txn.amount || 0,
