@@ -1752,6 +1752,7 @@ export default {
     },
 
     joinLive: async (_, { channelName, role }) => {
+      console.log("comming in joinLive----------------:");
       const stream = await prisma.liveStream.findFirst({
         where: {
           channelName,
@@ -1764,13 +1765,14 @@ export default {
       }
 
       const uid = Math.floor(Math.random() * 100000);
+      console.log("AGORA_APP_ID--------------:",process.env.AGORA_APP_ID);
 
       const token = generateRtcToken({
         channelName,
         uid,
         role,
       });
-
+    console.log("token for agora---------:",token);
       return {
         token,
         uid,
@@ -2127,6 +2129,7 @@ export default {
       };
     },
     startLive: async (_, { title }, { user }) => {
+      console.log("comming in startLive");
       if (!user) {
         throw new Error("Unauthorized");
       }
