@@ -118,7 +118,7 @@ type AstrologerEarningSummary {
   totalPaid: Float
   payableAmount: Float
   lastPaidAmount: Float
-  lastPayoutDate: DateTime
+  lastPayoutDate: String
 
   totalSessions: Int
   totalChatMinutes: Int
