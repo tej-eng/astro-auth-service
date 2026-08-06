@@ -41,6 +41,9 @@ enum ServiceType {
 enum TransactionType {
   CREDIT
   DEBIT
+  REFUND
+  CASHBACK
+  DISCOUNT
 }
 
 enum WithdrawalStatus {
@@ -171,6 +174,9 @@ model User {
   servicePaymentOrders ServicePaymentOrder[]
   noticesCreated       Notice[]              @relation("NoticeCreatedBy")
   serviceBookings      ServiceBooking[]
+  source               String?
+  callRecordings CallRecording[]
+  couponRedemptions CouponRedemption[]
 
   @@unique([countryCode, mobile])
 }
@@ -274,13 +280,16 @@ model Astrologer {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  isCallActive Boolean @default(false)
-  isChatActive Boolean @default(false)
-  isLiveActive Boolean @default(false)
-  isBusy       Boolean @default(false)
-  isOnline     Boolean @default(false)
-  isPromotional     Boolean @default(false)
+ isEligibleChat  Boolean @default(false)
+  isEligibleCall  Boolean @default(false)
+  isEligibleVideo Boolean @default(false)
+  isEligibleAudio Boolean @default(false)
+  isCallActive  Boolean @default(false)
+  isChatActive  Boolean @default(false)
+  isLiveActive  Boolean @default(false)
+  isBusy        Boolean @default(false)
+  isOnline      Boolean @default(false)
+  isPromotional Boolean @default(false)
 
   approvedBy Staff?     @relation("ApprovedAstrologers", fields: [approvedById], references: [id])
   createdBy  Staff?     @relation("CreatedAstrologers", fields: [createdById], references: [id])
@@ -302,21 +311,25 @@ model Astrologer {
   followers         AstrologerFollow[]
   serviceBookings   ServiceBooking[]
   noticeAstrologers NoticeAstrologer[]
-serviceMappings ServiceAstrologer[]
-  liveStreams LiveStream[]
-
+  serviceMappings   ServiceAstrologer[]
+  liveStreams       LiveStream[]
+  callRecordings CallRecording[]
+  isDeleted Boolean @default(false)
+  payouts AstrologerPayout[] 
+  tax AstrologerTax?
   @@index([rating])
   @@index([experience])
 }
+
 model ServiceAstrologer {
   id String @id @default(cuid())
 
-  serviceId String
+  serviceId    String
   astrologerId String
 
   price Float
 
-  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  service    Service    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   astrologer Astrologer @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
@@ -571,11 +584,11 @@ model Service {
 
   categoryId String?
 
-  category Category? @relation(fields: [categoryId], references: [id])
-   astrologerMappings ServiceAstrologer[]
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
-  bookings  ServiceBooking[]
+  category           Category?           @relation(fields: [categoryId], references: [id])
+  astrologerMappings ServiceAstrologer[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  bookings           ServiceBooking[]
 }
 
 model Gift {
@@ -653,7 +666,7 @@ model RechargePack {
   paymentOrders PaymentOrder[]
   transactions  WalletTransaction[]
   coupons       Coupon[]            @relation("CouponToRechargePack")
-
+ hideAfterFirstRecharge Boolean @default(false)
   @@index([isActive])
   @@index([price])
   @@index([coins])
@@ -680,12 +693,15 @@ model AstrologerWallet {
   astrologer     Astrologer          @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
   balanceCoins   Float               @default(0)
   totalEarned    Int                 @default(0)
+  totalCommission Float @default(0)
+  totalPaid Float @default(0)
+  pendingAmount Float @default(0)
   totalWithdrawn Int                 @default(0)
   withdrawals    Withdrawal[]
   createdAt      DateTime            @default(now())
   updatedAt      DateTime            @updatedAt
   transactions   WalletTransaction[]
-
+  lastPaidAmount   Float @default(0) 
   @@index([astrologerId])
 }
 
@@ -712,7 +728,7 @@ model WalletTransaction {
   coins       Int
   amount      Float?
   description String?
-
+  updatedBalance Float?
   createdAt DateTime @default(now())
 
   //  PREVENT duplicate credit from same payment
@@ -759,15 +775,16 @@ model Session {
   ratePerMin  Int
   durationSec Int @default(0)
 
-  coinsDeducted Int @default(0)
-  coinsEarned   Int @default(0)
-  commission    Int @default(0)
+  coinsDeducted Int       @default(0)
+  coinsEarned   Int       @default(0)
+  commission    Int       @default(0)
   source        String?
-  review    Review?
-  roomId         String?
-  startedAt DateTime?
-  endedAt   DateTime?
-
+  by        String?
+  review        Review?
+  roomId        String?
+  startedAt     DateTime?
+  endedAt       DateTime?
+  
   messages Message[]
 
   transactions WalletTransaction[]
@@ -775,6 +792,9 @@ model Session {
   fraudLogs FraudLog[]
 
   remedies SessionRemedy[]
+  callRecordings CallRecording[]
+  payoutSessions AstrologerPayoutSession[]
+
 
   createdAt DateTime @default(now())
 
@@ -785,88 +805,124 @@ model Session {
 }
 
 model Payment {
+
   id String @id @default(uuid())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user User @relation(fields:[userId],references:[id])
 
   rechargePackId String
-  rechargePack   RechargePack @relation(fields: [rechargePackId], references: [id])
+  rechargePack RechargePack @relation(fields:[rechargePackId],references:[id])
 
-  paymentOrderId String       @unique
-  paymentOrder   PaymentOrder @relation(fields: [paymentOrderId], references: [id])
+  paymentOrderId String @unique
+  paymentOrder PaymentOrder @relation(fields:[paymentOrderId],references:[id])
 
   amount Float
-  coins  Int
+  coins Int
 
   provider PaymentProvider
 
-  razorpayOrderId   String
+  razorpayOrderId String
   razorpayPaymentId String @unique
 
   status PaymentStatus
 
+  //--------------------------------
+  invoiceNo String? @unique
+
+  taxableAmount Float?
+
+  gstRate Float?
+
+  cgst Float?
+
+  sgst Float?
+
+  igst Float?
+
+  totalTax Float?
+
+  totalAmount Float?
+  pgChargeRate Float?
+  pgCharge Float?
+  pgIgst Float?
+  pgTotal Float?
+  receivableAmount Float?
+
+  //--------------------------------
+
+  country String?
+  state String?
+  city String?
+
+  //--------------------------------
+
+  platform String?
+
   createdAt DateTime @default(now())
 
-  // ADD THIS
   walletTransactions WalletTransaction[]
-
-  @@index([userId])
-  @@index([status])
-  @@index([razorpayOrderId])
 }
 
 model PaymentOrder {
   id String @id @default(uuid())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   rechargePackId String
-  rechargePack   RechargePack @relation(fields: [rechargePackId], references: [id])
+  rechargePack RechargePack @relation(fields: [rechargePackId], references: [id])
+
+  couponId String?
+  coupon Coupon? @relation(fields: [couponId], references: [id])
 
   razorpayOrderId String @unique
 
+  originalAmount Float
+  discount Float @default(0)
   amount Float
-  coins  Int
+  coins Int
 
   status PaymentOrderStatus @default(CREATED)
 
   payment Payment?
 
+  couponRedemption CouponRedemption?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@index([userId])
-  @@index([razorpayOrderId])
-  @@index([status])
 }
 
 model Coupon {
-  id             String           @id @default(uuid())
-  code           String           @unique
-  description    String?
-  type           CouponType
-  visibility     CouponVisibility
-  couponCount    Int              @default(0)
-applicable  String?
-  status         Boolean          @default(true)
+  id          String           @id @default(uuid())
+  code        String           @unique
+  description String?
+  type        CouponType
+  visibility  CouponVisibility
+  couponCount Int              @default(0)
+  applicable  String?
+  status      Boolean          @default(true)
 
   percentage     Float?
   flatAmount     Float?
   maxDiscount    Float?
   minOrderAmount Float?
 
-  redeemLimit    Int?
-  usedCount      Int              @default(0)
+  redeemLimit Int?
+  usedCount   Int  @default(0)
 
-  startDate      DateTime
-  endDate        DateTime
+  startDate DateTime
+  endDate   DateTime
 
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  rechargePacks  RechargePack[]   @relation("CouponToRechargePack")
+  rechargePacks RechargePack[] @relation("CouponToRechargePack")
+
+  // ADD THESE
+  paymentOrders     PaymentOrder[]
+  couponRedemptions CouponRedemption[]
+  servicePaymentOrders ServicePaymentOrder[] @relation("CouponServicePaymentOrders")
 }
 
 model Message {
@@ -877,7 +933,7 @@ model Message {
 
   senderId   String
   receiverId String?
-
+time String?
   message String
   image   String?
   sender  String
@@ -886,7 +942,7 @@ model Message {
 
   sessionId String?
   session   Session? @relation(fields: [sessionId], references: [id])
-  time String?
+
   createdAt DateTime @default(now())
 
   @@index([roomId])
@@ -947,17 +1003,17 @@ model KycDetail {
   ifsc              String?
   branchName        String?
   panNumber         String?
-  documentRemarks      String?
+  documentRemarks   String?
 
   aadhaarImage  String?
   panImage      String?
   passbookImage String?
-  astrologer    Astrologer?     @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
+  astrologer    Astrologer?    @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
   status        DocumentStatus @default(PENDING)
 
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  astrologerId String?   @unique
+  astrologerId String?  @unique
 }
 
 model Notification {
@@ -1196,6 +1252,8 @@ enum AppType {
   ASTROLOGER
 }
 
+
+
 model AppVersion {
   id String @id @default(uuid())
   appType            AppType
@@ -1344,7 +1402,7 @@ model ServiceBooking {
   gender  String?
   concern String?
 
-  amount Float
+  amount Float?
 
   paymentStatus PaymentStatus @default(PENDING)
   bookingStatus BookingStatus @default(PENDING)
@@ -1365,18 +1423,22 @@ model ServicePaymentOrder {
   id String @id @default(uuid())
 
   userId String
-  user   User   @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 
   bookingId String
-  booking   ServiceBooking @relation(fields: [bookingId], references: [id])
+  booking ServiceBooking @relation(fields: [bookingId], references: [id])
 
   razorpayOrderId String? @unique
 
   totalAmount Float
-
   walletAmount Float @default(0)
-
   payableAmount Float
+
+  couponId String?
+  coupon Coupon? @relation("CouponServicePaymentOrders", fields: [couponId], references: [id])
+
+  discount Float @default(0)
+  cashback Float @default(0)
 
   status PaymentOrderStatus @default(CREATED)
 
@@ -1387,6 +1449,7 @@ model ServicePaymentOrder {
   @@index([bookingId])
   @@index([razorpayOrderId])
   @@index([status])
+  @@index([couponId])
 }
 
 //-----------
@@ -1493,26 +1556,202 @@ model BlogCategoryMapping {
 
 //------------tables for live streaming----------------
 model LiveStream {
-  id            String      @id @default(uuid())
+  id String @id @default(uuid())
 
-  astrologerId  String
-  astrologer    Astrologer  @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
+  astrologerId String
+  astrologer Astrologer @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
 
-  title         String
+  title String
 
-  channelName   String
+  channelName String
 
-  status        LiveStatus  @default(SCHEDULED)
+  // ADD THIS
+  chatRoomId String?
 
-  scheduledAt   DateTime?
+  status LiveStatus @default(SCHEDULED)
 
-  createdAt     DateTime    @default(now())
+  scheduledAt DateTime?
 
-  endedAt       DateTime?
+  createdAt DateTime @default(now())
+
+  endedAt DateTime?
 }
 
 enum LiveStatus {
   SCHEDULED
   LIVE
   ENDED
+}
+
+
+
+model CallRecording {
+  id          String   @id @default(uuid())
+  
+  // Call information
+  roomId      String   @db.VarChar(255)
+  sessionId   String?  @db.VarChar(255) // Keep this as a regular field
+  
+  // User and Astrologer information
+  userId      String   @db.VarChar(255)
+  astrologerId String  @db.VarChar(255)
+  astrologerName String? @db.VarChar(255)
+  
+  // Recording details
+  fileName    String   @db.VarChar(500)
+  fileUrl     String   @db.VarChar(1000)
+  filePath    String?  @db.Text
+  fileSize    Int      @default(0)
+  
+  // Call metadata
+  duration    Int      @default(0)
+  callType    String   @default("audio")
+  timestamp   String   @db.VarChar(100)
+  
+  // Status and flags
+  status      String   @default("active")
+  isAdminOnly Boolean  @default(true)
+  
+  // Audit information
+  uploadedBy  String?  @db.VarChar(255)
+  uploadedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Additional metadata
+  metadata    Json?    @default("{}")
+  
+  // Relations
+  session     Session? @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  astrologer  Astrologer? @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
+  
+  // Indexes
+  @@index([roomId])
+  @@index([userId])
+  @@index([astrologerId])
+  @@index([sessionId])
+  @@index([createdAt])
+  @@index([status])
+  @@index([isAdminOnly])
+}
+
+model CouponRedemption {
+  id String @id @default(uuid())
+
+  couponId String
+  coupon Coupon @relation(fields: [couponId], references: [id])
+
+  userId String
+  user User @relation(fields: [userId], references: [id])
+
+  paymentOrderId String @unique
+  paymentOrder PaymentOrder @relation(fields: [paymentOrderId], references: [id])
+
+  discount Float
+
+  createdAt DateTime @default(now())
+}
+
+model Skill {
+  id        String   @id @default(cuid())
+
+  name      String
+  slug      String   @unique
+
+  sortOrder Int      @default(0)
+
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Problem {
+  id        String   @id @default(cuid())
+
+  name      String
+  slug      String   @unique
+
+  sortOrder Int      @default(0)
+
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AstrologerPayout {
+
+  id String @id @default(uuid())
+
+  astrologerId String
+  astrologer Astrologer @relation(fields:[astrologerId],references:[id])
+
+  fromDate DateTime
+  toDate DateTime
+
+  totalRevenue Float
+
+  commissionPercent Float
+  commission Float
+
+  earning Float
+
+  pgChargeRate Float
+  pgCharge Float
+
+  gstRate Float
+
+  igst Float?
+  cgst Float?
+  sgst Float?
+
+  pgTotal Float
+
+  grossAmount Float
+
+  tdsPercent Float
+  tdsAmount Float
+
+  lastPaidAmount Float?
+
+  payableAmount Float
+
+  transactionRef String?
+
+  paymentDate DateTime?
+
+  status WithdrawalStatus
+
+  createdAt DateTime @default(now())
+
+  payoutItems AstrologerPayoutSession[]
+}
+
+
+model AstrologerTax {
+  id String @id @default(uuid())
+
+  astrologerId String @unique
+  astrologer Astrologer @relation(fields: [astrologerId], references: [id], onDelete: Cascade)
+
+  gstNumber String?
+  state String
+  panNumber String
+
+  tdsPercent Float
+  gstPercent Float
+}
+
+model AstrologerPayoutSession {
+
+  id String @id @default(uuid())
+
+  payoutId String
+  payout AstrologerPayout @relation(fields:[payoutId],references:[id])
+
+  sessionId String
+  session Session @relation(fields:[sessionId],references:[id])
+
+  @@unique([payoutId, sessionId])
 }
