@@ -54,13 +54,17 @@ export default {
 
         if (!wallet) {
           return {
-            summary: {
-              totalEarnings: 0,
-              totalWithdrawn: 0,
-              currentBalance: 0,
-              totalSessions: 0,
-              totalChatMinutes: 0,
-            },
+        summary: {
+  totalEarnings: 0,
+  totalWithdrawn: 0,
+  currentBalance: 0,
+  totalPaid: 0,
+  payableAmount: 0,
+  lastPaidAmount: 0,
+  lastPayoutDate: null,
+  totalSessions: 0,
+  totalChatMinutes: 0,
+},
 
             transactions: [],
           };
@@ -76,16 +80,10 @@ export default {
             durationSec: true,
           },
         });
-        const [wallet, latestPayout, lastApprovedPayout] = await Promise.all([
-          prisma.astrologerWallet.findUnique({
-            where: {
-              astrologerId: astrologer.id,
-            },
-          }),
-
+        const [latestPayout, lastApprovedPayout] = await Promise.all([
           prisma.astrologerPayout.findFirst({
             where: {
-              astrologerId: astrologer.id,
+              astrologerId,
             },
             orderBy: {
               createdAt: "desc",
@@ -94,7 +92,7 @@ export default {
 
           prisma.astrologerPayout.findFirst({
             where: {
-              astrologerId: astrologer.id,
+              astrologerId,
               status: "APPROVED",
             },
             orderBy: {
@@ -118,14 +116,18 @@ export default {
             totalWithdrawn: wallet.totalWithdrawn || 0,
 
             currentBalance: wallet.balanceCoins || 0,
-            totalPaid: wallet?.totalPaid || 0,
 
-            payableAmount: latestPayout?.payableAmount || 0,
+            totalPaid: wallet.totalPaid || 0,
+
+         payableAmount: wallet.pendingAmount || 0,
+
+            lastPaidAmount: wallet.lastPaidAmount || 0,
 
             lastPayoutDate:
-              lastApprovedPayout?.paymentDate ||
-              lastApprovedPayout?.createdAt ||
+              lastApprovedPayout?.paymentDate ??
+              lastApprovedPayout?.createdAt ??
               null,
+
             totalSessions,
 
             totalChatMinutes,
