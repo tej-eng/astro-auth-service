@@ -110,13 +110,19 @@ export default gql`
   # ================= QUERY =================
 
   #---------------------start code for astrologer earnings--------
-  type AstrologerEarningSummary {
-    totalEarnings: Float!
-    totalWithdrawn: Float!
-    currentBalance: Float!
-    totalSessions: Int!
-    totalChatMinutes: Int!
-  }
+type AstrologerEarningSummary {
+  totalEarnings: Float
+  totalWithdrawn: Float
+  currentBalance: Float
+
+  totalPaid: Float
+  payableAmount: Float
+  lastPaidAmount: Float
+  lastPayoutDate: DateTime
+
+  totalSessions: Int
+  totalChatMinutes: Int
+}
 
   type AstrologerEarningTransaction {
     id: ID!
