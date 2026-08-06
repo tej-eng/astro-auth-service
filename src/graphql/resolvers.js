@@ -128,7 +128,7 @@ export default {
           0,
         );
 
-        const grossAmount = Number((earning - pgTotal).toFixed(2));
+       
 
         const totalPaid = wallet.totalPaid || 0;
 
