@@ -54,13 +54,17 @@ export default {
 
         if (!wallet) {
           return {
-            summary: {
-              totalEarnings: 0,
-              totalWithdrawn: 0,
-              currentBalance: 0,
-              totalSessions: 0,
-              totalChatMinutes: 0,
-            },
+        summary: {
+  totalEarnings: 0,
+  totalWithdrawn: 0,
+  currentBalance: 0,
+  totalPaid: 0,
+  payableAmount: 0,
+  lastPaidAmount: 0,
+  lastPayoutDate: null,
+  totalSessions: 0,
+  totalChatMinutes: 0,
+},
 
             transactions: [],
           };
@@ -76,6 +80,26 @@ export default {
             durationSec: true,
           },
         });
+        const [latestPayout, lastApprovedPayout] = await Promise.all([
+          prisma.astrologerPayout.findFirst({
+            where: {
+              astrologerId,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+          }),
+
+          prisma.astrologerPayout.findFirst({
+            where: {
+              astrologerId,
+              status: "APPROVED",
+            },
+            orderBy: {
+              paymentDate: "desc",
+            },
+          }),
+        ]);
 
         const totalSessions = sessions.length;
 
@@ -92,6 +116,17 @@ export default {
             totalWithdrawn: wallet.totalWithdrawn || 0,
 
             currentBalance: wallet.balanceCoins || 0,
+
+            totalPaid: wallet.totalPaid || 0,
+
+         payableAmount: wallet.pendingAmount || 0,
+
+            lastPaidAmount: wallet.lastPaidAmount || 0,
+
+            lastPayoutDate:
+              lastApprovedPayout?.paymentDate ??
+              lastApprovedPayout?.createdAt ??
+              null,
 
             totalSessions,
 
@@ -603,7 +638,6 @@ export default {
       { user },
     ) => {
       try {
-   
         if (!user) {
           throw new Error("Unauthorized");
         }
@@ -612,7 +646,6 @@ export default {
 
         const skip = (page - 1) * limit;
 
-      
         const wallet = await prisma.astrologerWallet.findUnique({
           where: {
             astrologerId,
@@ -633,14 +666,12 @@ export default {
           };
         }
 
-  
         const totalCount = await prisma.walletTransaction.count({
           where: {
             astrologerWalletId: wallet.id,
           },
         });
 
-     
         const transactions = await prisma.walletTransaction.findMany({
           where: {
             astrologerWalletId: wallet.id,
@@ -655,7 +686,6 @@ export default {
           take: limit,
         });
 
-    
         return {
           success: true,
 
@@ -667,7 +697,7 @@ export default {
 
           data: transactions.map((txn) => ({
             id: txn.id,
-  sessionId: txn.sessionId,
+            sessionId: txn.sessionId,
             type: txn.type,
 
             amount: txn.amount || 0,
@@ -1765,14 +1795,14 @@ export default {
       }
 
       const uid = Math.floor(Math.random() * 100000);
-      console.log("AGORA_APP_ID--------------:",process.env.AGORA_APP_ID);
+      console.log("AGORA_APP_ID--------------:", process.env.AGORA_APP_ID);
 
       const token = generateRtcToken({
         channelName,
         uid,
         role,
       });
-    console.log("token for agora---------:",token);
+      console.log("token for agora---------:", token);
       return {
         token,
         uid,
@@ -2269,7 +2299,6 @@ export default {
 
         const uploadPath = path.join(uploadDir, newFileName);
 
-
         await new Promise((resolve, reject) => {
           const stream = createReadStream();
           const out = fs.createWriteStream(uploadPath);
@@ -2287,7 +2316,6 @@ export default {
           "https://dhwaniastro.com/astro/v2/uploads";
 
         const fileUrl = `${baseUrl}/${newFileName}`;
-
 
         return {
           success: true,
