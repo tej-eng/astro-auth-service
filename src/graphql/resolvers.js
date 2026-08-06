@@ -76,6 +76,32 @@ export default {
             durationSec: true,
           },
         });
+        const [wallet, latestPayout, lastApprovedPayout] = await Promise.all([
+          prisma.astrologerWallet.findUnique({
+            where: {
+              astrologerId: astrologer.id,
+            },
+          }),
+
+          prisma.astrologerPayout.findFirst({
+            where: {
+              astrologerId: astrologer.id,
+            },
+            orderBy: {
+              createdAt: "desc",
+            },
+          }),
+
+          prisma.astrologerPayout.findFirst({
+            where: {
+              astrologerId: astrologer.id,
+              status: "APPROVED",
+            },
+            orderBy: {
+              paymentDate: "desc",
+            },
+          }),
+        ]);
 
         const totalSessions = sessions.length;
 
@@ -92,7 +118,14 @@ export default {
             totalWithdrawn: wallet.totalWithdrawn || 0,
 
             currentBalance: wallet.balanceCoins || 0,
+            totalPaid: wallet?.totalPaid || 0,
 
+            payableAmount: latestPayout?.payableAmount || 0,
+
+            lastPayoutDate:
+              lastApprovedPayout?.paymentDate ||
+              lastApprovedPayout?.createdAt ||
+              null,
             totalSessions,
 
             totalChatMinutes,
@@ -603,7 +636,6 @@ export default {
       { user },
     ) => {
       try {
-   
         if (!user) {
           throw new Error("Unauthorized");
         }
@@ -612,7 +644,6 @@ export default {
 
         const skip = (page - 1) * limit;
 
-      
         const wallet = await prisma.astrologerWallet.findUnique({
           where: {
             astrologerId,
@@ -633,14 +664,12 @@ export default {
           };
         }
 
-  
         const totalCount = await prisma.walletTransaction.count({
           where: {
             astrologerWalletId: wallet.id,
           },
         });
 
-     
         const transactions = await prisma.walletTransaction.findMany({
           where: {
             astrologerWalletId: wallet.id,
@@ -655,7 +684,6 @@ export default {
           take: limit,
         });
 
-    
         return {
           success: true,
 
@@ -667,7 +695,7 @@ export default {
 
           data: transactions.map((txn) => ({
             id: txn.id,
-  sessionId: txn.sessionId,
+            sessionId: txn.sessionId,
             type: txn.type,
 
             amount: txn.amount || 0,
@@ -1765,14 +1793,14 @@ export default {
       }
 
       const uid = Math.floor(Math.random() * 100000);
-      console.log("AGORA_APP_ID--------------:",process.env.AGORA_APP_ID);
+      console.log("AGORA_APP_ID--------------:", process.env.AGORA_APP_ID);
 
       const token = generateRtcToken({
         channelName,
         uid,
         role,
       });
-    console.log("token for agora---------:",token);
+      console.log("token for agora---------:", token);
       return {
         token,
         uid,
@@ -2269,7 +2297,6 @@ export default {
 
         const uploadPath = path.join(uploadDir, newFileName);
 
-
         await new Promise((resolve, reject) => {
           const stream = createReadStream();
           const out = fs.createWriteStream(uploadPath);
@@ -2287,7 +2314,6 @@ export default {
           "https://dhwaniastro.com/astro/v2/uploads";
 
         const fileUrl = `${baseUrl}/${newFileName}`;
-
 
         return {
           success: true,
