@@ -51,20 +51,33 @@ export default {
             },
           },
         });
+        const astrologer = await prisma.astrologer.findUnique({
+          where: {
+            id: astrologerId,
+          },
+          include: {
+            pricing: {
+              where: {
+                isActive: true,
+              },
+            },
+            tax: true,
+          },
+        });
 
         if (!wallet) {
           return {
-        summary: {
-  totalEarnings: 0,
-  totalWithdrawn: 0,
-  currentBalance: 0,
-  totalPaid: 0,
-  payableAmount: 0,
-  lastPaidAmount: 0,
-  lastPayoutDate: null,
-  totalSessions: 0,
-  totalChatMinutes: 0,
-},
+            summary: {
+              totalEarnings: 0,
+              totalWithdrawn: 0,
+              currentBalance: 0,
+              totalPaid: 0,
+              payableAmount: 0,
+              lastPaidAmount: 0,
+              lastPayoutDate: null,
+              totalSessions: 0,
+              totalChatMinutes: 0,
+            },
 
             transactions: [],
           };
@@ -78,6 +91,9 @@ export default {
 
           select: {
             durationSec: true,
+            coinsDeducted: true,
+            coinsEarned: true,
+            commission: true,
           },
         });
         const [latestPayout, lastApprovedPayout] = await Promise.all([
@@ -102,6 +118,24 @@ export default {
         ]);
 
         const totalSessions = sessions.length;
+        const totalRevenue = sessions.reduce(
+          (sum, session) => sum + (session.coinsDeducted || 0),
+          0,
+        );
+
+        const earning = sessions.reduce(
+          (sum, session) => sum + (session.coinsEarned || 0),
+          0,
+        );
+
+        const grossAmount = Number((earning - pgTotal).toFixed(2));
+
+        const totalPaid = wallet.totalPaid || 0;
+
+        const payableAmount = Math.max(
+          0,
+          Number((grossAmount - tdsAmount).toFixed(2)),
+        );
 
         let totalChatMinutes = 0;
 
@@ -111,15 +145,15 @@ export default {
 
         return {
           summary: {
-            totalEarnings: wallet.totalEarned || 0,
+            totalEarnings: earning,
 
             totalWithdrawn: wallet.totalWithdrawn || 0,
 
             currentBalance: wallet.balanceCoins || 0,
 
-            totalPaid: wallet.totalPaid || 0,
+            totalPaid,
 
-         payableAmount: wallet.pendingAmount || 0,
+            payableAmount,
 
             lastPaidAmount: wallet.lastPaidAmount || 0,
 
