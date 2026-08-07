@@ -886,6 +886,34 @@ type CurrentAstrologer {
 }
 #---------END CODE FOR CURRENT ASTROLOGER-------
 
+#-------------------ASTROLOGER PAYOUT SUMMARY------------
+type AstrologerPayoutSummary {
+  totalPayouts: Int!
+  totalRevenue: Float!
+  totalCommission: Float!
+  totalEarning: Float!
+  totalPgCharge: Float!
+  totalPgTotal: Float!
+  totalGrossAmount: Float!
+  totalTdsAmount: Float!
+  totalLastPaidAmount: Float!
+  totalPayableAmount: Float!
+  totalIGST: Float!
+  totalCGST: Float!
+  totalSGST: Float!
+  averageCommissionPercent: Float!
+  averagePgChargeRate: Float!
+  averageGstRate: Float!
+  averageTdsPercent: Float!
+}
+type AstrologerPayoutSummaryResponse {
+  success: Boolean!
+  message: String!
+  astrologer: Astrologer
+  summary: AstrologerPayoutSummary!
+}
+#--------------------END -----------
+
   type Query {
     meAstrologer: Astrologer
     getAstrologerEarnings: AstrologerEarningResponse!
@@ -960,6 +988,7 @@ getAstrologerFollowers(
   getAstrologerAppVersion(platform: String!): GetAstrologerAppVersionResponse!
 
   getCurrentAstrologer: CurrentAstrologer!
+  getAstrologerPayoutSummary: AstrologerPayoutSummaryResponse!
   
   
   }

@@ -118,6 +118,110 @@ export default {
         throw new Error(error.message || "Failed to fetch earnings");
       }
     },
+    getAstrologerPayoutSummary: async (_, __, { user }) => {
+  try {
+    if (!user) {
+      throw new Error("Unauthorized");
+    }
+
+    const astrologerId = user.id;
+
+    const [astrologer, payoutSummary] = await Promise.all([
+      prisma.astrologer.findUnique({
+        where: {
+          id: astrologerId,
+        },
+        select: {
+          id: true,
+          name: true,
+          displayName: true,
+          profilePic: true,
+          rating: true,
+          experience: true,
+        },
+      }),
+
+      prisma.astrologerPayout.aggregate({
+        where: {
+          astrologerId,
+        },
+
+        _sum: {
+          totalRevenue: true,
+          commission: true,
+          earning: true,
+          pgCharge: true,
+          pgTotal: true,
+          grossAmount: true,
+          tdsAmount: true,
+          payableAmount: true,
+          lastPaidAmount: true,
+          igst: true,
+          cgst: true,
+          sgst: true,
+        },
+
+        _avg: {
+          commissionPercent: true,
+          pgChargeRate: true,
+          gstRate: true,
+          tdsPercent: true,
+        },
+
+        _count: {
+          id: true,
+        },
+      }),
+    ]);
+
+    return {
+      success: true,
+      message: "Payout summary fetched successfully",
+
+      astrologer,
+
+      summary: {
+        totalPayouts: payoutSummary._count.id,
+
+        totalRevenue: payoutSummary._sum.totalRevenue || 0,
+        totalCommission: payoutSummary._sum.commission || 0,
+        totalEarning: payoutSummary._sum.earning || 0,
+
+        totalPgCharge: payoutSummary._sum.pgCharge || 0,
+        totalPgTotal: payoutSummary._sum.pgTotal || 0,
+
+        totalGrossAmount: payoutSummary._sum.grossAmount || 0,
+
+        totalTdsAmount: payoutSummary._sum.tdsAmount || 0,
+
+        totalLastPaidAmount: payoutSummary._sum.lastPaidAmount || 0,
+
+        totalPayableAmount: payoutSummary._sum.payableAmount || 0,
+
+        totalIGST: payoutSummary._sum.igst || 0,
+        totalCGST: payoutSummary._sum.cgst || 0,
+        totalSGST: payoutSummary._sum.sgst || 0,
+
+        averageCommissionPercent:
+          payoutSummary._avg.commissionPercent || 0,
+
+        averagePgChargeRate:
+          payoutSummary._avg.pgChargeRate || 0,
+
+        averageGstRate:
+          payoutSummary._avg.gstRate || 0,
+
+        averageTdsPercent:
+          payoutSummary._avg.tdsPercent || 0,
+      },
+    };
+  } catch (error) {
+    console.error("getAstrologerPayoutSummary:", error);
+    throw new Error(
+      error.message || "Failed to fetch payout summary"
+    );
+  }
+},
 
     getAstrologerChatHistory: async (_, { filter = {} }, { user }) => {
       try {
