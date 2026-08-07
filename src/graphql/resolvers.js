@@ -1886,6 +1886,8 @@ export default {
         };
       } catch (error) {
         console.error("getAstrologerAppVersion error:", error);
+                console.error("getAstrologerAppVersion error:");
+
 
         throw new Error(error.message || "Failed to fetch app version");
       }
