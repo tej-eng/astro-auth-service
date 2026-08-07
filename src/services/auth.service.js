@@ -19,6 +19,15 @@ const LOGIN_FAIL_WINDOW = 900;
 const REFRESH_COOKIE_NAME = "refreshToken";
 const ACCESS_COOKIE_NAME = "accessToken";
 const REFRESH_EXPIRE_DAYS = 7;
+const isProd = process.env.NODE_ENV === "production";
+
+const cookieOptions = {
+  httpOnly: true,
+  secure: isProd,
+  sameSite: isProd ? "none" : "lax",
+  path: "/",
+  ...(isProd ? { domain: ".dhwaniastro.com" } : {}),
+};
 
 // ================= REGISTER =================
 export const registerAstrologerService = async (data) => {
@@ -46,7 +55,7 @@ export const registerAstrologerService = async (data) => {
 
 // ================= REQUEST OTP =================
 export const requestOtpService = async (contactNo) => {
-  console.log("-------contactNo----------: ",contactNo);
+  console.log("-------contactNo----------: ", contactNo);
   const astrologer = await prisma.astrologer.findFirst({
     where: { contactNo },
   });
@@ -63,14 +72,14 @@ export const requestOtpService = async (contactNo) => {
     throw new Error("Too many OTP requests. Try later.");
 
   const otp = generateOtp();
-  const countryCode="+91";
-  const mobile=contactNo.trim();
+  const countryCode = "+91";
+  const mobile = contactNo.trim();
   await redis.set(`astrologer_otp:${contactNo}`, otp, "EX", OTP_EXPIRE);
-   await sendOTP({
-  countryCode,
-  mobile,
-  otp,
-});
+  await sendOTP({
+    countryCode,
+    mobile,
+    otp,
+  });
 
   console.log("OTP:", otp);
 
@@ -151,26 +160,18 @@ export const verifyOtpService = async (contactNo, otp, res) => {
 
   // Safe cookie set (important for tests)
   if (res) {
-    res.cookie(ACCESS_COOKIE_NAME, accessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      domain: ".dhwaniastro.com",
-      path: "/",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+  res.cookie(ACCESS_COOKIE_NAME, accessToken, {
+  ...cookieOptions,
+  maxAge: 24 * 60 * 60 * 1000,
+});
 
-    res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      domain: ".dhwaniastro.com",
-      path: "/",
-      maxAge: REFRESH_EXPIRE_DAYS * 24 * 60 * 60 * 1000,
-    });
+res.cookie(REFRESH_COOKIE_NAME, refreshToken, {
+  ...cookieOptions,
+  maxAge: REFRESH_EXPIRE_DAYS * 24 * 60 * 60 * 1000,
+});
   }
 
-  return { accessToken,refreshToken, astrologer };
+  return { accessToken, refreshToken, astrologer };
 };
 
 // ================= REFRESH =================
@@ -231,23 +232,15 @@ export const refreshTokenService = async (req, res) => {
     REFRESH_EXPIRE_DAYS * 24 * 60 * 60,
   );
   if (res) {
-    res.cookie(ACCESS_COOKIE_NAME, newAccessToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      domain: ".dhwaniastro.com",
-      path: "/",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
+res.cookie(ACCESS_COOKIE_NAME, newAccessToken, {
+  ...cookieOptions,
+  maxAge: 24 * 60 * 60 * 1000,
+});
 
-    res.cookie(REFRESH_COOKIE_NAME, newRefreshToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      domain: ".dhwaniastro.com",
-      path: "/",
-      maxAge: REFRESH_EXPIRE_DAYS * 24 * 60 * 60 * 1000,
-    });
+res.cookie(REFRESH_COOKIE_NAME, newRefreshToken, {
+  ...cookieOptions,
+  maxAge: REFRESH_EXPIRE_DAYS * 24 * 60 * 60 * 1000,
+});
   }
 
   return { accessToken: newAccessToken };
@@ -258,7 +251,7 @@ export const logoutService = async (req, res) => {
   if (!req?.cookies) {
     throw new Error("Request context missing");
   }
-console.log("-------comming in -logoutService--------" )
+  console.log("-------comming in -logoutService--------");
 
   const token = req.cookies[REFRESH_COOKIE_NAME];
 
@@ -291,21 +284,9 @@ console.log("-------comming in -logoutService--------" )
   });
 
   if (res) {
-    res.clearCookie(ACCESS_COOKIE_NAME, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      domain: ".dhwaniastro.com",
-      path: "/",
-    });
+res.clearCookie(ACCESS_COOKIE_NAME, cookieOptions);
 
-    res.clearCookie(REFRESH_COOKIE_NAME, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      domain: ".dhwaniastro.com",
-      path: "/",
-    });
+res.clearCookie(REFRESH_COOKIE_NAME, cookieOptions);
   }
 
   return "Logged out successfully";
