@@ -170,8 +170,8 @@ export default gql`
 
     ratePerMin: Int
 
-    coinsEarned: Int
-    commission: Int
+    coinsEarned: Float
+    commission: Float
 
     rating: Int
     reviewComment: String
@@ -251,8 +251,8 @@ export default gql`
 
     ratePerMin: Int
 
-    coinsEarned: Int
-    commission: Int
+    coinsEarned: Float
+    commission: Float
     source: String 
     lastMessage: String
   }
