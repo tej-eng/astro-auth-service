@@ -664,7 +664,7 @@ export default {
 
           let durationMinutes = 0;
           if (session.durationSec) {
-            durationMinutes = Math.ceil(session.durationSec / 60);
+            durationMinutes = session.durationSec || 0;
           }
 
           return {
