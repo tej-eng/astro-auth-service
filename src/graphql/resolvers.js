@@ -320,7 +320,7 @@ export default {
           take: limit,
         });
 
-        console.log("session----------------------------:",session);
+        console.log("session----------------------------:",sessions);
 
         /* =====================================
        GET ROOM IDS
@@ -390,7 +390,7 @@ export default {
           const intake = intakeMap.get(roomId);
 
           const durationMinutes = session.durationSec
-            ? Math.ceil(session.durationSec / 60)
+            ? session.durationSec
             : 0;
 
           return {
