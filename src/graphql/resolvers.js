@@ -397,7 +397,8 @@ export default {
             roomId,
 
             // Intake Name (tej / ajay)
-            userName: intake?.name || "",
+            userName: intake?.name || session.user?.name || "",
+            //userName: session.user?.name || null,
 
             userMobile: session.user?.mobile || "",
 
