@@ -320,6 +320,8 @@ export default {
           take: limit,
         });
 
+        console.log("session----------------------------:",session);
+
         /* =====================================
        GET ROOM IDS
     ===================================== */
@@ -356,7 +358,7 @@ export default {
               source: true,
             },
           });
-
+          console.log("intakes--------------------data------:",intakes)
           intakeMap = new Map(intakes.map((intake) => [intake.chatId, intake]));
         }
 
