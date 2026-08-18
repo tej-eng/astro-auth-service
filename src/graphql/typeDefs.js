@@ -535,8 +535,8 @@ type AstrologerSessionItem {
   durationSec: Int
   durationMinutes: Int
   ratePerMin: Int
-  coinsEarned: Int
-  commission: Int
+  coinsEarned: Float
+  commission: Float
   source: String
 }
 
