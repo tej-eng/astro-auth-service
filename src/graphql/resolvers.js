@@ -1118,113 +1118,583 @@ export default {
       }
     },
 
+    // getAstrologerSessions: async (_, { filter = {} }, { user }) => {
+    //   try {
+    //     if (!user) {
+    //       throw new Error("Unauthorized");
+    //     }
+
+    //     const astrologerId = user.id;
+
+    //     const {
+    //       page = 1,
+    //       limit = 10,
+    //       userName,
+    //       startDate,
+    //       endDate,
+    //       sessionType,
+    //       source,
+    //     } = filter;
+    //     console.log("astrologerId----------------------:",astrologerId);
+    //     const skip = (page - 1) * limit;
+
+    //     const where = {
+    //       astrologerId,
+    //       status: "COMPLETED",
+    //     };
+
+    //     // Fix: Convert sessionType to uppercase and validate
+    //     if (sessionType) {
+    //       const sessionTypeUpper = sessionType.toUpperCase();
+    //       // Only add to where if it's a valid SessionType enum value
+    //       if (["CHAT", "CALL"].includes(sessionTypeUpper)) {
+    //         where.type = sessionTypeUpper;
+    //       }
+    //     }
+
+    //     if (source) {
+    //       const sourceUpper = source.toUpperCase();
+    //       // Only add to where if it's a valid source
+    //       if (["WEB", "ANDROID", "IOS"].includes(sourceUpper)) {
+    //         where.source = sourceUpper;
+    //       }
+    //     }
+
+    //     // Handle date filters
+    //     if (startDate || endDate) {
+    //       where.createdAt = {};
+    //       if (startDate) {
+    //         where.createdAt.gte = new Date(startDate);
+    //       }
+    //       if (endDate) {
+    //         where.createdAt.lte = new Date(endDate);
+    //       }
+    //     }
+
+    //     // Handle userName filter
+    //     if (userName) {
+    //       where.user = {
+    //         name: {
+    //           contains: userName,
+    //           mode: "insensitive",
+    //         },
+    //       };
+    //     }
+
+    //     const totalCount = await prisma.session.count({
+    //       where,
+    //     });
+
+    //     const sessions = await prisma.session.findMany({
+    //       where,
+    //       include: {
+    //         user: {
+    //           select: {
+    //             id: true,
+    //             name: true,
+    //             mobile: true,
+    //             countryCode: true,
+    //           },
+    //         },
+    //         review: {
+    //           select: {
+    //             rating: true,
+    //             comment: true,
+    //           },
+    //         },
+    //       },
+    //       orderBy: {
+    //         createdAt: "desc",
+    //       },
+    //       skip,
+    //       take: limit,
+    //     });
+    //     console.log("----------:");
+    //     const intakeConditions = sessions.map((session) => ({
+    //       userId: session.userId,
+    //       astrologerId: session.astrologerId,
+    //     }));
+
+    //     let intakeMap = new Map();
+
+    //     if (intakeConditions.length > 0) {
+    //       const intakes = await prisma.intake.findMany({
+    //         where: {
+    //           OR: intakeConditions,
+    //         },
+    //         orderBy: {
+    //           createdAt: "desc",
+    //         },
+    //         select: {
+    //           userId: true,
+    //           astrologerId: true,
+    //           chatId: true,
+    //           birthPlace: true,
+    //           birthDate: true,
+    //           birthTime: true,
+    //           occupation: true,
+    //           gender: true,
+    //           name: true,
+    //           createdAt: true,
+    //         },
+    //       });
+
+    //       for (const intake of intakes) {
+    //         const key = `${intake.userId}_${intake.astrologerId}`;
+    //         if (!intakeMap.has(key)) {
+    //           intakeMap.set(key, intake);
+    //         }
+    //       }
+    //     }
+    //      console.log("------------AAAAAAAAAAAAAAAAAA");
+    //     const data = sessions.map((session) => {
+    //       const intake =
+    //         intakeMap.get(`${session.userId}_${session.astrologerId}`) || null;
+
+    //       return {
+    //         sessionId: session.id,
+    //         sessionType: session.type,
+    //         status: session.status,
+    //         userId: session.userId,
+    //         userName: session.user?.name || "",
+    //         userMobile: session.user?.mobile || "",
+    //         userCountryCode: session.user?.countryCode || "",
+    //         chatId: intake?.chatId || null,
+    //         birthPlace: intake?.birthPlace || "",
+    //         birthDate: intake?.birthDate
+    //           ? intake.birthDate.toISOString()
+    //           : null,
+    //         birthTime: intake?.birthTime || "",
+    //         occupation: intake?.occupation || "",
+    //         gender: intake?.gender || null,
+    //         startedAt: session.startedAt
+    //           ? session.startedAt.toISOString()
+    //           : null,
+    //         endedAt: session.endedAt ? session.endedAt.toISOString() : null,
+    //         createdAt: session.createdAt
+    //           ? session.createdAt.toISOString()
+    //           : null,
+    //         durationSec: session.durationSec || 0,
+    //         durationMinutes: session.durationSec
+    //           ? Math.ceil(session.durationSec / 60)
+    //           : 0,
+    //         ratePerMin: session.ratePerMin || 0,
+    //         coinsEarned: session.coinsEarned || 0,
+    //         commission: session.commission || 0,
+    //         rating: session.review?.rating ?? null,
+    //         reviewComment: session.review?.comment ?? null,
+    //         source: session.source || null,
+    //       };
+    //     });
+    //      console.log("111111111111111111111111111111111");
+    //     return {
+    //       success: true,
+    //       totalCount,
+    //       currentPage: page,
+    //       totalPages: Math.ceil(totalCount / limit),
+    //       data,
+    //     };
+    //   } catch (error) {
+    //     console.error("getAstrologerSessions error:", error);
+    //     throw new Error(error.message || "Failed to fetch astrologer sessions");
+    //   }
+    // },
+
     getAstrologerSessions: async (_, { filter = {} }, { user }) => {
+  console.log("\n=================================================");
+  console.log("🚀 getAstrologerSessions START");
+  console.log("=================================================");
+
+  try {
+    // =================================================
+    // STEP 1: AUTH CHECK
+    // =================================================
+    console.log("STEP 1: Checking user authentication");
+
+    if (!user) {
+      console.error("❌ STEP 1 FAILED: User is not authenticated");
+      throw new Error("Unauthorized");
+    }
+
+    console.log("✅ STEP 1 PASSED");
+    console.log("User ID:", user.id);
+
+    const astrologerId = user.id;
+
+    // =================================================
+    // STEP 2: READ FILTER
+    // =================================================
+    console.log("STEP 2: Reading filter");
+
+    const {
+      page = 1,
+      limit = 10,
+      userName,
+      startDate,
+      endDate,
+      sessionType,
+      source,
+    } = filter;
+
+    console.log("Filter received:", {
+      page,
+      limit,
+      userName,
+      startDate,
+      endDate,
+      sessionType,
+      source,
+    });
+
+    console.log(
+      "Astrologer ID:",
+      astrologerId
+    );
+
+    // =================================================
+    // STEP 3: PAGINATION
+    // =================================================
+    console.log("STEP 3: Calculating pagination");
+
+    const skip = (page - 1) * limit;
+
+    console.log("Pagination:", {
+      page,
+      limit,
+      skip,
+    });
+
+    // =================================================
+    // STEP 4: INITIAL WHERE
+    // =================================================
+    console.log("STEP 4: Creating initial WHERE condition");
+
+    const where = {
+      astrologerId,
+      status: "COMPLETED",
+    };
+
+    console.log(
+      "Initial WHERE:",
+      JSON.stringify(where, null, 2)
+    );
+
+    // =================================================
+    // STEP 5: SESSION TYPE FILTER
+    // =================================================
+    console.log("STEP 5: Processing sessionType");
+
+    if (sessionType) {
+      console.log(
+        "Original sessionType:",
+        sessionType
+      );
+
+      const sessionTypeUpper =
+        sessionType.toUpperCase();
+
+      console.log(
+        "Uppercase sessionType:",
+        sessionTypeUpper
+      );
+
+      if (
+        ["CHAT", "CALL"].includes(
+          sessionTypeUpper
+        )
+      ) {
+        where.type = sessionTypeUpper;
+
+        console.log(
+          "✅ Session type added:",
+          where.type
+        );
+      } else {
+        console.log(
+          "⚠️ Invalid sessionType:",
+          sessionTypeUpper
+        );
+      }
+    } else {
+      console.log(
+        "No sessionType filter provided"
+      );
+    }
+
+    // =================================================
+    // STEP 6: SOURCE FILTER
+    // =================================================
+    console.log("STEP 6: Processing source");
+
+    if (source) {
+      console.log(
+        "Original source:",
+        source
+      );
+
+      const sourceUpper =
+        source.toUpperCase();
+
+      console.log(
+        "Uppercase source:",
+        sourceUpper
+      );
+
+      if (
+        ["WEB", "ANDROID", "IOS"].includes(
+          sourceUpper
+        )
+      ) {
+        where.source = sourceUpper;
+
+        console.log(
+          "✅ Source added:",
+          where.source
+        );
+      } else {
+        console.log(
+          "⚠️ Invalid source:",
+          sourceUpper
+        );
+      }
+    } else {
+      console.log(
+        "No source filter provided"
+      );
+    }
+
+    // =================================================
+    // STEP 7: DATE FILTER
+    // =================================================
+    console.log("STEP 7: Processing date filters");
+
+    if (startDate || endDate) {
+      where.createdAt = {};
+
+      if (startDate) {
+        console.log(
+          "Processing startDate:",
+          startDate
+        );
+
+        const parsedStartDate =
+          new Date(startDate);
+
+        console.log(
+          "Parsed startDate:",
+          parsedStartDate
+        );
+
+        where.createdAt.gte =
+          parsedStartDate;
+      }
+
+      if (endDate) {
+        console.log(
+          "Processing endDate:",
+          endDate
+        );
+
+        const parsedEndDate =
+          new Date(endDate);
+
+        console.log(
+          "Parsed endDate:",
+          parsedEndDate
+        );
+
+        where.createdAt.lte =
+          parsedEndDate;
+      }
+    } else {
+      console.log(
+        "No date filter provided"
+      );
+    }
+
+    // =================================================
+    // STEP 8: USER NAME FILTER
+    // =================================================
+    console.log(
+      "STEP 8: Processing userName filter"
+    );
+
+    if (userName) {
+      console.log(
+        "Searching userName:",
+        userName
+      );
+
+      where.user = {
+        name: {
+          contains: userName,
+          mode: "insensitive",
+        },
+      };
+
+      console.log(
+        "User filter added:",
+        JSON.stringify(
+          where.user,
+          null,
+          2
+        )
+      );
+    } else {
+      console.log(
+        "No userName filter provided"
+      );
+    }
+
+    // =================================================
+    // STEP 9: FINAL WHERE
+    // =================================================
+    console.log(
+      "STEP 9: Final Prisma WHERE condition"
+    );
+
+    console.log(
+      JSON.stringify(where, null, 2)
+    );
+
+    // =================================================
+    // STEP 10: COUNT SESSIONS
+    // =================================================
+    console.log(
+      "STEP 10: Calling prisma.session.count()"
+    );
+
+    const totalCount =
+      await prisma.session.count({
+        where,
+      });
+
+    console.log(
+      "✅ STEP 10 COMPLETED"
+    );
+
+    console.log(
+      "Total sessions:",
+      totalCount
+    );
+
+    // =================================================
+    // STEP 11: FETCH SESSIONS
+    // =================================================
+    console.log(
+      "STEP 11: Calling prisma.session.findMany()"
+    );
+
+    const sessions =
+      await prisma.session.findMany({
+        where,
+
+        include: {
+          user: {
+            select: {
+              id: true,
+              name: true,
+              mobile: true,
+              countryCode: true,
+            },
+          },
+
+          review: {
+            select: {
+              rating: true,
+              comment: true,
+            },
+          },
+        },
+
+        orderBy: {
+          createdAt: "desc",
+        },
+
+        skip,
+        take: limit,
+      });
+
+    console.log(
+      "✅ STEP 11 COMPLETED"
+    );
+
+    console.log(
+      "Sessions count:",
+      sessions.length
+    );
+
+    console.log(
+      "Session IDs:",
+      sessions.map(
+        (session) => session.id
+      )
+    );
+
+    // =================================================
+    // STEP 12: CREATE INTAKE CONDITIONS
+    // =================================================
+    console.log(
+      "STEP 12: Creating intakeConditions"
+    );
+
+    const intakeConditions =
+      sessions.map((session) => ({
+        userId: session.userId,
+        astrologerId:
+          session.astrologerId,
+      }));
+
+    console.log(
+      "Intake conditions count:",
+      intakeConditions.length
+    );
+
+    console.log(
+      "Intake conditions:",
+      JSON.stringify(
+        intakeConditions,
+        null,
+        2
+      )
+    );
+
+    // =================================================
+    // STEP 13: CREATE INTAKE MAP
+    // =================================================
+    console.log(
+      "STEP 13: Creating intakeMap"
+    );
+
+    let intakeMap = new Map();
+
+    console.log(
+      "intakeMap created successfully"
+    );
+
+    // =================================================
+    // STEP 14: FETCH INTAKES
+    // =================================================
+    if (intakeConditions.length > 0) {
+      console.log(
+        "STEP 14: intakeConditions is NOT empty"
+      );
+
+      console.log(
+        "🔥 BEFORE prisma.intake.findMany()"
+      );
+
       try {
-        if (!user) {
-          throw new Error("Unauthorized");
-        }
-
-        const astrologerId = user.id;
-
-        const {
-          page = 1,
-          limit = 10,
-          userName,
-          startDate,
-          endDate,
-          sessionType,
-          source,
-        } = filter;
-        console.log("astrologerId----------------------:",astrologerId);
-        const skip = (page - 1) * limit;
-
-        const where = {
-          astrologerId,
-          status: "COMPLETED",
-        };
-
-        // Fix: Convert sessionType to uppercase and validate
-        if (sessionType) {
-          const sessionTypeUpper = sessionType.toUpperCase();
-          // Only add to where if it's a valid SessionType enum value
-          if (["CHAT", "CALL"].includes(sessionTypeUpper)) {
-            where.type = sessionTypeUpper;
-          }
-        }
-
-        if (source) {
-          const sourceUpper = source.toUpperCase();
-          // Only add to where if it's a valid source
-          if (["WEB", "ANDROID", "IOS"].includes(sourceUpper)) {
-            where.source = sourceUpper;
-          }
-        }
-
-        // Handle date filters
-        if (startDate || endDate) {
-          where.createdAt = {};
-          if (startDate) {
-            where.createdAt.gte = new Date(startDate);
-          }
-          if (endDate) {
-            where.createdAt.lte = new Date(endDate);
-          }
-        }
-
-        // Handle userName filter
-        if (userName) {
-          where.user = {
-            name: {
-              contains: userName,
-              mode: "insensitive",
-            },
-          };
-        }
-
-        const totalCount = await prisma.session.count({
-          where,
-        });
-
-        const sessions = await prisma.session.findMany({
-          where,
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                mobile: true,
-                countryCode: true,
-              },
-            },
-            review: {
-              select: {
-                rating: true,
-                comment: true,
-              },
-            },
-          },
-          orderBy: {
-            createdAt: "desc",
-          },
-          skip,
-          take: limit,
-        });
-        console.log("----------:");
-        const intakeConditions = sessions.map((session) => ({
-          userId: session.userId,
-          astrologerId: session.astrologerId,
-        }));
-
-        let intakeMap = new Map();
-
-        if (intakeConditions.length > 0) {
-          const intakes = await prisma.intake.findMany({
+        const intakes =
+          await prisma.intake.findMany({
             where: {
               OR: intakeConditions,
             },
+
             orderBy: {
               createdAt: "desc",
             },
+
             select: {
               userId: true,
               astrologerId: true,
@@ -1239,66 +1709,314 @@ export default {
             },
           });
 
-          for (const intake of intakes) {
-            const key = `${intake.userId}_${intake.astrologerId}`;
-            if (!intakeMap.has(key)) {
-              intakeMap.set(key, intake);
-            }
+        console.log(
+          "🔥 AFTER prisma.intake.findMany()"
+        );
+
+        console.log(
+          "Intakes count:",
+          intakes.length
+        );
+
+        console.log(
+          "Intakes:",
+          JSON.stringify(
+            intakes,
+            null,
+            2
+          )
+        );
+
+        // =================================================
+        // STEP 15: BUILD INTAKE MAP
+        // =================================================
+        console.log(
+          "STEP 15: Building intakeMap"
+        );
+
+        for (const intake of intakes) {
+          const key =
+            `${intake.userId}_${intake.astrologerId}`;
+
+          console.log(
+            "Processing intake key:",
+            key
+          );
+
+          if (!intakeMap.has(key)) {
+            intakeMap.set(
+              key,
+              intake
+            );
           }
         }
-         console.log("------------AAAAAAAAAAAAAAAAAA");
-        const data = sessions.map((session) => {
-          const intake =
-            intakeMap.get(`${session.userId}_${session.astrologerId}`) || null;
 
-          return {
-            sessionId: session.id,
-            sessionType: session.type,
-            status: session.status,
-            userId: session.userId,
-            userName: session.user?.name || "",
-            userMobile: session.user?.mobile || "",
-            userCountryCode: session.user?.countryCode || "",
-            chatId: intake?.chatId || null,
-            birthPlace: intake?.birthPlace || "",
-            birthDate: intake?.birthDate
+        console.log(
+          "✅ IntakeMap completed"
+        );
+
+        console.log(
+          "IntakeMap size:",
+          intakeMap.size
+        );
+      } catch (intakeError) {
+        console.error(
+          "🔥🔥🔥 INTAKE QUERY FAILED 🔥🔥🔥"
+        );
+
+        console.error(
+          "Error name:",
+          intakeError?.name
+        );
+
+        console.error(
+          "Error message:",
+          intakeError?.message
+        );
+
+        console.error(
+          "Error code:",
+          intakeError?.code
+        );
+
+        console.error(
+          "Error meta:",
+          intakeError?.meta
+        );
+
+        console.error(
+          "Error stack:",
+          intakeError?.stack
+        );
+
+        throw intakeError;
+      }
+    } else {
+      console.log(
+        "STEP 14: No sessions found, skipping intake query"
+      );
+    }
+
+    // =================================================
+    // STEP 16: CREATE RESPONSE DATA
+    // =================================================
+    console.log(
+      "STEP 16: Starting sessions.map()"
+    );
+
+    const data =
+      sessions.map((session) => {
+        console.log(
+          "Processing session:",
+          session.id
+        );
+
+        const intake =
+          intakeMap.get(
+            `${session.userId}_${session.astrologerId}`
+          ) || null;
+
+        console.log(
+          "Intake found:",
+          !!intake
+        );
+
+        return {
+          sessionId: session.id,
+
+          sessionType: session.type,
+
+          status: session.status,
+
+          userId: session.userId,
+
+          userName:
+            session.user?.name || "",
+
+          userMobile:
+            session.user?.mobile || "",
+
+          userCountryCode:
+            session.user?.countryCode || "",
+
+          chatId:
+            intake?.chatId || null,
+
+          birthPlace:
+            intake?.birthPlace || "",
+
+          birthDate:
+            intake?.birthDate
               ? intake.birthDate.toISOString()
               : null,
-            birthTime: intake?.birthTime || "",
-            occupation: intake?.occupation || "",
-            gender: intake?.gender || null,
-            startedAt: session.startedAt
+
+          birthTime:
+            intake?.birthTime || "",
+
+          occupation:
+            intake?.occupation || "",
+
+          gender:
+            intake?.gender || null,
+
+          startedAt:
+            session.startedAt
               ? session.startedAt.toISOString()
               : null,
-            endedAt: session.endedAt ? session.endedAt.toISOString() : null,
-            createdAt: session.createdAt
+
+          endedAt:
+            session.endedAt
+              ? session.endedAt.toISOString()
+              : null,
+
+          createdAt:
+            session.createdAt
               ? session.createdAt.toISOString()
               : null,
-            durationSec: session.durationSec || 0,
-            durationMinutes: session.durationSec
-              ? Math.ceil(session.durationSec / 60)
+
+          durationSec:
+            session.durationSec || 0,
+
+          durationMinutes:
+            session.durationSec
+              ? Math.ceil(
+                  session.durationSec / 60
+                )
               : 0,
-            ratePerMin: session.ratePerMin || 0,
-            coinsEarned: session.coinsEarned || 0,
-            commission: session.commission || 0,
-            rating: session.review?.rating ?? null,
-            reviewComment: session.review?.comment ?? null,
-            source: session.source || null,
-          };
-        });
-         console.log("111111111111111111111111111111111");
-        return {
-          success: true,
-          totalCount,
-          currentPage: page,
-          totalPages: Math.ceil(totalCount / limit),
-          data,
+
+          ratePerMin:
+            session.ratePerMin || 0,
+
+          coinsEarned:
+            session.coinsEarned || 0,
+
+          commission:
+            session.commission || 0,
+
+          rating:
+            session.review?.rating ?? null,
+
+          reviewComment:
+            session.review?.comment ?? null,
+
+          source:
+            session.source || null,
         };
-      } catch (error) {
-        console.error("getAstrologerSessions error:", error);
-        throw new Error(error.message || "Failed to fetch astrologer sessions");
+      });
+
+    console.log(
+      "✅ STEP 16 COMPLETED"
+    );
+
+    console.log(
+      "Final data count:",
+      data.length
+    );
+
+    // =================================================
+    // STEP 17: RETURN RESPONSE
+    // =================================================
+    console.log(
+      "STEP 17: Preparing GraphQL response"
+    );
+
+    const response = {
+      success: true,
+
+      totalCount,
+
+      currentPage: page,
+
+      totalPages:
+        Math.ceil(
+          totalCount / limit
+        ),
+
+      data,
+    };
+
+    console.log(
+      "Response summary:",
+      {
+        success: response.success,
+        totalCount: response.totalCount,
+        currentPage: response.currentPage,
+        totalPages: response.totalPages,
+        dataLength: response.data.length,
       }
-    },
+    );
+
+    console.log(
+      "================================================="
+    );
+
+    console.log(
+      "✅ getAstrologerSessions SUCCESS"
+    );
+
+    console.log(
+      "=================================================\n"
+    );
+
+    return response;
+
+  } catch (error) {
+
+    // =================================================
+    // GLOBAL ERROR HANDLER
+    // =================================================
+    console.error(
+      "\n================================================="
+    );
+
+    console.error(
+      "🔥 getAstrologerSessions ERROR"
+    );
+
+    console.error(
+      "================================================="
+    );
+
+    console.error(
+      "Error name:",
+      error?.name
+    );
+
+    console.error(
+      "Error message:",
+      error?.message
+    );
+
+    console.error(
+      "Error code:",
+      error?.code
+    );
+
+    console.error(
+      "Error meta:",
+      error?.meta
+    );
+
+    console.error(
+      "Error stack:",
+      error?.stack
+    );
+
+    console.error(
+      "Full error:",
+      error
+    );
+
+    console.error(
+      "=================================================\n"
+    );
+
+    throw new Error(
+      error?.message ||
+        "Failed to fetch astrologer sessions"
+    );
+  }
+},
     getOffers: async (_, __, { user }) => {
       try {
         if (!user) {
