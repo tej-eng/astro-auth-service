@@ -1328,7 +1328,7 @@ export default {
 
     const {
       page = 1,
-      limit = 10,
+      limit = 1,
       userName,
       startDate,
       endDate,
