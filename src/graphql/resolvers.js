@@ -1209,7 +1209,7 @@ export default {
           skip,
           take: limit,
         });
-
+        console.log("----------:");
         const intakeConditions = sessions.map((session) => ({
           userId: session.userId,
           astrologerId: session.astrologerId,
@@ -1246,7 +1246,7 @@ export default {
             }
           }
         }
-
+         console.log("------------AAAAAAAAAAAAAAAAAA");
         const data = sessions.map((session) => {
           const intake =
             intakeMap.get(`${session.userId}_${session.astrologerId}`) || null;
