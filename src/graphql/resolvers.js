@@ -1135,7 +1135,7 @@ export default {
           sessionType,
           source,
         } = filter;
-
+        console.log("astrologerId----------------------:",astrologerId);
         const skip = (page - 1) * limit;
 
         const where = {
@@ -1286,7 +1286,7 @@ export default {
             source: session.source || null,
           };
         });
-
+         console.log("111111111111111111111111111111111");
         return {
           success: true,
           totalCount,
