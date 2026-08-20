@@ -1105,7 +1105,7 @@ export default {
       }
     },
 
-   getAstrologerSessions: async (_, { filter = {} }, { user }) => {
+  getAstrologerSessions: async (_, { filter = {} }, { user }) => {
   console.log("\n==============================================");
   console.log("🚀 getAstrologerSessions START");
   console.log("==============================================");
@@ -1176,7 +1176,8 @@ export default {
     // STEP 5: SESSION TYPE
     // =====================================================
     if (sessionType) {
-      const sessionTypeUpper = String(sessionType).toUpperCase();
+      const sessionTypeUpper =
+        String(sessionType).toUpperCase();
 
       console.log(
         "\nSTEP 5: sessionType:",
@@ -1197,7 +1198,8 @@ export default {
     // STEP 6: SOURCE
     // =====================================================
     if (source) {
-      const sourceUpper = String(source).toUpperCase();
+      const sourceUpper =
+        String(source).toUpperCase();
 
       console.log("\nSTEP 6: source:", sourceUpper);
 
@@ -1217,7 +1219,9 @@ export default {
     // STEP 7: DATE FILTER
     // =====================================================
     if (startDate || endDate) {
-      console.log("\nSTEP 7: Processing date filter");
+      console.log(
+        "\nSTEP 7: Processing date filter",
+      );
 
       where.createdAt = {};
 
@@ -1345,9 +1349,14 @@ export default {
           },
         },
 
-        orderBy: {
-          createdAt: "desc",
-        },
+        orderBy: [
+          {
+            createdAt: "desc",
+          },
+          {
+            id: "desc",
+          },
+        ],
 
         skip,
         take: limitNumber,
@@ -1371,7 +1380,7 @@ export default {
     // =====================================================
     // STEP 12: SESSION INFORMATION
     // =====================================================
-    console.log("\nSTEP 12: Session IDs:");
+    console.log("\nSTEP 12: Session Information:");
 
     sessions.forEach((session, index) => {
       console.log(
@@ -1382,235 +1391,25 @@ export default {
           astrologerId: session.astrologerId,
           type: session.type,
           status: session.status,
+          roomId: session.roomId,
+          source: session.source,
+          by: session.by,
+          startedAt: session.startedAt,
+          endedAt: session.endedAt,
+          durationSec: session.durationSec,
+          ratePerMin: session.ratePerMin,
+          coinsDeducted: session.coinsDeducted,
+          coinsEarned: session.coinsEarned,
+          commission: session.commission,
         },
       );
     });
 
     // =====================================================
-    // STEP 13: UNIQUE INTAKE CONDITIONS
+    // STEP 13: BUILD RESPONSE
     // =====================================================
     console.log(
-      "\nSTEP 13: Building unique intakeConditions...",
-    );
-
-    const uniqueIntakeConditions = [
-      ...new Map(
-        sessions.map((session) => [
-          `${session.userId}_${session.astrologerId}`,
-          {
-            userId: session.userId,
-            astrologerId: session.astrologerId,
-          },
-        ]),
-      ).values(),
-    ];
-
-    console.log(
-      "Unique intake conditions count:",
-      uniqueIntakeConditions.length,
-    );
-
-    console.log(
-      "Unique intake conditions:",
-      JSON.stringify(
-        uniqueIntakeConditions,
-        null,
-        2,
-      ),
-    );
-
-    // =====================================================
-    // STEP 14: INTAKE QUERY
-    // =====================================================
-    let intakeMap = new Map();
-
-    if (uniqueIntakeConditions.length > 0) {
-      console.log(
-        "\n==============================================",
-      );
-
-      console.log(
-        "STEP 14: BEFORE prisma.intake.findMany()",
-      );
-
-      console.log(
-        "==============================================",
-      );
-
-      try {
-        const intakeStart = Date.now();
-
-        console.log(
-          "Intake query conditions:",
-          JSON.stringify(
-            uniqueIntakeConditions,
-            null,
-            2,
-          ),
-        );
-
-        // IMPORTANT:
-        // await is required here
-        const intakes =
-          await prisma.intake.findMany({
-            where: {
-              OR: uniqueIntakeConditions,
-            },
-
-            orderBy: {
-              createdAt: "desc",
-            },
-
-            select: {
-              userId: true,
-              astrologerId: true,
-              chatId: true,
-              birthPlace: true,
-              birthDate: true,
-              birthTime: true,
-              occupation: true,
-              gender: true,
-              name: true,
-              createdAt: true,
-            },
-          });
-
-        console.log(
-          "\n==============================================",
-        );
-
-        console.log(
-          "✅ STEP 14: prisma.intake.findMany() SUCCESS",
-        );
-
-        console.log(
-          "==============================================",
-        );
-
-        console.log(
-          "Intakes count:",
-          intakes.length,
-        );
-
-        console.log(
-          "Intake query duration:",
-          Date.now() - intakeStart,
-          "ms",
-        );
-
-        // =================================================
-        // STEP 15: BUILD INTAKE MAP
-        // =================================================
-        console.log(
-          "\nSTEP 15: Building intakeMap...",
-        );
-
-        for (const intake of intakes) {
-          const key = `${intake.userId}_${intake.astrologerId}`;
-
-          console.log(
-            "Processing intake:",
-            {
-              key,
-              userId: intake.userId,
-              astrologerId: intake.astrologerId,
-              chatId: intake.chatId,
-              createdAt: intake.createdAt,
-            },
-          );
-
-          /*
-           * Because intakes are sorted by createdAt DESC,
-           * the first intake for a user + astrologer pair
-           * is the latest intake.
-           */
-          if (!intakeMap.has(key)) {
-            intakeMap.set(key, intake);
-          }
-        }
-
-        console.log(
-          "✅ STEP 15: intakeMap created",
-        );
-
-        console.log(
-          "intakeMap size:",
-          intakeMap.size,
-        );
-
-      } catch (intakeError) {
-        console.error(
-          "\n==============================================",
-        );
-
-        console.error(
-          "🔥🔥🔥 INTAKE QUERY FAILED 🔥🔥🔥",
-        );
-
-        console.error(
-          "==============================================",
-        );
-
-        console.error(
-          "Error name:",
-          intakeError?.name,
-        );
-
-        console.error(
-          "Error message:",
-          intakeError?.message,
-        );
-
-        console.error(
-          "Error code:",
-          intakeError?.code,
-        );
-
-        console.error(
-          "Error meta:",
-          intakeError?.meta,
-        );
-
-        console.error(
-          "Error stack:",
-          intakeError?.stack,
-        );
-
-        console.error(
-          "Full error:",
-          intakeError,
-        );
-
-        console.error(
-          "Conditions:",
-          JSON.stringify(
-            uniqueIntakeConditions,
-            null,
-            2,
-          ),
-        );
-
-        console.error(
-          "==============================================",
-        );
-
-        throw intakeError;
-      }
-    } else {
-      console.log(
-        "\nSTEP 14: No sessions found.",
-      );
-
-      console.log(
-        "Skipping intake query.",
-      );
-    }
-
-    // =====================================================
-    // STEP 16: BUILD RESPONSE DATA
-    // =====================================================
-    console.log(
-      "\nSTEP 16: Mapping sessions...",
+      "\nSTEP 13: Mapping sessions...",
     );
 
     const data = sessions.map(
@@ -1620,19 +1419,19 @@ export default {
           session.id,
         );
 
-        const key =
-          `${session.userId}_${session.astrologerId}`;
-
-        const intake =
-          intakeMap.get(key) || null;
-
         return {
+          // =================================================
+          // SESSION
+          // =================================================
           sessionId: session.id,
 
           sessionType: session.type,
 
           status: session.status,
 
+          // =================================================
+          // USER
+          // =================================================
           userId: session.userId,
 
           userName:
@@ -1644,26 +1443,15 @@ export default {
           userCountryCode:
             session.user?.countryCode || "",
 
-          chatId:
-            intake?.chatId || null,
+          // =================================================
+          // SESSION IDENTIFIERS
+          // =================================================
+          roomId:
+            session.roomId || null,
 
-          birthPlace:
-            intake?.birthPlace || "",
-
-          birthDate:
-            intake?.birthDate
-              ? intake.birthDate.toISOString()
-              : null,
-
-          birthTime:
-            intake?.birthTime || "",
-
-          occupation:
-            intake?.occupation || "",
-
-          gender:
-            intake?.gender || null,
-
+          // =================================================
+          // SESSION DETAILS
+          // =================================================
           startedAt:
             session.startedAt
               ? session.startedAt.toISOString()
@@ -1679,6 +1467,9 @@ export default {
               ? session.createdAt.toISOString()
               : null,
 
+          // =================================================
+          // DURATION
+          // =================================================
           durationSec:
             session.durationSec || 0,
 
@@ -1689,29 +1480,44 @@ export default {
                 )
               : 0,
 
+          // =================================================
+          // FINANCIAL
+          // =================================================
           ratePerMin:
-            session.ratePerMin || 0,
+            session.ratePerMin ?? 0,
+
+          coinsDeducted:
+            session.coinsDeducted ?? 0,
 
           coinsEarned:
-            session.coinsEarned || 0,
+            session.coinsEarned ?? 0,
 
           commission:
-            session.commission || 0,
+            session.commission ?? 0,
 
+          // =================================================
+          // SOURCE
+          // =================================================
+          source:
+            session.source || null,
+
+          by:
+            session.by || null,
+
+          // =================================================
+          // REVIEW
+          // =================================================
           rating:
             session.review?.rating ?? null,
 
           reviewComment:
             session.review?.comment ?? null,
-
-          source:
-            session.source || null,
         };
       },
     );
 
     console.log(
-      "✅ STEP 16: Mapping completed",
+      "✅ STEP 13: Mapping completed",
     );
 
     console.log(
@@ -1720,7 +1526,7 @@ export default {
     );
 
     // =====================================================
-    // STEP 17: RESPONSE
+    // STEP 14: RESPONSE
     // =====================================================
     const totalPages =
       Math.ceil(
@@ -1732,7 +1538,7 @@ export default {
     );
 
     console.log(
-      "STEP 17: RETURNING RESPONSE",
+      "STEP 14: RETURNING RESPONSE",
     );
 
     console.log(
@@ -1813,7 +1619,6 @@ export default {
       "==============================================",
     );
 
-    // Preserve original Prisma/JS error
     throw error;
   }
 },
