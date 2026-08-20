@@ -1105,523 +1105,399 @@ export default {
       }
     },
 
-  getAstrologerSessions: async (_, { filter = {} }, { user }) => {
-  console.log("\n==============================================");
-  console.log("🚀 getAstrologerSessions START");
-  console.log("==============================================");
+    getAstrologerSessions: async (_, { filter = {} }, { user }) => {
+      console.log("\n==============================================");
+      console.log("🚀 getAstrologerSessions START");
+      console.log("==============================================");
 
-  try {
-    // =====================================================
-    // STEP 1: AUTH
-    // =====================================================
-    console.log("STEP 1: Checking user...");
+      try {
+        // =====================================================
+        // STEP 1: AUTH
+        // =====================================================
+        console.log("STEP 1: Checking user...");
 
-    if (!user) {
-      console.error("❌ Unauthorized");
-      throw new Error("Unauthorized");
-    }
-
-    const astrologerId = user.id;
-
-    console.log("✅ User found");
-    console.log("Astrologer ID:", astrologerId);
-
-    // =====================================================
-    // STEP 2: FILTER
-    // =====================================================
-    console.log("\nSTEP 2: Incoming filter:");
-    console.log(JSON.stringify(filter, null, 2));
-
-    const {
-      page = 1,
-      limit = 10,
-      userName,
-      startDate,
-      endDate,
-      sessionType,
-      source,
-    } = filter;
-
-    // =====================================================
-    // STEP 3: PAGINATION
-    // =====================================================
-    const pageNumber = Math.max(1, Number(page) || 1);
-
-    const limitNumber = Math.min(
-      100,
-      Math.max(1, Number(limit) || 10),
-    );
-
-    const skip = (pageNumber - 1) * limitNumber;
-
-    console.log("\nSTEP 3: Pagination");
-    console.log({
-      pageNumber,
-      limitNumber,
-      skip,
-    });
-
-    // =====================================================
-    // STEP 4: INITIAL WHERE
-    // =====================================================
-    const where = {
-      astrologerId,
-      status: "COMPLETED",
-    };
-
-    console.log("\nSTEP 4: Initial WHERE:");
-    console.log(JSON.stringify(where, null, 2));
-
-    // =====================================================
-    // STEP 5: SESSION TYPE
-    // =====================================================
-    if (sessionType) {
-      const sessionTypeUpper =
-        String(sessionType).toUpperCase();
-
-      console.log(
-        "\nSTEP 5: sessionType:",
-        sessionTypeUpper,
-      );
-
-      if (["CHAT", "CALL"].includes(sessionTypeUpper)) {
-        where.type = sessionTypeUpper;
-      } else {
-        console.warn(
-          "⚠️ Invalid sessionType:",
-          sessionTypeUpper,
-        );
-      }
-    }
-
-    // =====================================================
-    // STEP 6: SOURCE
-    // =====================================================
-    if (source) {
-      const sourceUpper =
-        String(source).toUpperCase();
-
-      console.log("\nSTEP 6: source:", sourceUpper);
-
-      if (
-        ["WEB", "ANDROID", "IOS"].includes(sourceUpper)
-      ) {
-        where.source = sourceUpper;
-      } else {
-        console.warn(
-          "⚠️ Invalid source:",
-          sourceUpper,
-        );
-      }
-    }
-
-    // =====================================================
-    // STEP 7: DATE FILTER
-    // =====================================================
-    if (startDate || endDate) {
-      console.log(
-        "\nSTEP 7: Processing date filter",
-      );
-
-      where.createdAt = {};
-
-      if (startDate) {
-        const start = new Date(startDate);
-
-        if (isNaN(start.getTime())) {
-          throw new Error(
-            `Invalid startDate: ${startDate}`,
-          );
+        if (!user) {
+          console.error("❌ Unauthorized");
+          throw new Error("Unauthorized");
         }
 
-        where.createdAt.gte = start;
-      }
+        const astrologerId = user.id;
 
-      if (endDate) {
-        const end = new Date(endDate);
+        console.log("✅ User found");
+        console.log("Astrologer ID:", astrologerId);
 
-        if (isNaN(end.getTime())) {
-          throw new Error(
-            `Invalid endDate: ${endDate}`,
-          );
+        // =====================================================
+        // STEP 2: FILTER
+        // =====================================================
+        console.log("\nSTEP 2: Incoming filter:");
+        console.log(JSON.stringify(filter, null, 2));
+
+        const {
+          page = 1,
+          limit = 10,
+          userName,
+          startDate,
+          endDate,
+          sessionType,
+          source,
+        } = filter;
+
+        // =====================================================
+        // STEP 3: PAGINATION
+        // =====================================================
+        const pageNumber = Math.max(1, Number(page) || 1);
+
+        const limitNumber = Math.min(100, Math.max(1, Number(limit) || 10));
+
+        const skip = (pageNumber - 1) * limitNumber;
+
+        console.log("\nSTEP 3: Pagination");
+        console.log({
+          pageNumber,
+          limitNumber,
+          skip,
+        });
+
+        // =====================================================
+        // STEP 4: INITIAL WHERE
+        // =====================================================
+        const where = {
+          astrologerId,
+          status: {
+            in: ["COMPLETED", "CANCELLED", "ONGOING"],
+          },
+        };
+
+        console.log("\nSTEP 4: Initial WHERE:");
+        console.log(JSON.stringify(where, null, 2));
+
+        // =====================================================
+        // STEP 5: SESSION TYPE
+        // =====================================================
+        if (sessionType) {
+          const sessionTypeUpper = String(sessionType).toUpperCase();
+
+          console.log("\nSTEP 5: sessionType:", sessionTypeUpper);
+
+          if (["CHAT", "CALL"].includes(sessionTypeUpper)) {
+            where.type = sessionTypeUpper;
+          } else {
+            console.warn("⚠️ Invalid sessionType:", sessionTypeUpper);
+          }
         }
 
-        // Include entire end date
-        end.setHours(23, 59, 59, 999);
+        // =====================================================
+        // STEP 6: SOURCE
+        // =====================================================
+        if (source) {
+          const sourceUpper = String(source).toUpperCase();
 
-        where.createdAt.lte = end;
-      }
+          console.log("\nSTEP 6: source:", sourceUpper);
 
-      console.log(
-        "Date filter:",
-        where.createdAt,
-      );
-    }
+          if (["WEB", "ANDROID", "IOS"].includes(sourceUpper)) {
+            where.source = sourceUpper;
+          } else {
+            console.warn("⚠️ Invalid source:", sourceUpper);
+          }
+        }
 
-    // =====================================================
-    // STEP 8: USER NAME
-    // =====================================================
-    if (userName) {
-      console.log(
-        "\nSTEP 8: userName:",
-        userName,
-      );
+        // =====================================================
+        // STEP 7: DATE FILTER
+        // =====================================================
+        if (startDate || endDate) {
+          console.log("\nSTEP 7: Processing date filter");
 
-      where.user = {
-        name: {
-          contains: String(userName),
-          mode: "insensitive",
-        },
-      };
-    }
+          where.createdAt = {};
 
-    // =====================================================
-    // STEP 9: FINAL WHERE
-    // =====================================================
-    console.log(
-      "\n==============================================",
-    );
+          if (startDate) {
+            const start = new Date(startDate);
 
-    console.log("STEP 9: FINAL WHERE");
+            if (isNaN(start.getTime())) {
+              throw new Error(`Invalid startDate: ${startDate}`);
+            }
 
-    console.log(
-      "==============================================",
-    );
+            where.createdAt.gte = start;
+          }
 
-    console.log(
-      JSON.stringify(where, null, 2),
-    );
+          if (endDate) {
+            const end = new Date(endDate);
 
-    // =====================================================
-    // STEP 10: COUNT
-    // =====================================================
-    console.log(
-      "\nSTEP 10: BEFORE prisma.session.count()",
-    );
+            if (isNaN(end.getTime())) {
+              throw new Error(`Invalid endDate: ${endDate}`);
+            }
 
-    const countStart = Date.now();
+            // Include entire end date
+            end.setHours(23, 59, 59, 999);
 
-    const totalCount =
-      await prisma.session.count({
-        where,
-      });
+            where.createdAt.lte = end;
+          }
 
-    console.log(
-      "✅ STEP 10: prisma.session.count() SUCCESS",
-    );
+          console.log("Date filter:", where.createdAt);
+        }
 
-    console.log("totalCount:", totalCount);
+        // =====================================================
+        // STEP 8: USER NAME
+        // =====================================================
+        if (userName) {
+          console.log("\nSTEP 8: userName:", userName);
 
-    console.log(
-      "Count duration:",
-      Date.now() - countStart,
-      "ms",
-    );
+          where.user = {
+            name: {
+              contains: String(userName),
+              mode: "insensitive",
+            },
+          };
+        }
 
-    // =====================================================
-    // STEP 11: GET SESSIONS
-    // =====================================================
-    console.log(
-      "\nSTEP 11: BEFORE prisma.session.findMany()",
-    );
+        // =====================================================
+        // STEP 9: FINAL WHERE
+        // =====================================================
+        console.log("\n==============================================");
 
-    const sessionStart = Date.now();
+        console.log("STEP 9: FINAL WHERE");
 
-    const sessions =
-      await prisma.session.findMany({
-        where,
+        console.log("==============================================");
 
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              mobile: true,
-              countryCode: true,
+        console.log(JSON.stringify(where, null, 2));
+
+        // =====================================================
+        // STEP 10: COUNT
+        // =====================================================
+        console.log("\nSTEP 10: BEFORE prisma.session.count()");
+
+        const countStart = Date.now();
+
+        const totalCount = await prisma.session.count({
+          where,
+        });
+
+        console.log("✅ STEP 10: prisma.session.count() SUCCESS");
+
+        console.log("totalCount:", totalCount);
+
+        console.log("Count duration:", Date.now() - countStart, "ms");
+
+        // =====================================================
+        // STEP 11: GET SESSIONS
+        // =====================================================
+        console.log("\nSTEP 11: BEFORE prisma.session.findMany()");
+
+        const sessionStart = Date.now();
+
+        const sessions = await prisma.session.findMany({
+          where,
+
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                mobile: true,
+                countryCode: true,
+              },
+            },
+
+            review: {
+              select: {
+                rating: true,
+                comment: true,
+              },
             },
           },
 
-          review: {
-            select: {
-              rating: true,
-              comment: true,
+          orderBy: [
+            {
+              createdAt: "desc",
             },
-          },
-        },
+            {
+              id: "desc",
+            },
+          ],
 
-        orderBy: [
-          {
-            createdAt: "desc",
-          },
-          {
-            id: "desc",
-          },
-        ],
+          skip,
+          take: limitNumber,
+        });
 
-        skip,
-        take: limitNumber,
-      });
+        console.log("✅ STEP 11: prisma.session.findMany() SUCCESS");
 
-    console.log(
-      "✅ STEP 11: prisma.session.findMany() SUCCESS",
-    );
+        console.log("Sessions count:", sessions.length);
 
-    console.log(
-      "Sessions count:",
-      sessions.length,
-    );
+        console.log("Session query duration:", Date.now() - sessionStart, "ms");
 
-    console.log(
-      "Session query duration:",
-      Date.now() - sessionStart,
-      "ms",
-    );
+        // =====================================================
+        // STEP 12: SESSION INFORMATION
+        // =====================================================
+        console.log("\nSTEP 12: Session Information:");
 
-    // =====================================================
-    // STEP 12: SESSION INFORMATION
-    // =====================================================
-    console.log("\nSTEP 12: Session Information:");
+        sessions.forEach((session, index) => {
+          console.log(`Session ${index + 1}:`, {
+            id: session.id,
+            userId: session.userId,
+            astrologerId: session.astrologerId,
+            type: session.type,
+            status: session.status,
+            roomId: session.roomId,
+            source: session.source,
+            by: session.by,
+            startedAt: session.startedAt,
+            endedAt: session.endedAt,
+            durationSec: session.durationSec,
+            ratePerMin: session.ratePerMin,
+            coinsDeducted: session.coinsDeducted,
+            coinsEarned: session.coinsEarned,
+            commission: session.commission,
+          });
+        });
 
-    sessions.forEach((session, index) => {
-      console.log(
-        `Session ${index + 1}:`,
-        {
-          id: session.id,
-          userId: session.userId,
-          astrologerId: session.astrologerId,
-          type: session.type,
-          status: session.status,
-          roomId: session.roomId,
-          source: session.source,
-          by: session.by,
-          startedAt: session.startedAt,
-          endedAt: session.endedAt,
-          durationSec: session.durationSec,
-          ratePerMin: session.ratePerMin,
-          coinsDeducted: session.coinsDeducted,
-          coinsEarned: session.coinsEarned,
-          commission: session.commission,
-        },
-      );
-    });
+        // =====================================================
+        // STEP 13: BUILD RESPONSE
+        // =====================================================
+        console.log("\nSTEP 13: Mapping sessions...");
 
-    // =====================================================
-    // STEP 13: BUILD RESPONSE
-    // =====================================================
-    console.log(
-      "\nSTEP 13: Mapping sessions...",
-    );
+        const data = sessions.map((session, index) => {
+          console.log(
+            `Mapping session ${index + 1}/${sessions.length}:`,
+            session.id,
+          );
 
-    const data = sessions.map(
-      (session, index) => {
-        console.log(
-          `Mapping session ${index + 1}/${sessions.length}:`,
-          session.id,
-        );
+          return {
+            // =================================================
+            // SESSION
+            // =================================================
+            sessionId: session.id,
 
-        return {
-          // =================================================
-          // SESSION
-          // =================================================
-          sessionId: session.id,
+            sessionType: session.type,
 
-          sessionType: session.type,
+            status: session.status,
 
-          status: session.status,
+            // =================================================
+            // USER
+            // =================================================
+            userId: session.userId,
 
-          // =================================================
-          // USER
-          // =================================================
-          userId: session.userId,
+            userName: session.user?.name || "",
 
-          userName:
-            session.user?.name || "",
+            userMobile: session.user?.mobile || "",
 
-          userMobile:
-            session.user?.mobile || "",
+            userCountryCode: session.user?.countryCode || "",
 
-          userCountryCode:
-            session.user?.countryCode || "",
+            // =================================================
+            // SESSION IDENTIFIERS
+            // =================================================
+            roomId: session.roomId || null,
 
-          // =================================================
-          // SESSION IDENTIFIERS
-          // =================================================
-          roomId:
-            session.roomId || null,
-
-          // =================================================
-          // SESSION DETAILS
-          // =================================================
-          startedAt:
-            session.startedAt
+            // =================================================
+            // SESSION DETAILS
+            // =================================================
+            startedAt: session.startedAt
               ? session.startedAt.toISOString()
               : null,
 
-          endedAt:
-            session.endedAt
-              ? session.endedAt.toISOString()
-              : null,
+            endedAt: session.endedAt ? session.endedAt.toISOString() : null,
 
-          createdAt:
-            session.createdAt
+            createdAt: session.createdAt
               ? session.createdAt.toISOString()
               : null,
 
-          // =================================================
-          // DURATION
-          // =================================================
-          durationSec:
-            session.durationSec || 0,
+            // =================================================
+            // DURATION
+            // =================================================
+            durationSec: session.durationSec || 0,
 
-          durationMinutes:
-            session.durationSec
-              ? Math.ceil(
-                  session.durationSec / 60,
-                )
+            durationMinutes: session.durationSec
+              ? Math.ceil(session.durationSec / 60)
               : 0,
 
-          // =================================================
-          // FINANCIAL
-          // =================================================
-          ratePerMin:
-            session.ratePerMin ?? 0,
+            // =================================================
+            // FINANCIAL
+            // =================================================
+            ratePerMin: session.ratePerMin ?? 0,
 
-          coinsDeducted:
-            session.coinsDeducted ?? 0,
+            coinsDeducted: session.coinsDeducted ?? 0,
 
-          coinsEarned:
-            session.coinsEarned ?? 0,
+            coinsEarned: session.coinsEarned ?? 0,
 
-          commission:
-            session.commission ?? 0,
+            commission: session.commission ?? 0,
 
-          // =================================================
-          // SOURCE
-          // =================================================
-          source:
-            session.source || null,
+            // =================================================
+            // SOURCE
+            // =================================================
+            source: session.source || null,
 
-          by:
-            session.by || null,
+            by: session.by || null,
 
-          // =================================================
-          // REVIEW
-          // =================================================
-          rating:
-            session.review?.rating ?? null,
+            // =================================================
+            // REVIEW
+            // =================================================
+            rating: session.review?.rating ?? null,
 
-          reviewComment:
-            session.review?.comment ?? null,
+            reviewComment: session.review?.comment ?? null,
+          };
+        });
+
+        console.log("✅ STEP 13: Mapping completed");
+
+        console.log("Response data count:", data.length);
+
+        // =====================================================
+        // STEP 14: RESPONSE
+        // =====================================================
+        const totalPages = Math.ceil(totalCount / limitNumber);
+
+        console.log("\n==============================================");
+
+        console.log("STEP 14: RETURNING RESPONSE");
+
+        console.log("==============================================");
+
+        console.log({
+          success: true,
+          totalCount,
+          currentPage: pageNumber,
+          totalPages,
+          dataCount: data.length,
+        });
+
+        console.log("🎉 getAstrologerSessions COMPLETED");
+
+        return {
+          success: true,
+
+          totalCount,
+
+          currentPage: pageNumber,
+
+          totalPages,
+
+          data,
         };
-      },
-    );
+      } catch (error) {
+        // =====================================================
+        // MAIN ERROR
+        // =====================================================
+        console.error("\n==============================================");
 
-    console.log(
-      "✅ STEP 13: Mapping completed",
-    );
+        console.error("🔥🔥🔥 getAstrologerSessions ERROR 🔥🔥🔥");
 
-    console.log(
-      "Response data count:",
-      data.length,
-    );
+        console.error("==============================================");
 
-    // =====================================================
-    // STEP 14: RESPONSE
-    // =====================================================
-    const totalPages =
-      Math.ceil(
-        totalCount / limitNumber,
-      );
+        console.error("Error name:", error?.name);
 
-    console.log(
-      "\n==============================================",
-    );
+        console.error("Error message:", error?.message);
 
-    console.log(
-      "STEP 14: RETURNING RESPONSE",
-    );
+        console.error("Error code:", error?.code);
 
-    console.log(
-      "==============================================",
-    );
+        console.error("Error meta:", error?.meta);
 
-    console.log({
-      success: true,
-      totalCount,
-      currentPage: pageNumber,
-      totalPages,
-      dataCount: data.length,
-    });
+        console.error("Error stack:", error?.stack);
 
-    console.log(
-      "🎉 getAstrologerSessions COMPLETED",
-    );
+        console.error("Full error:", error);
 
-    return {
-      success: true,
+        console.error("==============================================");
 
-      totalCount,
-
-      currentPage: pageNumber,
-
-      totalPages,
-
-      data,
-    };
-
-  } catch (error) {
-    // =====================================================
-    // MAIN ERROR
-    // =====================================================
-    console.error(
-      "\n==============================================",
-    );
-
-    console.error(
-      "🔥🔥🔥 getAstrologerSessions ERROR 🔥🔥🔥",
-    );
-
-    console.error(
-      "==============================================",
-    );
-
-    console.error(
-      "Error name:",
-      error?.name,
-    );
-
-    console.error(
-      "Error message:",
-      error?.message,
-    );
-
-    console.error(
-      "Error code:",
-      error?.code,
-    );
-
-    console.error(
-      "Error meta:",
-      error?.meta,
-    );
-
-    console.error(
-      "Error stack:",
-      error?.stack,
-    );
-
-    console.error(
-      "Full error:",
-      error,
-    );
-
-    console.error(
-      "==============================================",
-    );
-
-    throw error;
-  }
-},
+        throw error;
+      }
+    },
 
     getOffers: async (_, __, { user }) => {
       try {
