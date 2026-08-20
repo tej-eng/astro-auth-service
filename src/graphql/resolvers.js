@@ -1125,6 +1125,7 @@ export default {
         }
 
         const astrologerId = user.id;
+        console.log("filter-------------:",filter);
 
         const {
           page = 1,
