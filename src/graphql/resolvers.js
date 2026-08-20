@@ -119,109 +119,103 @@ export default {
       }
     },
     getAstrologerPayoutSummary: async (_, __, { user }) => {
-  try {
-    if (!user) {
-      throw new Error("Unauthorized");
-    }
+      try {
+        if (!user) {
+          throw new Error("Unauthorized");
+        }
 
-    const astrologerId = user.id;
+        const astrologerId = user.id;
 
-    const [astrologer, payoutSummary] = await Promise.all([
-      prisma.astrologer.findUnique({
-        where: {
-          id: astrologerId,
-        },
-        select: {
-          id: true,
-          name: true,
-          displayName: true,
-          profilePic: true,
-          rating: true,
-          experience: true,
-        },
-      }),
+        const [astrologer, payoutSummary] = await Promise.all([
+          prisma.astrologer.findUnique({
+            where: {
+              id: astrologerId,
+            },
+            select: {
+              id: true,
+              name: true,
+              displayName: true,
+              profilePic: true,
+              rating: true,
+              experience: true,
+            },
+          }),
 
-      prisma.astrologerPayout.aggregate({
-        where: {
-          astrologerId,
-        },
+          prisma.astrologerPayout.aggregate({
+            where: {
+              astrologerId,
+            },
 
-        _sum: {
-          totalRevenue: true,
-          commission: true,
-          earning: true,
-          pgCharge: true,
-          pgTotal: true,
-          grossAmount: true,
-          tdsAmount: true,
-          payableAmount: true,
-          lastPaidAmount: true,
-          igst: true,
-          cgst: true,
-          sgst: true,
-        },
+            _sum: {
+              totalRevenue: true,
+              commission: true,
+              earning: true,
+              pgCharge: true,
+              pgTotal: true,
+              grossAmount: true,
+              tdsAmount: true,
+              payableAmount: true,
+              lastPaidAmount: true,
+              igst: true,
+              cgst: true,
+              sgst: true,
+            },
 
-        _avg: {
-          commissionPercent: true,
-          pgChargeRate: true,
-          gstRate: true,
-          tdsPercent: true,
-        },
+            _avg: {
+              commissionPercent: true,
+              pgChargeRate: true,
+              gstRate: true,
+              tdsPercent: true,
+            },
 
-        _count: {
-          id: true,
-        },
-      }),
-    ]);
+            _count: {
+              id: true,
+            },
+          }),
+        ]);
 
-    return {
-      success: true,
-      message: "Payout summary fetched successfully",
+        return {
+          success: true,
+          message: "Payout summary fetched successfully",
 
-      astrologer,
+          astrologer,
 
-      summary: {
-        totalPayouts: payoutSummary._count.id,
+          summary: {
+            totalPayouts: payoutSummary._count.id,
 
-        totalRevenue: payoutSummary._sum.totalRevenue || 0,
-        totalCommission: payoutSummary._sum.commission || 0,
-        totalEarning: payoutSummary._sum.earning || 0,
+            totalRevenue: payoutSummary._sum.totalRevenue || 0,
+            totalCommission: payoutSummary._sum.commission || 0,
+            totalEarning: payoutSummary._sum.earning || 0,
 
-        totalPgCharge: payoutSummary._sum.pgCharge || 0,
-        totalPgTotal: payoutSummary._sum.pgTotal || 0,
+            totalPgCharge: payoutSummary._sum.pgCharge || 0,
+            totalPgTotal: payoutSummary._sum.pgTotal || 0,
 
-        totalGrossAmount: payoutSummary._sum.grossAmount || 0,
+            totalGrossAmount: payoutSummary._sum.grossAmount || 0,
 
-        totalTdsAmount: payoutSummary._sum.tdsAmount || 0,
+            totalTdsAmount: payoutSummary._sum.tdsAmount || 0,
 
-        totalLastPaidAmount: payoutSummary._sum.lastPaidAmount || 0,
+            totalLastPaidAmount: payoutSummary._sum.lastPaidAmount || 0,
 
-        totalPayableAmount: payoutSummary._sum.payableAmount || 0,
+            totalPayableAmount: payoutSummary._sum.payableAmount || 0,
 
-        totalIGST: payoutSummary._sum.igst || 0,
-        totalCGST: payoutSummary._sum.cgst || 0,
-        totalSGST: payoutSummary._sum.sgst || 0,
+            totalIGST: payoutSummary._sum.igst || 0,
+            totalCGST: payoutSummary._sum.cgst || 0,
+            totalSGST: payoutSummary._sum.sgst || 0,
 
-        averageCommissionPercent:
-          payoutSummary._avg.commissionPercent || 0,
+            averageCommissionPercent: payoutSummary._avg.commissionPercent || 0,
 
-        averagePgChargeRate:
-          payoutSummary._avg.pgChargeRate || 0,
+            averagePgChargeRate: payoutSummary._avg.pgChargeRate || 0,
 
-        averageGstRate:
-          payoutSummary._avg.gstRate || 0,
+            averageGstRate: payoutSummary._avg.gstRate || 0,
 
-        averageTdsPercent:
-          payoutSummary._avg.tdsPercent || 0,
-      },
-    };
-  } catch (error) {
-    console.error("getAstrologerPayoutSummary:", error);
-    throw new Error(
-      error.message || "Failed to fetch payout summary"
-    );
-  }
-},
+            averageTdsPercent: payoutSummary._avg.tdsPercent || 0,
+          },
+        };
+      } catch (error) {
+        console.error("getAstrologerPayoutSummary:", error);
+        throw new Error(error.message || "Failed to fetch payout summary");
+      }
+    },
 
     getAstrologerChatHistory: async (_, { filter = {} }, { user }) => {
       try {
@@ -320,7 +314,7 @@ export default {
           take: limit,
         });
 
-        console.log("session----------------------------:",sessions);
+        console.log("session----------------------------:", sessions);
 
         /* =====================================
        GET ROOM IDS
@@ -358,7 +352,7 @@ export default {
               source: true,
             },
           });
-          console.log("intakes--------------------data------:",intakes)
+          console.log("intakes--------------------data------:", intakes);
           intakeMap = new Map(intakes.map((intake) => [intake.chatId, intake]));
         }
 
@@ -389,9 +383,7 @@ export default {
 
           const intake = intakeMap.get(roomId);
 
-          const durationMinutes = session.durationSec
-            ? session.durationSec
-            : 0;
+          const durationMinutes = session.durationSec ? session.durationSec : 0;
 
           return {
             sessionId: session.id,
@@ -710,7 +702,6 @@ export default {
       { user },
     ) => {
       try {
-   
         if (!user) {
           throw new Error("Unauthorized");
         }
@@ -719,7 +710,6 @@ export default {
 
         const skip = (page - 1) * limit;
 
-      
         const wallet = await prisma.astrologerWallet.findUnique({
           where: {
             astrologerId,
@@ -740,14 +730,12 @@ export default {
           };
         }
 
-  
         const totalCount = await prisma.walletTransaction.count({
           where: {
             astrologerWalletId: wallet.id,
           },
         });
 
-     
         const transactions = await prisma.walletTransaction.findMany({
           where: {
             astrologerWalletId: wallet.id,
@@ -762,7 +750,6 @@ export default {
           take: limit,
         });
 
-    
         return {
           success: true,
 
@@ -774,7 +761,7 @@ export default {
 
           data: transactions.map((txn) => ({
             id: txn.id,
-  sessionId: txn.sessionId,
+            sessionId: txn.sessionId,
             type: txn.type,
 
             amount: txn.amount || 0,
@@ -1118,700 +1105,476 @@ export default {
       }
     },
 
-      getAstrologerSessions: async (_, { filter = {} }, { user }) => {
-  console.log("\n==============================================");
-  console.log("🚀 getAstrologerSessions START");
-  console.log("==============================================");
-
-  try {
-    // =====================================================
-    // STEP 1: AUTH
-    // =====================================================
-    console.log("STEP 1: Checking user...");
-
-    if (!user) {
-      console.error("❌ Unauthorized");
-      throw new Error("Unauthorized");
-    }
-
-    const astrologerId = user.id;
-
-    console.log("✅ User found");
-    console.log("Astrologer ID:", astrologerId);
-
-    // =====================================================
-    // STEP 2: FILTER
-    // =====================================================
-    console.log("\nSTEP 2: Incoming filter:");
-    console.log(JSON.stringify(filter, null, 2));
-
-    const {
-      page = 1,
-      limit = 10,
-      userName,
-      startDate,
-      endDate,
-      sessionType,
-      source,
-    } = filter;
-
-    // =====================================================
-    // STEP 3: PAGINATION
-    // =====================================================
-    const pageNumber = Math.max(1, Number(page) || 1);
-    const limitNumber = Math.min(
-      100,
-      Math.max(1, Number(limit) || 10)
-    );
-
-    const skip = (pageNumber - 1) * limitNumber;
-
-    console.log("\nSTEP 3: Pagination");
-    console.log({
-      pageNumber,
-      limitNumber,
-      skip,
-    });
-
-    // =====================================================
-    // STEP 4: WHERE
-    // =====================================================
-    const where = {
-      astrologerId,
-      status: "COMPLETED",
-    };
-
-    console.log("\nSTEP 4: Initial WHERE:");
-    console.log(JSON.stringify(where, null, 2));
-
-    // =====================================================
-    // STEP 5: SESSION TYPE
-    // =====================================================
-    if (sessionType) {
-      const sessionTypeUpper =
-        String(sessionType).toUpperCase();
-
-      console.log(
-        "\nSTEP 5: sessionType:",
-        sessionTypeUpper
-      );
-
-      if (
-        ["CHAT", "CALL"].includes(
-          sessionTypeUpper
-        )
-      ) {
-        where.type = sessionTypeUpper;
-      } else {
-        console.warn(
-          "⚠️ Invalid sessionType:",
-          sessionTypeUpper
-        );
-      }
-    }
-
-    // =====================================================
-    // STEP 6: SOURCE
-    // =====================================================
-    if (source) {
-      const sourceUpper =
-        String(source).toUpperCase();
-
-      console.log(
-        "\nSTEP 6: source:",
-        sourceUpper
-      );
-
-      if (
-        ["WEB", "ANDROID", "IOS"].includes(
-          sourceUpper
-        )
-      ) {
-        where.source = sourceUpper;
-      } else {
-        console.warn(
-          "⚠️ Invalid source:",
-          sourceUpper
-        );
-      }
-    }
-
-    // =====================================================
-    // STEP 7: DATE FILTER
-    // =====================================================
-    if (startDate || endDate) {
-      console.log(
-        "\nSTEP 7: Processing date filter"
-      );
-
-      where.createdAt = {};
-
-      if (startDate) {
-        const start = new Date(startDate);
-
-        if (isNaN(start.getTime())) {
-          throw new Error(
-            `Invalid startDate: ${startDate}`
-          );
-        }
-
-        where.createdAt.gte = start;
-      }
-
-      if (endDate) {
-        const end = new Date(endDate);
-
-        if (isNaN(end.getTime())) {
-          throw new Error(
-            `Invalid endDate: ${endDate}`
-          );
-        }
-
-        end.setHours(23, 59, 59, 999);
-
-        where.createdAt.lte = end;
-      }
-
-      console.log(
-        "Date filter:",
-        where.createdAt
-      );
-    }
-
-    // =====================================================
-    // STEP 8: USER NAME
-    // =====================================================
-    if (userName) {
-      console.log(
-        "\nSTEP 8: userName:",
-        userName
-      );
-
-      where.user = {
-        name: {
-          contains: String(userName),
-          mode: "insensitive",
-        },
-      };
-    }
-
-    // =====================================================
-    // STEP 9: FINAL WHERE
-    // =====================================================
-    console.log(
-      "\n=============================================="
-    );
-
-    console.log("STEP 9: FINAL WHERE");
-
-    console.log(
-      "=============================================="
-    );
-
-    console.log(
-      JSON.stringify(where, null, 2)
-    );
-
-    // =====================================================
-    // STEP 10: COUNT
-    // =====================================================
-    console.log(
-      "\nSTEP 10: BEFORE prisma.session.count()"
-    );
-
-    const countStart = Date.now();
-
-    const totalCount =
-      await prisma.session.count({
-        where,
-      });
-
-    console.log(
-      "✅ STEP 10: prisma.session.count() SUCCESS"
-    );
-
-    console.log("totalCount:", totalCount);
-
-    console.log(
-      "Count duration:",
-      Date.now() - countStart,
-      "ms"
-    );
-
-    // =====================================================
-    // STEP 11: GET SESSIONS
-    // =====================================================
-    console.log(
-      "\nSTEP 11: BEFORE prisma.session.findMany()"
-    );
-
-    const sessionStart = Date.now();
-
-    const sessions =
-      await prisma.session.findMany({
-        where,
-
-        include: {
-          user: {
-            select: {
-              id: true,
-              name: true,
-              mobile: true,
-              countryCode: true,
-            },
-          },
-
-          review: {
-            select: {
-              rating: true,
-              comment: true,
-            },
-          },
-        },
-
-        orderBy: {
-          createdAt: "desc",
-        },
-
-        skip,
-        take: limitNumber,
-      });
-
-    console.log(
-      "✅ STEP 11: prisma.session.findMany() SUCCESS"
-    );
-
-    console.log(
-      "Sessions count:",
-      sessions.length
-    );
-
-    console.log(
-      "Session query duration:",
-      Date.now() - sessionStart,
-      "ms"
-    );
-
-    // =====================================================
-    // STEP 12: SESSION INFORMATION
-    // =====================================================
-    console.log("\nSTEP 12: Session IDs:");
-
-    sessions.forEach((session, index) => {
-      console.log(
-        `Session ${index + 1}:`,
-        {
-          id: session.id,
-          userId: session.userId,
-          astrologerId:
-            session.astrologerId,
-          type: session.type,
-          status: session.status,
-        }
-      );
-    });
-
-    // =====================================================
-    // STEP 13: UNIQUE INTAKE CONDITIONS
-    // =====================================================
-    console.log(
-      "\nSTEP 13: Building unique intakeConditions..."
-    );
-
-    const uniqueIntakeConditions = [
-      ...new Map(
-        sessions.map((session) => [
-          `${session.userId}_${session.astrologerId}`,
-          {
-            userId: session.userId,
-            astrologerId:
-              session.astrologerId,
-          },
-        ])
-      ).values(),
-    ];
-
-    console.log(
-      "Unique intake conditions count:",
-      uniqueIntakeConditions.length
-    );
-
-    console.log(
-      "Unique intake conditions:",
-      JSON.stringify(
-        uniqueIntakeConditions,
-        null,
-        2
-      )
-    );
-
-    // =====================================================
-    // STEP 14: INTAKE QUERY
-    // =====================================================
-    let intakeMap = new Map();
-
-    if (
-      uniqueIntakeConditions.length > 0
-    ) {
-      console.log(
-        "\n=============================================="
-      );
-
-      console.log(
-        "STEP 14: BEFORE prisma.intake.findMany()"
-      );
-
-      console.log(
-        "=============================================="
-      );
+    getAstrologerSessions: async (_, { filter = {} }, { user }) => {
+      console.log("\n==============================================");
+      console.log("🚀 getAstrologerSessions START");
+      console.log("==============================================");
 
       try {
-        const intakeStart = Date.now();
+        // =====================================================
+        // STEP 1: AUTH
+        // =====================================================
+        console.log("STEP 1: Checking user...");
 
-        const intakes =
-          await prisma.intake.findMany({
-            where: {
-              OR: uniqueIntakeConditions,
-            },
+        if (!user) {
+          console.error("❌ Unauthorized");
+          throw new Error("Unauthorized");
+        }
 
-            orderBy: {
-              createdAt: "desc",
-            },
+        const astrologerId = user.id;
 
-            select: {
-              userId: true,
-              astrologerId: true,
-              chatId: true,
-              birthPlace: true,
-              birthDate: true,
-              birthTime: true,
-              occupation: true,
-              gender: true,
-              name: true,
-              createdAt: true,
-            },
-          });
+        console.log("✅ User found");
+        console.log("Astrologer ID:", astrologerId);
 
-        console.log(
-          "✅ STEP 14: prisma.intake.findMany() SUCCESS"
-        );
+        // =====================================================
+        // STEP 2: FILTER
+        // =====================================================
+        console.log("\nSTEP 2: Incoming filter:");
+        console.log(JSON.stringify(filter, null, 2));
 
-        console.log(
-          "Intakes count:",
-          intakes.length
-        );
+        const {
+          page = 1,
+          limit = 10,
+          userName,
+          startDate,
+          endDate,
+          sessionType,
+          source,
+        } = filter;
 
-        console.log(
-          "Intake query duration:",
-          Date.now() - intakeStart,
-          "ms"
-        );
+        // =====================================================
+        // STEP 3: PAGINATION
+        // =====================================================
+        const pageNumber = Math.max(1, Number(page) || 1);
+        const limitNumber = Math.min(100, Math.max(1, Number(limit) || 10));
 
-        // =================================================
-        // STEP 15: BUILD INTAKE MAP
-        // =================================================
-        console.log(
-          "\nSTEP 15: Building intakeMap..."
-        );
+        const skip = (pageNumber - 1) * limitNumber;
 
-        for (const intake of intakes) {
-          const key =
-            `${intake.userId}_${intake.astrologerId}`;
+        console.log("\nSTEP 3: Pagination");
+        console.log({
+          pageNumber,
+          limitNumber,
+          skip,
+        });
 
-          if (!intakeMap.has(key)) {
-            intakeMap.set(key, intake);
+        // =====================================================
+        // STEP 4: WHERE
+        // =====================================================
+        const where = {
+          astrologerId,
+          status: "COMPLETED",
+        };
+
+        console.log("\nSTEP 4: Initial WHERE:");
+        console.log(JSON.stringify(where, null, 2));
+
+        // =====================================================
+        // STEP 5: SESSION TYPE
+        // =====================================================
+        if (sessionType) {
+          const sessionTypeUpper = String(sessionType).toUpperCase();
+
+          console.log("\nSTEP 5: sessionType:", sessionTypeUpper);
+
+          if (["CHAT", "CALL"].includes(sessionTypeUpper)) {
+            where.type = sessionTypeUpper;
+          } else {
+            console.warn("⚠️ Invalid sessionType:", sessionTypeUpper);
           }
         }
 
-        console.log(
-          "✅ STEP 15: intakeMap created"
-        );
+        // =====================================================
+        // STEP 6: SOURCE
+        // =====================================================
+        if (source) {
+          const sourceUpper = String(source).toUpperCase();
+
+          console.log("\nSTEP 6: source:", sourceUpper);
+
+          if (["WEB", "ANDROID", "IOS"].includes(sourceUpper)) {
+            where.source = sourceUpper;
+          } else {
+            console.warn("⚠️ Invalid source:", sourceUpper);
+          }
+        }
+
+        // =====================================================
+        // STEP 7: DATE FILTER
+        // =====================================================
+        if (startDate || endDate) {
+          console.log("\nSTEP 7: Processing date filter");
+
+          where.createdAt = {};
+
+          if (startDate) {
+            const start = new Date(startDate);
+
+            if (isNaN(start.getTime())) {
+              throw new Error(`Invalid startDate: ${startDate}`);
+            }
+
+            where.createdAt.gte = start;
+          }
+
+          if (endDate) {
+            const end = new Date(endDate);
+
+            if (isNaN(end.getTime())) {
+              throw new Error(`Invalid endDate: ${endDate}`);
+            }
+
+            end.setHours(23, 59, 59, 999);
+
+            where.createdAt.lte = end;
+          }
+
+          console.log("Date filter:", where.createdAt);
+        }
+
+        // =====================================================
+        // STEP 8: USER NAME
+        // =====================================================
+        if (userName) {
+          console.log("\nSTEP 8: userName:", userName);
+
+          where.user = {
+            name: {
+              contains: String(userName),
+              mode: "insensitive",
+            },
+          };
+        }
+
+        // =====================================================
+        // STEP 9: FINAL WHERE
+        // =====================================================
+        console.log("\n==============================================");
+
+        console.log("STEP 9: FINAL WHERE");
+
+        console.log("==============================================");
+
+        console.log(JSON.stringify(where, null, 2));
+
+        // =====================================================
+        // STEP 10: COUNT
+        // =====================================================
+        console.log("\nSTEP 10: BEFORE prisma.session.count()");
+
+        const countStart = Date.now();
+
+        const totalCount = await prisma.session.count({
+          where,
+        });
+
+        console.log("✅ STEP 10: prisma.session.count() SUCCESS");
+
+        console.log("totalCount:", totalCount);
+
+        console.log("Count duration:", Date.now() - countStart, "ms");
+
+        // =====================================================
+        // STEP 11: GET SESSIONS
+        // =====================================================
+        console.log("\nSTEP 11: BEFORE prisma.session.findMany()");
+
+        const sessionStart = Date.now();
+
+        const sessions = await prisma.session.findMany({
+          where,
+
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                mobile: true,
+                countryCode: true,
+              },
+            },
+
+            review: {
+              select: {
+                rating: true,
+                comment: true,
+              },
+            },
+          },
+
+          orderBy: {
+            createdAt: "desc",
+          },
+
+          skip,
+          take: limitNumber,
+        });
+
+        console.log("✅ STEP 11: prisma.session.findMany() SUCCESS");
+
+        console.log("Sessions count:", sessions.length);
+
+        console.log("Session query duration:", Date.now() - sessionStart, "ms");
+
+        // =====================================================
+        // STEP 12: SESSION INFORMATION
+        // =====================================================
+        console.log("\nSTEP 12: Session IDs:");
+
+        sessions.forEach((session, index) => {
+          console.log(`Session ${index + 1}:`, {
+            id: session.id,
+            userId: session.userId,
+            astrologerId: session.astrologerId,
+            type: session.type,
+            status: session.status,
+          });
+        });
+
+        // =====================================================
+        // STEP 13: UNIQUE INTAKE CONDITIONS
+        // =====================================================
+        console.log("\nSTEP 13: Building unique intakeConditions...");
+
+        const uniqueIntakeConditions = [
+          ...new Map(
+            sessions.map((session) => [
+              `${session.userId}_${session.astrologerId}`,
+              {
+                userId: session.userId,
+                astrologerId: session.astrologerId,
+              },
+            ]),
+          ).values(),
+        ];
 
         console.log(
-          "intakeMap size:",
-          intakeMap.size
-        );
-      } catch (intakeError) {
-        console.error(
-          "\n=============================================="
+          "Unique intake conditions count:",
+          uniqueIntakeConditions.length,
         );
 
-        console.error(
-          "🔥🔥🔥 INTAKE QUERY FAILED 🔥🔥🔥"
-        );
-
-        console.error(
-          "=============================================="
-        );
-
-        console.error(
-          "Error name:",
-          intakeError?.name
-        );
-
-        console.error(
-          "Error message:",
-          intakeError?.message
-        );
-
-        console.error(
-          "Error code:",
-          intakeError?.code
-        );
-
-        console.error(
-          "Error meta:",
-          intakeError?.meta
-        );
-
-        console.error(
-          "Error stack:",
-          intakeError?.stack
-        );
-
-        console.error(
-          "Full error:",
-          intakeError
-        );
-
-        console.error(
-          "Conditions:",
-          JSON.stringify(
-            uniqueIntakeConditions,
-            null,
-            2
-          )
-        );
-
-        console.error(
-          "=============================================="
-        );
-
-        throw intakeError;
-      }
-    } else {
-      console.log(
-        "\nSTEP 14: No sessions found."
-      );
-
-      console.log(
-        "Skipping intake query."
-      );
-    }
-
-    // =====================================================
-    // STEP 16: BUILD RESPONSE DATA
-    // =====================================================
-    console.log(
-      "\nSTEP 16: Mapping sessions..."
-    );
-
-    const data = sessions.map(
-      (session, index) => {
         console.log(
-          `Mapping session ${index + 1}/${sessions.length}:`,
-          session.id
+          "Unique intake conditions:",
+          JSON.stringify(uniqueIntakeConditions, null, 2),
         );
 
-        const key =
-          `${session.userId}_${session.astrologerId}`;
+        // =====================================================
+        // STEP 14: INTAKE QUERY
+        // =====================================================
+        let intakeMap = new Map();
 
-        const intake =
-          intakeMap.get(key) || null;
+        if (uniqueIntakeConditions.length > 0) {
+          console.log("\n==============================================");
 
-        return {
-          sessionId: session.id,
+          console.log("STEP 14: BEFORE prisma.intake.findMany()");
 
-          sessionType: session.type,
+          console.log("==============================================");
 
-          status: session.status,
+          try {
+            const intakeStart = Date.now();
 
-          userId: session.userId,
+            const intakes = prisma.intake.findMany({
+              take: 1,
+            });
 
-          userName:
-            session.user?.name || "",
+            console.log("✅ STEP 14: prisma.intake.findMany() SUCCESS");
 
-          userMobile:
-            session.user?.mobile || "",
+            console.log("Intakes count:", intakes.length);
 
-          userCountryCode:
-            session.user?.countryCode || "",
+            console.log(
+              "Intake query duration:",
+              Date.now() - intakeStart,
+              "ms",
+            );
 
-          chatId:
-            intake?.chatId || null,
+            // =================================================
+            // STEP 15: BUILD INTAKE MAP
+            // =================================================
+            console.log("\nSTEP 15: Building intakeMap...");
 
-          birthPlace:
-            intake?.birthPlace || "",
+            for (const intake of intakes) {
+              const key = `${intake.userId}_${intake.astrologerId}`;
 
-          birthDate:
-            intake?.birthDate
+              if (!intakeMap.has(key)) {
+                intakeMap.set(key, intake);
+              }
+            }
+
+            console.log("✅ STEP 15: intakeMap created");
+
+            console.log("intakeMap size:", intakeMap.size);
+          } catch (intakeError) {
+            console.error("\n==============================================");
+
+            console.error("🔥🔥🔥 INTAKE QUERY FAILED 🔥🔥🔥");
+
+            console.error("==============================================");
+
+            console.error("Error name:", intakeError?.name);
+
+            console.error("Error message:", intakeError?.message);
+
+            console.error("Error code:", intakeError?.code);
+
+            console.error("Error meta:", intakeError?.meta);
+
+            console.error("Error stack:", intakeError?.stack);
+
+            console.error("Full error:", intakeError);
+
+            console.error(
+              "Conditions:",
+              JSON.stringify(uniqueIntakeConditions, null, 2),
+            );
+
+            console.error("==============================================");
+
+            throw intakeError;
+          }
+        } else {
+          console.log("\nSTEP 14: No sessions found.");
+
+          console.log("Skipping intake query.");
+        }
+
+        // =====================================================
+        // STEP 16: BUILD RESPONSE DATA
+        // =====================================================
+        console.log("\nSTEP 16: Mapping sessions...");
+
+        const data = sessions.map((session, index) => {
+          console.log(
+            `Mapping session ${index + 1}/${sessions.length}:`,
+            session.id,
+          );
+
+          const key = `${session.userId}_${session.astrologerId}`;
+
+          const intake = intakeMap.get(key) || null;
+
+          return {
+            sessionId: session.id,
+
+            sessionType: session.type,
+
+            status: session.status,
+
+            userId: session.userId,
+
+            userName: session.user?.name || "",
+
+            userMobile: session.user?.mobile || "",
+
+            userCountryCode: session.user?.countryCode || "",
+
+            chatId: intake?.chatId || null,
+
+            birthPlace: intake?.birthPlace || "",
+
+            birthDate: intake?.birthDate
               ? intake.birthDate.toISOString()
               : null,
 
-          birthTime:
-            intake?.birthTime || "",
+            birthTime: intake?.birthTime || "",
 
-          occupation:
-            intake?.occupation || "",
+            occupation: intake?.occupation || "",
 
-          gender:
-            intake?.gender || null,
+            gender: intake?.gender || null,
 
-          startedAt:
-            session.startedAt
+            startedAt: session.startedAt
               ? session.startedAt.toISOString()
               : null,
 
-          endedAt:
-            session.endedAt
-              ? session.endedAt.toISOString()
-              : null,
+            endedAt: session.endedAt ? session.endedAt.toISOString() : null,
 
-          createdAt:
-            session.createdAt
+            createdAt: session.createdAt
               ? session.createdAt.toISOString()
               : null,
 
-          durationSec:
-            session.durationSec || 0,
+            durationSec: session.durationSec || 0,
 
-          durationMinutes:
-            session.durationSec
-              ? Math.ceil(
-                  session.durationSec / 60
-                )
+            durationMinutes: session.durationSec
+              ? Math.ceil(session.durationSec / 60)
               : 0,
 
-          ratePerMin:
-            session.ratePerMin || 0,
+            ratePerMin: session.ratePerMin || 0,
 
-          coinsEarned:
-            session.coinsEarned || 0,
+            coinsEarned: session.coinsEarned || 0,
 
-          commission:
-            session.commission || 0,
+            commission: session.commission || 0,
 
-          rating:
-            session.review?.rating ??
-            null,
+            rating: session.review?.rating ?? null,
 
-          reviewComment:
-            session.review?.comment ??
-            null,
+            reviewComment: session.review?.comment ?? null,
 
-          source:
-            session.source || null,
+            source: session.source || null,
+          };
+        });
+
+        console.log("✅ STEP 16: Mapping completed");
+
+        console.log("Response data count:", data.length);
+
+        // =====================================================
+        // STEP 17: RESPONSE
+        // =====================================================
+        const totalPages = Math.ceil(totalCount / limitNumber);
+
+        console.log("\n==============================================");
+
+        console.log("STEP 17: RETURNING RESPONSE");
+
+        console.log("==============================================");
+
+        console.log({
+          success: true,
+          totalCount,
+          currentPage: pageNumber,
+          totalPages,
+          dataCount: data.length,
+        });
+
+        console.log("🎉 getAstrologerSessions COMPLETED");
+
+        return {
+          success: true,
+
+          totalCount,
+
+          currentPage: pageNumber,
+
+          totalPages,
+
+          data,
         };
+      } catch (error) {
+        // =====================================================
+        // MAIN ERROR
+        // =====================================================
+        console.error("\n==============================================");
+
+        console.error("🔥🔥🔥 getAstrologerSessions ERROR 🔥🔥🔥");
+
+        console.error("==============================================");
+
+        console.error("Error name:", error?.name);
+
+        console.error("Error message:", error?.message);
+
+        console.error("Error code:", error?.code);
+
+        console.error("Error meta:", error?.meta);
+
+        console.error("Error stack:", error?.stack);
+
+        console.error("Full error:", error);
+
+        console.error("==============================================");
+
+        // Preserve original error
+        throw error;
       }
-    );
+    },
 
-    console.log(
-      "✅ STEP 16: Mapping completed"
-    );
-
-    console.log(
-      "Response data count:",
-      data.length
-    );
-
-    // =====================================================
-    // STEP 17: RESPONSE
-    // =====================================================
-    const totalPages =
-      Math.ceil(
-        totalCount / limitNumber
-      );
-
-    console.log(
-      "\n=============================================="
-    );
-
-    console.log(
-      "STEP 17: RETURNING RESPONSE"
-    );
-
-    console.log(
-      "=============================================="
-    );
-
-    console.log({
-      success: true,
-      totalCount,
-      currentPage: pageNumber,
-      totalPages,
-      dataCount: data.length,
-    });
-
-    console.log(
-      "🎉 getAstrologerSessions COMPLETED"
-    );
-
-    return {
-      success: true,
-
-      totalCount,
-
-      currentPage: pageNumber,
-
-      totalPages,
-
-      data,
-    };
-  } catch (error) {
-    // =====================================================
-    // MAIN ERROR
-    // =====================================================
-    console.error(
-      "\n=============================================="
-    );
-
-    console.error(
-      "🔥🔥🔥 getAstrologerSessions ERROR 🔥🔥🔥"
-    );
-
-    console.error(
-      "=============================================="
-    );
-
-    console.error(
-      "Error name:",
-      error?.name
-    );
-
-    console.error(
-      "Error message:",
-      error?.message
-    );
-
-    console.error(
-      "Error code:",
-      error?.code
-    );
-
-    console.error(
-      "Error meta:",
-      error?.meta
-    );
-
-    console.error(
-      "Error stack:",
-      error?.stack
-    );
-
-    console.error(
-      "Full error:",
-      error
-    );
-
-    console.error(
-      "=============================================="
-    );
-
-    // Preserve original error
-    throw error;
-  }
-},
-  
     getOffers: async (_, __, { user }) => {
       try {
         if (!user) {
@@ -2385,14 +2148,14 @@ export default {
       }
 
       const uid = Math.floor(Math.random() * 100000);
-      console.log("AGORA_APP_ID--------------:",process.env.AGORA_APP_ID);
+      console.log("AGORA_APP_ID--------------:", process.env.AGORA_APP_ID);
 
       const token = generateRtcToken({
         channelName,
         uid,
         role,
       });
-    console.log("token for agora---------:",token);
+      console.log("token for agora---------:", token);
       return {
         token,
         uid,
@@ -2506,8 +2269,7 @@ export default {
         };
       } catch (error) {
         console.error("getAstrologerAppVersion error:", error);
-                console.error("getAstrologerAppVersion error:");
-
+        console.error("getAstrologerAppVersion error:");
 
         throw new Error(error.message || "Failed to fetch app version");
       }
@@ -2891,7 +2653,6 @@ export default {
 
         const uploadPath = path.join(uploadDir, newFileName);
 
-
         await new Promise((resolve, reject) => {
           const stream = createReadStream();
           const out = fs.createWriteStream(uploadPath);
@@ -2909,7 +2670,6 @@ export default {
           "https://dhwaniastro.com/astro/v2/uploads";
 
         const fileUrl = `${baseUrl}/${newFileName}`;
-
 
         return {
           success: true,
