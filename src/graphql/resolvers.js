@@ -387,7 +387,7 @@ export default {
 
           return {
             sessionId: session.id,
-
+  userId: session.user?.id || null,
             roomId,
 
             // Intake Name (tej / ajay)
@@ -661,6 +661,7 @@ export default {
 
           return {
             sessionId: session.id,
+              userId: session.user?.id || null,
             roomId: lastMessage?.roomId || null,
             userName: session.user?.name || null,
             userMobile: session.user?.mobile || null,
