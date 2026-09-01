@@ -11,7 +11,7 @@ import crypto from "crypto";
 import { sendOTP } from "./smsService.js";
 
 const OTP_EXPIRE = 300;
-const OTP_RATE_LIMIT = 5;
+const OTP_RATE_LIMIT = 20;
 const OTP_RATE_WINDOW = 600;
 const LOGIN_FAIL_LIMIT = 5;
 const LOGIN_FAIL_WINDOW = 900;
