@@ -147,7 +147,7 @@ export default gql`
   type AstrologerChatHistoryItem {
     sessionId: String
     roomId: String
-
+userId: ID
     userName: String
     userMobile: String
     userCountryCode: String
@@ -235,7 +235,7 @@ export default gql`
   type AstrologerCallHistoryItem {
     sessionId: String
     roomId: String
-
+userId: ID
     userName: String
     userMobile: String
     userCountryCode: String

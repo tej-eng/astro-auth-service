@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 import prisma from "../config/prisma.js";
 import redis from "../config/redis.js";
-import { GraphQLError } from "graphql";
 
 const auth = async (req) => {
   try {
@@ -24,15 +23,8 @@ if (session) {
     const { sessionId } = JSON.parse(session);
 
     if (sessionId !== decoded.sessionId) {
-  throw new GraphQLError(
-    "Unauthorized: Session expired or logged in from another device",
-    {
-      extensions: {
-        code: "UNAUTHENTICATED",
-      },
+      return null;
     }
-  );
-}
 
     const user = await prisma.astrologer.findUnique({
       where: {
